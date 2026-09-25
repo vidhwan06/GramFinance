@@ -46,7 +46,7 @@ Lessons are designed around simple explanations, real-life examples, visuals and
 
 ---
 
-### 2. 💰 Loan Understanding Tool — V2
+### 2. 💰 Loan Understanding Tool :- V2
 
 The Loan Calculator is currently the most complete functional module.
 
