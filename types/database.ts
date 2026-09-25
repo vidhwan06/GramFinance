@@ -31,6 +31,30 @@
 /** Mirrors the `users_language_check` CHECK constraint from migration 001. */
 export type UserLanguage = 'en' | 'kn';
 
+/** Mirrors the `schemes_status_check` CHECK constraint from migration 011. */
+export type SchemeStatus = 'draft' | 'active' | 'inactive' | 'expired';
+
+/** Mirrors `scheme_rules_rule_type_check`. */
+export type SchemeRuleType = 'eligibility' | 'loan_terms';
+
+/** Mirrors `scheme_rules_group_operator_check`. */
+export type RuleGroupOperator = 'AND' | 'OR';
+
+/** Mirrors `scheme_rules_operator_check`. Exactly the V1 operator set. */
+export type SchemeRuleOperator =
+  | '='
+  | '!='
+  | '>'
+  | '>='
+  | '<'
+  | '<='
+  | 'IN'
+  | 'NOT_IN'
+  | 'CONTAINS';
+
+/** Mirrors `user_roles_role_check`. */
+export type UserRoleName = 'admin';
+
 /**
  * Profile row. Extends a Supabase Auth account — this is NOT a standalone user
  * table and holds no credentials.
@@ -92,6 +116,52 @@ export type DbScheme = {
   official_url: string;
   /** Date the scheme was last manually verified. Surface this to users. */
   last_verified: string;
+  /**
+   * Lifecycle state. Added by migration 011 with `DEFAULT 'draft'`, so a row
+   * inserted without an explicit status is hidden from the public catalogue.
+   */
+  status: SchemeStatus;
+  created_at: string;
+};
+
+/**
+ * Deterministic eligibility rules. Source of truth for eligibility —
+ * `schemes.target_groups` is browse metadata and must never be evaluated.
+ *
+ * NOTE ON UNITS: monetary `value`s here are INR RUPEES, never paise. The loan
+ * engine in features/loan/engine uses integer paise; the two conventions are
+ * different and conversion belongs at the integration boundary only.
+ */
+export type DbSchemeRule = {
+  id: string;
+  scheme_id: string;
+  rule_group: number;
+  group_operator: RuleGroupOperator;
+  rule_type: SchemeRuleType;
+  /** Constrained to the closed registry by `scheme_rules_field_check`. */
+  field: string;
+  operator: SchemeRuleOperator;
+  /** Scalar for = != > >= < <=; array for IN NOT_IN CONTAINS. */
+  value: number | string | boolean | Array<number | string | boolean>;
+  required: boolean;
+  description_en: string | null;
+  description_kn: string | null;
+  priority: number;
+  created_at: string;
+};
+
+/**
+ * Authorization foundation for future admin features.
+ *
+ * RLS is enabled with ZERO policies and all client grants are revoked, so no
+ * client — anon or authenticated — can read or write a role record. A `role`
+ * column on public.users was rejected because migration 008 lets a user UPDATE
+ * their own row, which would have been self-promotion.
+ */
+export type DbUserRole = {
+  /** Primary key AND foreign key to auth.users(id). */
+  user_id: string;
+  role: UserRoleName;
   created_at: string;
 };
 
@@ -180,8 +250,36 @@ export type DbSchemeInsert = {
   id?: string;
   /** Has DEFAULT '{"ALL"}'. */
   states?: string[] | null;
+  /** Has DEFAULT 'draft'. Omit to keep a scheme unpublished. */
+  status?: SchemeStatus;
   created_at?: string;
 };
+
+export type DbSchemeRuleInsert = {
+  scheme_id: string;
+  field: string;
+  operator: SchemeRuleOperator;
+  value: number | string | boolean | Array<number | string | boolean>;
+  /** Has DEFAULT 1. */
+  rule_group?: number;
+  /** Has DEFAULT 'AND'. */
+  group_operator?: RuleGroupOperator;
+  /** Has DEFAULT 'eligibility'. */
+  rule_type?: SchemeRuleType;
+  /** Has DEFAULT TRUE. */
+  required?: boolean;
+  /** Has DEFAULT 0. */
+  priority?: number;
+  id?: string;
+  description_en?: string | null;
+  description_kn?: string | null;
+  created_at?: string;
+};
+
+/**
+ * There is deliberately no client-facing Insert type for user_roles. Role
+ * records are created only by a trusted Supabase SQL / admin operation.
+ */
 
 export type DbFraudPatternInsert = {
   category: string;
@@ -238,6 +336,21 @@ export interface Database {
         Row: DbScheme;
         Insert: DbSchemeInsert;
         Update: AllOptional<DbScheme>;
+        Relationships: [];
+      };
+      scheme_rules: {
+        Row: DbSchemeRule;
+        Insert: DbSchemeRuleInsert;
+        Update: AllOptional<DbSchemeRule>;
+        Relationships: [];
+      };
+      user_roles: {
+        Row: DbUserRole;
+        // No client Insert/Update/Delete is possible: the table has no RLS
+        // policies and no client grants, so these shapes exist only for the
+        // server-side / service-role path.
+        Insert: { user_id: string; role: UserRoleName; created_at?: string };
+        Update: Partial<{ role: UserRoleName }>;
         Relationships: [];
       };
       fraud_patterns: {

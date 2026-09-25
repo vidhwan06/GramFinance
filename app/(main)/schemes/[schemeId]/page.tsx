@@ -1,17 +1,41 @@
-'use client';
-
 import React from 'react';
-import { useLanguage } from '@/features/language/hooks/useLanguage';
+import { notFound } from 'next/navigation';
+import { SchemeDetailView } from '@/features/schemes/components/SchemeDetailView';
+import { ErrorState } from '@/components/common/ErrorState';
+import { getActiveSchemeWithDetails } from '@/features/schemes/schemes-service';
+import { en as t } from '@/features/language/translations/en';
 
-export default function SchemeDetailPage() {
-  const { t } = useLanguage();
+/**
+ * One published scheme.
+ *
+ * A Server Component. The read goes through the anon-key client, so a draft,
+ * inactive or expired scheme is invisible here at the database level, not just
+ * filtered out afterwards.
+ *
+ * `notFound()` is used for both "no such scheme" and "not published", so the
+ * page cannot be used to discover unpublished work. It renders the nearest
+ * `not-found` boundary, which is `app/(main)/schemes/[schemeId]/not-found.tsx`,
+ * so the app shell (header and bottom navigation) is preserved.
+ */
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900">{t.nav.schemes}</h1>
-      <div className="p-6 bg-white rounded-xl border border-gray-200">
-        <p className="text-gray-600">Scheme detail placeholder.</p>
-      </div>
-    </div>
-  );
+export const dynamic = 'force-dynamic';
+
+export default async function SchemeDetailPage({
+  params,
+}: {
+  params: Promise<{ schemeId: string }>;
+}) {
+  const { schemeId } = await params;
+
+  let scheme;
+  try {
+    scheme = await getActiveSchemeWithDetails(schemeId);
+  } catch (error) {
+    console.error('[schemes] detail load failed', error);
+    return <ErrorState title={t.schemes.errorTitle} message={t.schemes.errorMessage} />;
+  }
+
+  if (!scheme) notFound();
+
+  return <SchemeDetailView scheme={scheme} />;
 }

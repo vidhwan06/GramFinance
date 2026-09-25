@@ -21,7 +21,20 @@
 -- ============================================================================
 
 -- Initial verified scheme
-INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified)
+--
+-- status is set to 'draft' on INSERT and is deliberately NOT part of the
+-- DO UPDATE set below. Migration 011 made public catalogue reads expose only
+-- status = 'active', and this row's facts were last verified on 2026-01-15 --
+-- around eight months before that migration. Publishing it as active would
+-- present unverified information as currently verified.
+--
+-- To publish it: re-verify against https://pmkisan.gov.in/, update
+-- last_verified to the real date, then set status = 'active'. That is a
+-- deliberate human step and the verification date must never be invented.
+--
+-- Because status is absent from the DO UPDATE set, re-running this seed after
+-- someone has properly verified and published PM-KISAN will not demote it.
+INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified, status)
 VALUES (
     'Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)',
     'ಪ್ರಧಾನ ಮಂತ್ರಿ ಕಿಸಾನ್ ಸಮ್ಮಾನ್ ನಿಧಿ (PM-KISAN)',
@@ -30,7 +43,8 @@ VALUES (
     ARRAY['farmer', 'small_holder'],
     ARRAY['Aadhaar Card', 'Land Records', 'Bank Account Details'],
     'https://pmkisan.gov.in/',
-    '2026-01-15'
+    '2026-01-15',
+    'draft'
 ) ON CONFLICT (official_url) DO UPDATE SET
     name_en             = EXCLUDED.name_en,
     name_kn             = EXCLUDED.name_kn,

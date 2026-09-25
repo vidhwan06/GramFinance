@@ -7,9 +7,9 @@ Next.js 15 (App Router), React 19, TypeScript, Tailwind, Supabase, Vitest. Bilin
 ```bash
 npm run dev                                            # http://localhost:3000
 npm run build                                          # also runs lint + typecheck
-npm test                                               # vitest run — 26 tests / 3 files
+npm test                                               # vitest run — 278 tests / 14 files
 npx tsc --noEmit                                       # there is NO `typecheck` script
-npx vitest run tests/unit/loan/engine.test.ts          # single file
+npx vitest run tests/unit                              # offline only, no network
 npx vitest run -t "Money Utilities"                    # single test by name
 SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network Supabase suite
 ```
@@ -31,14 +31,30 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
 
 ## Supabase
 
-- Schema lives in `supabase/migrations/001`–`010`. `001`–`009` are applied to the live project; **`010` is not** — until `supabase db push` runs it, `public.quizzes` still grants SELECT to `anon` (RLS filters it to zero rows, so no data leaks, but the privilege layer disagrees) and one integration test fails by design.
-- RLS is on for all six tables; `users` / `feedback` are owner-scoped, `lessons` / `schemes` / `fraud_patterns` are public reads, `quizzes` is authenticated-only.
+- Schema lives in `supabase/migrations/001`–`011`. `001`–`010` are applied to the live project; **`011` is not** — until `supabase db push` runs it, `schemes.status` and `scheme_rules` do not exist and three integration tests fail by design.
+- RLS is on for every table. `lessons` / `schemes` / `fraud_patterns` / `scheme_rules` are public **active-only** reads; `quizzes` is authenticated-only; `users` / `feedback` are owner-scoped; **`user_roles` has RLS on with ZERO policies and ZERO client grants** — deny-all, so self-promotion has no code path at all. Do not add a policy or grant to it without reading the reasoning in migration 011.
 - **Never use the service-role key client-side.** No service-role client exists; do not add one to `client.ts`. The anon key + session cookie is what applies RLS.
+- **Never put a role/admin column on `public.users`.** Migration 008 lets a user `UPDATE` their own row, so a `role` column there would be self-promotion. `public.is_admin()` (SECURITY DEFINER, `search_path = ''`) reads `user_roles` instead.
 - `types/database.ts` uses `type` aliases, **not `interface`** — the SDK's `GenericTable` needs an implicit index signature, and interfaces silently collapse every row type to `never` while still compiling.
 - Typing catches bad insert shapes, wrong value types, unselected columns and invalid enum literals. It does **not** catch a wrong table name in `.from()` or a typo'd column in `.select()` — check those by hand.
 - `@supabase/ssr` must stay on a version whose peer range matches the installed `supabase-js` (currently `^0.12.7` / `^2.114.0`). Mismatched versions degrade row types to `never` and `skipLibCheck` hides it.
 
 `GEMINI_API_KEY` must stay server-side: Gemini calls belong in `app/api/` route handlers only, never in client components. Extend the loan engine and the existing `components/ui` + `components/common` kit rather than inventing a parallel path.
+
+## Schemes (Phase 4A–4C)
+
+- **The eligibility engine and its API exist; the UI does not.** There is no schemes page, form or result component yet. `app/(main)/schemes/*` are still placeholders.
+- `features/schemes/eligibility/field-registry.ts` is the **closed allow-list** of fields a rule may reference. Always read applicant values through `readApplicantField()` — never `applicant[rule.field]`, which is a prototype-pollution primitive. The same list is a CHECK constraint on `scheme_rules.field`; a test asserts the two stay identical.
+- **Units differ by design.** The loan engine is integer **paise**. The schemes engine is **rupees**. Convert only at the integration boundary. There must be no `* 100` / `/ 100` inside the eligibility code — a test greps for it.
+- **Groups are AND-combined**; `groupOperator` is the operator *inside* a group. OR-combining groups lets a failed hard limit be cancelled by an unrelated passing group, which tells users they may qualify for a scheme whose ceiling they exceed. Alternatives belong in a single OR group.
+- **A missing applicant value is `unknown`, never `fail`.** `NOT_IN` over an absent value must not resolve to a pass.
+- **Eligibility is server-side only.** `POST /api/schemes/eligibility` uses the anon-key server client with the caller's session, so RLS applies to it exactly as in the browser. Never add a service-role client, and never let a client submit a result — the Zod request schema is `.strict()`, so `verdict`/`eligible` are rejected outright.
+- `applicant-schema.ts` is **derived from the field registry**, not hand-written, so a field only has to be added in one place.
+- `schemes.target_groups` is **browse/filter metadata only**. Eligibility truth is `scheme_rules`.
+- Public catalogue shows `status = 'active'` only. PM-KISAN is deliberately `draft` because its facts were last verified `2026-01-15`; publish it only after real re-verification, and never invent a verification date.
+- `supabase/seed-demo.sql` holds clearly-labelled `DEMO_SCHEME_*` fixtures (one `active`, one `draft`) used by the RLS tests. They are **not real schemes** — never show them to users or copy their rules into real records.
+- Rules are structured data only: no JS, no `eval`, no `Function`. Never let a rule row contain code.
+- Domain language is deliberately cautious — `eligible` / `potentially_eligible` / `not_eligible`, and copy must never promise approval. The API returns the disclaimer in the response body so a client cannot forget it.
 
 ## Loan engine (`features/loan/engine/`) — the load-bearing code
 

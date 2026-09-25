@@ -81,12 +81,35 @@ describe.skipIf(skipReason !== null)('Supabase connection + row-level security (
   it('reaches the project and reads public reference data (public.schemes)', async () => {
     const { data, error } = await supabase
       .from('schemes')
-      .select('id, name_en, name_kn, official_url, last_verified')
+      .select('id, name_en, name_kn, official_url, last_verified, status')
       .limit(5);
 
     expect(error, `unexpected PostgREST error: ${error?.message}`).toBeNull();
     expect(data).not.toBeNull();
+    // Requires supabase/seed-demo.sql to have been applied. That file is what
+    // provides the single `active` scheme the public catalogue can see, because
+    // the real PM-KISAN row is deliberately left at status='draft' (its facts
+    // were last verified 2026-01-15 and have not been re-checked).
     expect(data!.length).toBeGreaterThan(0);
+  });
+
+  it('exposes only status=active schemes to anon', async () => {
+    // Migration 011 replaced the migration 008 catch-all `USING (true)` policy
+    // with a status filter. Draft, inactive and expired schemes must be
+    // invisible to the public, and PM-KISAN in particular must not appear.
+    const { data, error } = await supabase
+      .from('schemes')
+      .select('name_en, official_url, status');
+
+    expect(error).toBeNull();
+
+    for (const scheme of data ?? []) {
+      expect(scheme.status, `${scheme.name_en} must not be publicly visible`).toBe('active');
+    }
+
+    // The real scheme is real, but unverified, so it must be withheld.
+    const publicUrls = (data ?? []).map((s) => s.official_url);
+    expect(publicUrls).not.toContain('https://pmkisan.gov.in/');
   });
 
   it('round-trips bilingual scheme content without corrupting Kannada', async () => {
@@ -101,6 +124,48 @@ describe.skipIf(skipReason !== null)('Supabase connection + row-level security (
     // Kannada block entirely, so this catches encoding damage end to end.
     expect(data![0].name_kn).toMatch(CANNADA_RANGE);
     expect(data![0].name_kn.length).toBeGreaterThan(0);
+  });
+
+  it('reads scheme_rules for an active scheme and hides a draft scheme rules', async () => {
+    // The scheme_rules policy is a semi-join against public.schemes filtered to
+    // status='active', so a draft scheme's rules are unreadable even though the
+    // rules themselves are not secret. The existence of an unreleased scheme
+    // stays private.
+    const { data, error } = await supabase
+      .from('scheme_rules')
+      .select('id, scheme_id, field, operator, value, required, rule_group, group_operator');
+
+    expect(error, 'anon should be able to read scheme_rules').toBeNull();
+    expect(data).not.toBeNull();
+
+    // Every visible rule must belong to an active scheme.
+    const { data: activeSchemes } = await supabase.from('schemes').select('id');
+    const activeIds = new Set((activeSchemes ?? []).map((s) => s.id));
+
+    for (const rule of data ?? []) {
+      expect(activeIds.has(rule.scheme_id)).toBe(true);
+    }
+  });
+
+  it('DENIES anon writes on public.scheme_rules', async () => {
+    // Reference data is service-role only. Rules are not a client write path.
+    const { error } = await supabase
+      .from('scheme_rules')
+      // @ts-expect-error deliberately partial payload; the write must be refused
+      // at the privilege layer before any column validation is attempted.
+      .insert({ field: 'age' });
+
+    expect(error, 'anon must not insert into public.scheme_rules').not.toBeNull();
+  });
+
+  it('DENIES anon any access to public.user_roles', async () => {
+    // user_roles has RLS enabled with ZERO policies and all client grants
+    // revoked, so there is no code path by which a user can read a role record
+    // — including their own. Self-promotion is structurally impossible.
+    const { data, error } = await supabase.from('user_roles').select('user_id, role');
+
+    expect(error, 'anon must not read public.user_roles').not.toBeNull();
+    expect(data === null || data.length === 0).toBe(true);
   });
 
   it('allows anon SELECT on the other public reference tables', async () => {
