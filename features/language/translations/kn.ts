@@ -44,6 +44,7 @@ export const kn: TranslationKeys = {
       emiRow: 'ಆರಂಭಿಕ ತಿಂಗಳ ಕಂತು (EMI)',
       interestRow: 'ಒಟ್ಟು ಬಡ್ಡಿ ಪಾವತಿ',
       outflowRow: 'ಒಟ್ಟು ಹೊರಹೋಗುವ ಮೊತ್ತ',
+      closeBtn: 'ಹೋಲಿಕೆ ಮುಚ್ಚಿ',
     },
   },
   home: {

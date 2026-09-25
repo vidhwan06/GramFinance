@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, forwardRef } from 'react';
+import React, { useId, InputHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -9,7 +9,13 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, helperText, id, ...props }, ref) => {
-    const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    // useId guarantees a unique DOM id. Deriving it from the label text alone
+    // produced collisions: LoanComparisonCard renders "Option A" and "Option B"
+    // with identical labels, so all eight inputs shared four ids and clicking
+    // option B's label focused option A's field. An explicit `id` still wins so
+    // ids can stay readable and stable where they matter.
+    const generatedId = useId();
+    const inputId = id ?? (label ? `${label.toLowerCase().replace(/\s+/g, '-')}-${generatedId}` : generatedId);
 
     return (
       <div className="w-full flex flex-col space-y-1.5">

@@ -1,17 +1,33 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { Database } from '@/types/database';
+import { getMissingSupabaseEnvVars, getSupabasePublicEnv } from './env';
 
+/**
+ * Server-side Supabase client for Server Components, Server Actions and
+ * Route Handlers.
+ *
+ * Uses the anon key plus the user's session cookie, so row-level security
+ * applies exactly as it does in the browser. It is NOT a privileged client:
+ * never use it to bypass RLS. A service-role client would be a separate,
+ * server-only module, and does not exist yet.
+ *
+ * `cookies()` is async in Next.js 15, which is why this is an async function.
+ * Callers must `await createClient()`.
+ */
 export async function createClient() {
-  const cookieStore = await cookies();
+  const env = getSupabasePublicEnv();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables for server.');
+  if (!env) {
+    throw new Error(
+      `Missing Supabase environment variables: ${getMissingSupabaseEnvVars().join(', ')}. ` +
+        'Copy .env.example to .env.local and fill in the NEXT_PUBLIC_* values.'
+    );
   }
 
-  return createServerClient(supabaseUrl, supabaseAnonKey, {
+  const cookieStore = await cookies();
+
+  return createServerClient<Database>(env.url, env.anonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -22,7 +38,9 @@ export async function createClient() {
             cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
           );
         } catch {
-          // Called from a Server Component
+          // Next.js throws when cookies are written from a Server Component,
+          // which only has read access. This is expected, not an error: session
+          // refreshes are then persisted by middleware.ts on the next request.
         }
       },
     },

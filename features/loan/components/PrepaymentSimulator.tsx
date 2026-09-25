@@ -11,9 +11,22 @@ import { PiggyBank, ArrowRight, Info } from 'lucide-react';
 export interface PrepaymentSimulatorProps {
   engineResult: EngineLoanResult;
   onPrepaymentChange: (prepayments: { month: number; amount: number }[]) => void;
+  /**
+   * Bilingual message describing why the current prepayment input is invalid.
+   *
+   * When set, the outcome panels are hidden. Previously an out-of-range month
+   * was silently filtered out of the engine config while the panel still
+   * rendered, so the user was shown "Interest Saved: ₹0" as though a simulation
+   * had actually run.
+   */
+  prepaymentError?: string | null;
 }
 
-export function PrepaymentSimulator({ engineResult, onPrepaymentChange }: PrepaymentSimulatorProps) {
+export function PrepaymentSimulator({
+  engineResult,
+  onPrepaymentChange,
+  prepaymentError,
+}: PrepaymentSimulatorProps) {
   const [amount, setAmount] = useState<number>(0);
   const [month, setMonth] = useState<number>(12);
   const { language } = useLanguage();
@@ -60,16 +73,18 @@ export function PrepaymentSimulator({ engineResult, onPrepaymentChange }: Prepay
           <Input
             label={language === 'kn' ? 'ಯಾವ ತಿಂಗಳಲ್ಲಿ (Month #):' : 'In Month Number:'}
             type="number"
+            inputMode="numeric"
             value={month || ''}
             onChange={(e) => handleApply(amount, parseInt(e.target.value, 10) || 1)}
             placeholder="12"
             min={1}
             max={engineResult.schedule.actualTenureMonths}
+            error={prepaymentError ?? undefined}
           />
         </div>
 
-        {/* Dual Scenario Display */}
-        {analysis && amount > 0 && (
+        {/* Dual Scenario Display — only when the input is actually valid. */}
+        {analysis && amount > 0 && !prepaymentError && (
           <div className="pt-3 border-t border-indigo-200 space-y-4 animate-fade-in">
             <h4 className="text-sm font-bold text-indigo-950">
               {language === 'kn' ? 'ಎರಡು ಪರ್ಯಾಯ ಪರಿಣಾಮಗಳ ವಿವರಣೆ:' : 'Two Numerical Outcomes Comparison:'}

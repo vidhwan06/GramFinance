@@ -21,7 +21,9 @@ const config: Config = {
           900: '#14532d',
         },
         warning: {
-          50: '#fffbe finished',
+          // Was '#fffbe finished' — a corrupted value that emitted broken CSS
+          // for any bg-warning-50 / border-warning-50 class. This is amber-50.
+          50: '#fffbeb',
           500: '#f59e0b',
           600: '#d97706',
           700: '#b45309',

@@ -42,6 +42,7 @@ export const en = {
       emiRow: 'Initial Monthly EMI',
       interestRow: 'Total Interest Payable',
       outflowRow: 'Total Cash Outflow',
+      closeBtn: 'Close comparison',
     },
   },
   home: {

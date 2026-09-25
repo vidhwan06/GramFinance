@@ -47,12 +47,17 @@ export function LoanComparisonCard() {
           <span>{labels.cardTitle}</span>
         </CardTitle>
         <div className="flex space-x-2">
-          <Button variant="ghost" size="sm" onClick={copyAToB} title={labels.copyBtn}>
-            <Copy className="h-4 w-4 mr-1" />
+          <Button variant="ghost" size="sm" onClick={copyAToB}>
+            <Copy className="h-4 w-4 mr-1" aria-hidden="true" />
             <span>{labels.copyBtn}</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
-            ✕
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(false)}
+            aria-label={labels.closeBtn}
+          >
+            <span aria-hidden="true">✕</span>
           </Button>
         </div>
       </CardHeader>
@@ -68,31 +73,38 @@ export function LoanComparisonCard() {
             </h4>
             <div className="space-y-2">
               <Input
+                id="compare-a-principal"
                 label={labels.principal}
                 type="number"
+                inputMode="decimal"
                 value={configA.principalPaise / 100 || ''}
                 onChange={(e) =>
                   updateConfigA({ principalPaise: (parseFloat(e.target.value) || 0) * 100 })
                 }
               />
               <Input
+                id="compare-a-rate"
                 label={labels.rate}
                 type="number"
-                step="0.1"
+                inputMode="decimal"
+                step="0.01"
                 value={configA.annualInterestRate || ''}
                 onChange={(e) =>
                   updateConfigA({ annualInterestRate: parseFloat(e.target.value) || 0 })
                 }
               />
               <Input
+                id="compare-a-tenure"
                 label={labels.tenure}
                 type="number"
+                inputMode="numeric"
                 value={configA.tenureMonths || ''}
                 onChange={(e) =>
                   updateConfigA({ tenureMonths: parseInt(e.target.value, 10) || 1 })
                 }
               />
               <Select
+                id="compare-a-method"
                 label={labels.method}
                 value={configA.interestMethod}
                 onChange={(e) =>
@@ -118,31 +130,38 @@ export function LoanComparisonCard() {
             </h4>
             <div className="space-y-2">
               <Input
+                id="compare-b-principal"
                 label={labels.principal}
                 type="number"
+                inputMode="decimal"
                 value={configB.principalPaise / 100 || ''}
                 onChange={(e) =>
                   updateConfigB({ principalPaise: (parseFloat(e.target.value) || 0) * 100 })
                 }
               />
               <Input
+                id="compare-b-rate"
                 label={labels.rate}
                 type="number"
-                step="0.1"
+                inputMode="decimal"
+                step="0.01"
                 value={configB.annualInterestRate || ''}
                 onChange={(e) =>
                   updateConfigB({ annualInterestRate: parseFloat(e.target.value) || 0 })
                 }
               />
               <Input
+                id="compare-b-tenure"
                 label={labels.tenure}
                 type="number"
+                inputMode="numeric"
                 value={configB.tenureMonths || ''}
                 onChange={(e) =>
                   updateConfigB({ tenureMonths: parseInt(e.target.value, 10) || 1 })
                 }
               />
               <Select
+                id="compare-b-method"
                 label={labels.method}
                 value={configB.interestMethod}
                 onChange={(e) =>

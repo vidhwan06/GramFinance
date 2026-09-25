@@ -1,4 +1,4 @@
-import React, { SelectHTMLAttributes, forwardRef } from 'react';
+import React, { useId, SelectHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface SelectOption {
@@ -15,7 +15,10 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, label, options, error, helperText, id, ...props }, ref) => {
-    const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+    // See Input.tsx: label-derived ids collided when the same label appeared
+    // more than once on a page. useId keeps every control uniquely addressable.
+    const generatedId = useId();
+    const selectId = id ?? (label ? `${label.toLowerCase().replace(/\s+/g, '-')}-${generatedId}` : generatedId);
 
     return (
       <div className="w-full flex flex-col space-y-1.5">
@@ -33,6 +36,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className
           )}
           aria-invalid={error ? 'true' : 'false'}
+          aria-describedby={error ? `${selectId}-error` : helperText ? `${selectId}-helper` : undefined}
           {...props}
         >
           {options.map((option) => (
@@ -42,10 +46,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="text-sm font-medium text-red-600">{error}</p>
+          <p id={`${selectId}-error`} className="text-sm font-medium text-red-600">{error}</p>
         )}
         {!error && helperText && (
-          <p className="text-sm text-gray-600">{helperText}</p>
+          <p id={`${selectId}-helper`} className="text-sm text-gray-600">{helperText}</p>
         )}
       </div>
     );
