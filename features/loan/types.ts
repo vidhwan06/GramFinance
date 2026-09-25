@@ -1,17 +1,35 @@
-export type LoanCalculationMethod = 'reducing' | 'flat';
-
 export interface LoanInput {
-  principal: number;
-  interestRate: number; // annual percentage
-  tenureMonths: number;
-  processingFee: number;
-  method: LoanCalculationMethod;
+  principal: number; // Principal amount in INR
+  interestRate: number; // Annual interest rate in %
+  tenureMonths: number; // Tenure in months
+  processingFee: number; // Processing fee in INR
+}
+
+export interface LoanValidationErrors {
+  principal?: string;
+  interestRate?: string;
+  tenureMonths?: string;
+  processingFee?: string;
+}
+
+export interface PlainLanguageSummary {
+  monthlyText: string;
+  interestText: string;
+  totalText: string;
+  estimateDisclaimer: string;
 }
 
 export interface LoanResult {
-  emi: number;
+  monthlyEmi: number;
   totalInterest: number;
   totalRepayment: number;
-  effectiveCostPercentage: number;
-  plainLanguageSummary: string;
+  processingFee: number;
+  totalPayableAmount: number;
+  plainLanguageSummary: PlainLanguageSummary;
+}
+
+export interface CalculationDetails {
+  method: 'reducing-balance';
+  methodLabel: string;
+  assumptionsText: string;
 }
