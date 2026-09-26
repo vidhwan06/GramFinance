@@ -107,10 +107,11 @@ describe.skipIf(skipReason !== null)('Supabase connection + row-level security (
       expect(scheme.status, `${scheme.name_en} must not be publicly visible`).toBe('active');
     }
 
-    // PM-KISAN and PMUY are now active and must be publicly visible.
+    // PM-KISAN, PMUY, and PM Vishwakarma are now active and must be publicly visible.
     const publicUrls = (data ?? []).map((s) => s.official_url);
     expect(publicUrls).toContain('https://pmkisan.gov.in/');
     expect(publicUrls).toContain('https://pmuy.gov.in/');
+    expect(publicUrls).toContain('https://www.pmvishwakarma.gov.in/');
   });
 
   it('round-trips bilingual scheme content without corrupting Kannada', async () => {

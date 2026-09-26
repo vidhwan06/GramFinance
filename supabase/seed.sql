@@ -227,11 +227,10 @@ SELECT s.id, 1, 'AND', 'eligibility', 'poorHousehold', '=', 'true', true,
 FROM public.schemes s WHERE s.official_url = 'https://pmuy.gov.in/';
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- PM Vishwakarma — scheme row (kept as DRAFT)
+-- PM Vishwakarma — scheme row (ACTIVE)
 -- ─────────────────────────────────────────────────────────────────────────────
--- PM Vishwakarma is a new scheme. It is deliberately seeded as 'draft' and
--- must not be activated until a separate official-source verification and
--- review step.
+-- PM Vishwakarma is active. status is deliberately NOT part of the DO UPDATE
+-- set below, so re-running this seed after activation will not demote it.
 -- ─────────────────────────────────────────────────────────────────────────────
 INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified, status)
 VALUES (
@@ -243,7 +242,7 @@ VALUES (
     ARRAY['Aadhaar authentication through CSC', 'Proof of trade engagement', 'Bank account details'],
     'https://www.pmvishwakarma.gov.in/',
     '2026-09-26',
-    'draft'
+    'active'
 ) ON CONFLICT (official_url) DO UPDATE SET
     name_en             = EXCLUDED.name_en,
     name_kn             = EXCLUDED.name_kn,

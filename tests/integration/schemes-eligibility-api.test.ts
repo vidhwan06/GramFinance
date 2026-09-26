@@ -117,10 +117,11 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
     for (const outcome of json.data!.results) {
       expect(outcome.scheme.status).toBe('active');
     }
-    // PM-KISAN and PMUY are now active and must be discoverable.
+    // PM-KISAN, PMUY, and PM Vishwakarma are now active and must be discoverable.
     const urls = json.data!.results.map((r) => r.scheme.nameEn);
     expect(urls.join(' ')).toMatch(/PM-KISAN|Kisan Samman/i);
     expect(urls.join(' ')).toMatch(/PMUY|Ujjwala/i);
+    expect(urls.join(' ')).toMatch(/Vishwakarma/i);
   });
 
   it('carries the disclaimer so a client cannot omit it', async () => {
@@ -131,6 +132,9 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
 
   it('reports a scheme with no information as potentially eligible, not eligible', async () => {
     const { json } = await call({ applicant: {} });
+
+    // Only real schemes should appear; demo schemes are inactive/draft
+    expect(json.data!.results.length).toBe(3);
 
     for (const outcome of json.data!.results) {
       expect(outcome.eligibility.status).not.toBe('eligible');

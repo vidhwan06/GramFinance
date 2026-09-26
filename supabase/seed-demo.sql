@@ -28,7 +28,7 @@
 BEGIN;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- DEMO_SCHEME_001 — active
+-- DEMO_SCHEME_001 — inactive
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Exercises every V1 operator across the registry: scalar comparisons, a
 -- two-element IN list, and a NOT_IN list.
@@ -48,7 +48,7 @@ VALUES (
     ARRAY['Aadhaar Card (DEMO)', 'Income Certificate (DEMO)'],
     'https://example.invalid/demo/education-loan',
     '2026-09-25',
-    'active'
+    'inactive'
 )
 ON CONFLICT (official_url) DO UPDATE SET
     name_en            = EXCLUDED.name_en,

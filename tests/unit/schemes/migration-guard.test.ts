@@ -240,8 +240,8 @@ describe('demo seed provides the active/draft fixture pair', () => {
     expect(descriptions.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('seeds one active and one draft scheme', () => {
-    expect(demoSeed).toMatch(/'active'\s*\)\s*ON\s+CONFLICT/i);
+  it('seeds one inactive and one draft scheme', () => {
+    expect(demoSeed).toMatch(/'inactive'\s*\)\s*ON\s+CONFLICT/i);
     expect(demoSeed).toMatch(/'draft'\s*\)\s*ON\s+CONFLICT/i);
   });
 
