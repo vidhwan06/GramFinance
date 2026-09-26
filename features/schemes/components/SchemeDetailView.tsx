@@ -30,16 +30,31 @@ export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
 
   const isNationwide = scheme.states.length === 0 || scheme.states.includes('ALL');
 
-  const conditionRows = scheme.rules.map((rule) => {
-    const definition = getSchemeFieldDefinition(rule.field);
-    const fieldLabel = definition
-      ? language === 'kn'
-        ? definition.labelKn
-        : definition.labelEn
-      : rule.field;
-    const authored = language === 'kn' ? rule.descriptionKn : rule.descriptionEn;
-    return { id: rule.id, fieldLabel, authored, operator: rule.operator, expected: String(rule.value) };
-  });
+  // Group rules by their ruleGroup for human-readable display.
+  const groupedRules: Record<number, typeof scheme.rules> = {};
+  for (const rule of scheme.rules) {
+    const group = rule.ruleGroup;
+    if (!groupedRules[group]) groupedRules[group] = [];
+    groupedRules[group].push(rule);
+  }
+
+  const groupNumbers = Object.keys(groupedRules).map(Number).sort((a, b) => a - b);
+
+  const conditionDescriptions = (rules: typeof scheme.rules): string[] => {
+    // Collect all authored descriptions in the group.
+    const descriptions: string[] = [];
+    for (const rule of rules) {
+      const authored = language === 'kn' ? rule.descriptionKn : rule.descriptionEn;
+      if (authored) {
+        descriptions.push(authored);
+      } else {
+        // Fallback: use the field label.
+        const def = getSchemeFieldDefinition(rule.field);
+        descriptions.push(def ? (language === 'kn' ? def.labelKn : def.labelEn) : rule.field);
+      }
+    }
+    return descriptions;
+  };
 
   return (
     <div className="space-y-6">
@@ -87,30 +102,48 @@ export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
         </Card>
       )}
 
-      {conditionRows.length > 0 && (
+      {scheme.rules.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">{t.schemes.conditionsTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul
-              className="space-y-2"
+            <div
+              className="space-y-3"
               aria-label={t.schemes.conditionsTitle}
               data-testid="scheme-conditions"
             >
-              {conditionRows.map((row) => (
-                <li
-                  key={row.id}
-                  className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-700"
-                >
-                  <span className="font-semibold">{row.fieldLabel}</span>{' '}
-                  <span className="text-gray-500">
-                    {row.operator} {row.expected}
-                  </span>
-                  {row.authored && <span className="block text-xs mt-1">{row.authored}</span>}
-                </li>
-              ))}
-            </ul>
+              {groupNumbers.map((groupNum) => {
+                const rules = groupedRules[groupNum];
+                const groupOp = rules[0]?.groupOperator ?? 'AND';
+                const descriptions = conditionDescriptions(rules);
+                return (
+                  <div
+                    key={groupNum}
+                    className="rounded-lg border border-gray-200 bg-white p-4"
+                  >
+                    <div className="space-y-1">
+                      {descriptions.map((desc, idx) => (
+                        <p key={idx} className="text-sm text-gray-700">
+                          <span className="font-semibold">{desc}</span>
+                        </p>
+                      ))}
+                    </div>
+                    {rules.length > 1 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {groupOp === 'OR'
+                          ? (language === 'kn'
+                              ? 'ಈ ನಿಯಮಗಳಲ್ಲಿ ಕನಿಷ್ಟ ಒಂದು ಪೂರೈಯಬೇಕು.'
+                              : 'At least one of these conditions must be met.')
+                          : (language === 'kn'
+                              ? 'ಈ ನಿಯಮಗಳೆಲ್ಲವೂ ಪೂರೈಯಬೇಕು.'
+                              : 'All of these conditions must be met.')}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}

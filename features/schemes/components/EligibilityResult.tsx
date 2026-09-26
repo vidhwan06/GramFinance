@@ -85,6 +85,9 @@ export function EligibilityResult({
 
       {failedRules.length > 0 && (
         <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2">
+            {language === 'kn' ? 'ಪೂರೈಯದ ನಿಯಮಗಳು' : 'Conditions not met'}
+          </h3>
           <RuleOutcomeList
             evaluations={failedRules}
             language={language}
@@ -95,6 +98,9 @@ export function EligibilityResult({
 
       {unknownRules.length > 0 && (
         <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2">
+            {language === 'kn' ? 'ಮಾಹಿತಿ ಕಾಣೆಯಾಗಿರುವ ನಿಯಮಗಳು' : 'Conditions needing information'}
+          </h3>
           <RuleOutcomeList
             evaluations={unknownRules}
             language={language}
@@ -105,6 +111,9 @@ export function EligibilityResult({
 
       {passedRules.length > 0 && (
         <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2">
+            {language === 'kn' ? 'ಪೂರೈದ ನಿಯಮಗಳು' : 'Conditions met'}
+          </h3>
           <RuleOutcomeList
             evaluations={passedRules}
             language={language}

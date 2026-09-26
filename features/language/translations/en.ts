@@ -97,6 +97,12 @@ export const en = {
       fail: 'Not met',
       unknown: 'Needs information',
     },
+    selectPlaceholder: 'Select an option',
+    conditionsNotMet: 'Conditions not met',
+    conditionsNeedingInfo: 'Conditions needing information',
+    conditionsMet: 'Conditions met',
+    orGroupHint: 'At least one of these conditions must be met.',
+    andGroupHint: 'All of these conditions must be met.',
   },
   home: {
     welcomeTitle: 'GramFinance',

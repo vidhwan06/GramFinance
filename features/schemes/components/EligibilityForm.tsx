@@ -14,6 +14,7 @@ import {
   buildApplicantPayload,
   buildFieldControls,
   validateRawValues,
+  type FieldControl,
   type RawFormValues,
 } from '../eligibility/form-fields';
 import type { SchemeFieldName } from '../eligibility/field-registry';
@@ -50,16 +51,26 @@ export interface EligibilityFormProps {
 export function EligibilityForm({ schemeId, requiredFields, language, labels }: EligibilityFormProps) {
   const { t } = useLanguage();
   const [values, setValues] = useState<RawFormValues>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({ });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [result, setResult] = useState<SchemeOutcome | null>(null);
   const [disclaimer, setDisclaimer] = useState<{ en: string; kn: string } | null>(null);
 
-  const controls = useMemo(
+  const allControls = useMemo(
     () => buildFieldControls(requiredFields, language),
     [requiredFields, language]
   );
+
+  // Filter controls based on conditional visibility.
+  const controls = useMemo(() => {
+    return allControls.filter((control) => {
+      if (!control.visibleWhen) return true;
+      const dependencyValue = values[control.visibleWhen.field];
+      return dependencyValue === control.visibleWhen.value;
+    });
+  }, [allControls, values]);
+
   const messages = language === 'kn' ? KN_MESSAGES : EN_MESSAGES;
 
   const handleChange = (field: SchemeFieldName, value: string) => {
@@ -73,6 +84,7 @@ export function EligibilityForm({ schemeId, requiredFields, language, labels }: 
   };
 
   const submit = async () => {
+    // Validate only the currently visible controls.
     const validationErrors = validateRawValues(controls, values, messages);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) {
@@ -141,7 +153,60 @@ export function EligibilityForm({ schemeId, requiredFields, language, labels }: 
     setResult(null);
   };
 
-  if (controls.length === 0 && !result) {
+  /** Renders a single control based on its kind. */
+  const renderControl = (control: FieldControl) => {
+    const id = `eligibility-field-${control.field}`;
+
+    if (control.kind === 'boolean') {
+      return (
+        <Select
+          key={control.field}
+          id={id}
+          label={control.label}
+          value={values[control.field] ?? ''}
+          onChange={(e) => handleChange(control.field, e.target.value)}
+          options={[{ value: '', label: language === 'kn' ? 'ಆಯ್ಕೆ ಮಾಡಿ' : 'Select an option' }, ...booleanOptions(language)]}
+          error={errors[control.field]}
+          helperText={control.helperText}
+          required
+        />
+      );
+    }
+
+    if (control.kind === 'select') {
+      return (
+        <Select
+          key={control.field}
+          id={id}
+          label={control.label}
+          value={values[control.field] ?? ''}
+          onChange={(e) => handleChange(control.field, e.target.value)}
+          options={[{ value: '', label: language === 'kn' ? 'ಆಯ್ಕೆ ಮಾಡಿ' : 'Select an option' }, ...(control.options ?? [])]}
+          error={errors[control.field]}
+          helperText={control.helperText}
+          required
+        />
+      );
+    }
+
+    return (
+      <Input
+        key={control.field}
+        id={id}
+        label={control.label}
+        type={control.kind === 'number' ? 'number' : 'text'}
+        inputMode={control.kind === 'number' ? 'decimal' : 'text'}
+        value={values[control.field] ?? ''}
+        onChange={(e) => handleChange(control.field, e.target.value)}
+        error={errors[control.field]}
+        helperText={errors[control.field] ? undefined : control.helperText}
+        placeholder={control.placeholder}
+        required
+      />
+    );
+  };
+
+  if (allControls.length === 0 && !result) {
     return (
       <Alert variant="info" title={labels.formTitle}>
         {labels.formHelp}
@@ -165,38 +230,7 @@ export function EligibilityForm({ schemeId, requiredFields, language, labels }: 
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {controls.map((control) => {
-              if (control.kind === 'boolean') {
-                return (
-                  <Select
-                    key={control.field}
-                    id={`eligibility-field-${control.field}`}
-                    label={control.label}
-                    value={values[control.field] ?? ''}
-                    onChange={(e) => handleChange(control.field, e.target.value)}
-                    options={[{ value: '', label: '-' }, ...booleanOptions(language)]}
-                    error={errors[control.field]}
-                    required
-                  />
-                );
-              }
-
-              return (
-                <Input
-                  key={control.field}
-                  id={`eligibility-field-${control.field}`}
-                  label={control.label}
-                  type={control.kind === 'number' ? 'number' : 'text'}
-                  inputMode={control.kind === 'number' ? 'decimal' : 'text'}
-                  value={values[control.field] ?? ''}
-                  onChange={(e) => handleChange(control.field, e.target.value)}
-                  error={errors[control.field]}
-                  helperText={errors[control.field] ? undefined : control.placeholder}
-                  placeholder={control.placeholder}
-                  required
-                />
-              );
-            })}
+            {controls.map(renderControl)}
           </div>
 
           <Button

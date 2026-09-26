@@ -1,10 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/Button';
 import { getSchemeFieldDefinition } from '../eligibility/field-registry';
 import type { RuleEvaluation } from '../types';
-import type { SchemeOutcome } from '../eligibility/check-eligibility-service';
 
 export interface RuleOutcomeListProps {
   evaluations: RuleEvaluation[];
@@ -38,11 +36,50 @@ function labelFor(field: string, language: 'en' | 'kn'): string {
 }
 
 /**
- * Rule-level outcomes exactly as the server returned them.
+ * Human-readable description of a rule outcome.
  *
- * Nothing is recomputed here. Each row shows the field, the required value and
- * the applicant's value, so the reasoning is auditable rather than a bare
- * "eligible" or "not eligible".
+ * Instead of showing raw operator/value syntax, this produces a plain-language
+ * description of what the rule checks and what the user's answer was.
+ *
+ * The backend description (if present) is always preferred — it is authored
+ * specifically for each rule. This function only provides a fallback for rules
+ * that don't have an authored description.
+ */
+function describeOutcome(
+  evaluation: RuleEvaluation,
+  language: 'en' | 'kn'
+): string {
+  // Prefer the authored description from the backend.
+  const authored = language === 'kn' ? evaluation.descriptionKn : evaluation.descriptionEn;
+  if (authored) return authored;
+
+  // Fallback: generate a human-readable description from the field metadata.
+  const fieldLabel = labelFor(evaluation.field, language);
+  const actual = evaluation.actual;
+
+  if (evaluation.outcome === 'unknown') {
+    return language === 'kn'
+      ? `${fieldLabel}: ಮಾಹಿತಿ ಕಾಣೆಯಾಗಿದೆ. ದಯವಿಟ್ಟು ಉತ್ತರವನ್ನು ನಮೂದಿಸಿ.`
+      : `${fieldLabel}: Information is missing. Please provide an answer.`;
+  }
+
+  if (actual === null) {
+    return language === 'kn'
+      ? `${fieldLabel}: ಉತ್ತರವನ್ನು ನಮೂದಿಸಿ.`
+      : `${fieldLabel}: No answer provided.`;
+  }
+
+  return language === 'kn'
+    ? `${fieldLabel}: ನಿಮ್ಮ ಉತ್ತರ "${actual}".`
+    : `${fieldLabel}: Your answer was "${actual}".`;
+}
+
+/**
+ * Rule-level outcomes with human-readable descriptions.
+ *
+ * Nothing is recomputed here. Each row shows a plain-language description of
+ * what the rule checks and what the user's answer was, so the reasoning is
+ * understandable rather than a bare "eligible" or "not eligible".
  */
 export function RuleOutcomeList({ evaluations, language, labels }: RuleOutcomeListProps) {
   if (evaluations.length === 0) return null;
@@ -57,6 +94,7 @@ export function RuleOutcomeList({ evaluations, language, labels }: RuleOutcomeLi
     <ul className="space-y-2">
       {evaluations.map((evaluation) => {
         const status = statusLabel[evaluation.outcome];
+        const description = describeOutcome(evaluation, language);
         return (
           <li
             key={evaluation.ruleId}
@@ -72,23 +110,9 @@ export function RuleOutcomeList({ evaluations, language, labels }: RuleOutcomeLi
                   {labelFor(evaluation.field, language)}
                 </p>
 
-                {evaluation.actual === null ? (
-                  <p className="text-xs mt-0.5">
-                    {labels.expected}: {evaluation.expected}
-                  </p>
-                ) : (
-                  <p className="text-xs mt-0.5 break-words">
-                    {labels.yourValue}: {evaluation.actual} &middot; {labels.expected}:{' '}
-                    {evaluation.expected}
-                  </p>
-                )}
-
-                {evaluation.descriptionEn && language === 'en' && (
-                  <p className="text-xs mt-1 opacity-80">{evaluation.descriptionEn}</p>
-                )}
-                {evaluation.descriptionKn && language === 'kn' && (
-                  <p className="text-xs mt-1 opacity-80">{evaluation.descriptionKn}</p>
-                )}
+                <p className="text-xs mt-0.5">
+                  {description}
+                </p>
               </div>
             </div>
           </li>

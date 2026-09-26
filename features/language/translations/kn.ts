@@ -125,5 +125,11 @@ export const kn: TranslationKeys = {
       fail: 'ಪೂರೈಯಿಲ್ಲ',
       unknown: 'ಮಾಹಿತಿ ಅಗತ್ಯ',
     },
+    selectPlaceholder: 'ಆಯ್ಕೆ ಮಾಡಿ',
+    conditionsNotMet: 'ಪೂರೈಯದ ನಿಯಮಗಳು',
+    conditionsNeedingInfo: 'ಮಾಹಿತಿ ಕಾಣೆಯಾಗಿರುವ ನಿಯಮಗಳು',
+    conditionsMet: 'ಪೂರೈದ ನಿಯಮಗಳು',
+    orGroupHint: 'ಈ ನಿಯಮಗಳಲ್ಲಿ ಕನಿಷ್ಟ ಒಂದು ಪೂರೈಯಬೇಕು.',
+    andGroupHint: 'ಈ ನಿಯಮಗಳೆಲ್ಲವೂ ಪೂರೈಯಬೇಕು.',
   },
 };

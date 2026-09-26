@@ -95,7 +95,7 @@ describe('SchemeDetailView condition rendering', () => {
     {
       id: 'r2',
       schemeId: SCHEME.id,
-      ruleGroup: 1,
+      ruleGroup: 2,
       groupOperator: 'AND',
       ruleType: 'eligibility',
       field: 'annualIncome',
@@ -121,20 +121,22 @@ describe('SchemeDetailView condition rendering', () => {
     const { container } = renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
 
     for (const rule of RULES) {
-      const occurrences = [...container.querySelectorAll('li')].filter(
-        (li) => li.textContent?.includes(rule.descriptionEn!) === true
+      const occurrences = [...container.querySelectorAll('p')].filter(
+        (el) => el.textContent?.includes(rule.descriptionEn!) === true
       ).length;
       expect(occurrences, `"${rule.descriptionEn}" rendered ${occurrences} times`).toBe(1);
     }
   });
 
-  it('renders one condition row per stored rule, with no invented rows', () => {
+  it('renders one condition group per rule group, with no invented groups', () => {
     renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
 
     // Scoped to the conditions list, not every list on the page: the document
     // checklist is a separate <ul> and would otherwise be counted too.
     const conditions = screen.getByTestId('scheme-conditions');
-    expect(conditions.querySelectorAll('li')).toHaveLength(DETAIL.rules.length);
+    // Rules are in groups 1 and 2, so there are 2 group cards.
+    const groupCards = conditions.querySelectorAll(':scope > div');
+    expect(groupCards.length).toBe(2);
   });
 
   it('does not hide genuinely distinct rules that share a field', () => {
