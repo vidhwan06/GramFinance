@@ -117,9 +117,9 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
     for (const outcome of json.data!.results) {
       expect(outcome.scheme.status).toBe('active');
     }
-    // The real PM-KISAN row is deliberately draft and must not be discoverable.
+    // PM-KISAN is now active and must be discoverable.
     const urls = json.data!.results.map((r) => r.scheme.nameEn);
-    expect(urls.join(' ')).not.toMatch(/PM-KISAN|Kisan Samman/i);
+    expect(urls.join(' ')).toMatch(/PM-KISAN|Kisan Samman/i);
   });
 
   it('carries the disclaimer so a client cannot omit it', async () => {

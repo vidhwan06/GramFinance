@@ -88,9 +88,9 @@ describe.skipIf(skipReason !== null)('published scheme catalogue (live)', () => 
     const schemes = await listActiveSchemes();
     const urls = schemes.map((s) => s.nameEn).join(' ');
 
-    // PM-KISAN is deliberately draft until re-verified, and the second demo
-    // fixture is draft too. Neither may reach the catalogue.
-    expect(urls).not.toMatch(/PM-?KISAN|Kisan Samman/i);
+    // PM-KISAN is now active and must appear in the catalogue.
+    expect(urls).toMatch(/PM-?KISAN|Kisan Samman/i);
+    // The second demo fixture is still draft and must not appear.
     expect(urls).not.toMatch(/farm-credit/i);
   });
 

@@ -39,13 +39,13 @@ INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, ta
 VALUES (
     'Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)',
     'ಪ್ರಧಾನ ಮಂತ್ರಿ ಕಿಸಾನ್ ಸಮ್ಮಾನ್ ನಿಧಿ (PM-KISAN)',
-    'Income support of Rs. 6,000 per year for landholding farmer families, paid in three equal installments. Subject to exclusion criteria including institutional landholders, government employees above MTS/Class IV grade, pensioners receiving Rs. 10,000 or more per month, income-tax payers, registered professionals, and NRIs.',
-    'ಭೂಮಿ ಹೊಂದಿರುವ ರೈತ ಕುಟುಂಬಗಳಿಗೆ ವರ್ಷಕ್ಕೆ ರೂ. 6,000 ಆದಾಯ ಬೆಂಬಲ, ಮೂರು ಸಮಾನ ಕಂತುಗಳಲ್ಲಿ. ಸಂಸ್ಥಾತ್ಮಕ ಭೂಮಿದಾರರು, MTS/ಕ್ಲಾಸ್ IV ಮೇಲಿನ ಸರ್ಕಾರಿ ಉದ್ಯೋಗಿಗಳು, ತಿಂಗಳಿಗೆ ರೂ. 10,000 ಅಥವಾ ಹೆಚ್ಚಿನ ಪನ್ಷನ್ ಪಡೆಯುವವರು, ಆದಾಯ ತೆರಿಗೆ ಪಾಡುವವರು, ನೋಂದಾಯಿತ ವೃತ್ತಿಪರರು ಮತ್ತು ಎನ್ ಆರ್ ಐಗಳನ್ನು ಹೊರತುಪಡಿಸಿ ಯೋಜನೆಯ ಅರ್ಹತೆ ನಿಯಮಗಳು.',
+    'Income support of Rs. 6,000 per year for landholding farmer families, paid in three equal installments. Eligibility estimation: GramFinance evaluates landholding status and exclusion criteria from your answers. Official verification: land-record verification, State/UT verification, and duplicate-beneficiary checks are required. Administrative requirements: eKYC, Aadhaar-seeded bank account, and PM-KISAN portal registration are mandatory. This is a preliminary assessment, not an official government eligibility determination.',
+    'ಭೂಮಿ ಹೊಂದಿರುವ ರೈತ ಕುಟುಂಬಗಳಿಗೆ ವರ್ಷಕ್ಕೆ ರೂ. 6,000 ಆದಾಯ ಬೆಂಬಲ, ಮೂರು ಸಮಾನ ಕಂತುಗಳಲ್ಲಿ. ಅರ್ಹತೆ ಅಂದಾಜು: GramFinance ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ ಭೂಮಿ ಹೊಂದಿಕೆ ಮತ್ತು ಹೊರಗಿಡುವಿಕೆ ಮಾನದಂಡಗಳನ್ನು ಮೌಲ್ಯಮಾಪನ ಮಾಡುತ್ತದೆ. ಅಧಿಕೃತ ಪರಿಶೀಲನೆ: ಭೂದಾಖಲೆ ಪರಿಶೀಲನೆ, ರಾಜ್ಯ/ಕೇಂದ್ರಾಡಳಿತ ಪ್ರದೇಶ ಪರಿಶೀಲನೆ ಮತ್ತು ನಕಲಿ ಪ್ರಯೋಜನ ಪರಿಶೀಲನೆ ಅಗತ್ಯವಿದೆ. ಆಡಳಿತ ಅಗತ್ಯಗಳು: eKYC, ಆಧಾರ್-ಬೀಜಿತ ಬ್ಯಾಂಕ್ ಖಾತೆ ಮತ್ತು PM-KISAN ಪೋರ್ಟಲ್ ಮೂಲಕ ನೋಂದಣಿ ಕಡ್ಡಾಯ. ಇದು ಪ್ರಾಥಮಿಕ ಮೌಲ್ಯಮಾಪನೆ, ಅಧಿಕೃತ ಸರ್ಕಾರಿ ಅರ್ಹತಾ ನಿರ್ಧಾರವಲ್ಲ.',
     ARRAY['farmer', 'small_holder', 'marginal_farmer'],
     ARRAY['Aadhaar Card', 'Land Records (Record of Rights)', 'Bank Account Details'],
     'https://pmkisan.gov.in/',
-    '2026-01-15',
-    'draft'
+    '2026-09-26',
+    'active'
 ) ON CONFLICT (official_url) DO UPDATE SET
     name_en             = EXCLUDED.name_en,
     name_kn             = EXCLUDED.name_kn,
