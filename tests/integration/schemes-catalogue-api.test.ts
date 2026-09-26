@@ -88,8 +88,9 @@ describe.skipIf(skipReason !== null)('published scheme catalogue (live)', () => 
     const schemes = await listActiveSchemes();
     const urls = schemes.map((s) => s.nameEn).join(' ');
 
-    // PM-KISAN is now active and must appear in the catalogue.
+    // PM-KISAN and PMUY are now active and must appear in the catalogue.
     expect(urls).toMatch(/PM-?KISAN|Kisan Samman/i);
+    expect(urls).toMatch(/PMUY|Ujjwala/i);
     // The second demo fixture is still draft and must not appear.
     expect(urls).not.toMatch(/farm-credit/i);
   });

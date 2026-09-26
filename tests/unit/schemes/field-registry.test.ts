@@ -34,6 +34,7 @@ describe('closed field registry', () => {
         'existingLoan',
         'gender',
         'govtEmployeeCategory',
+        'hasExistingLpgConnection',
         'incomeTaxPayer',
         'isNRI',
         'isPoliticalOfficeHolder',
@@ -42,6 +43,7 @@ describe('closed field registry', () => {
         'monthlyPension',
         'occupation',
         'ownsCultivableLand',
+        'poorHousehold',
         'requestedLoanAmount',
         'state',
       ].sort()
@@ -154,11 +156,11 @@ describe('monetary unit discipline (decision 13)', () => {
 });
 
 describe('TypeScript registry and SQL CHECK constraint agree', () => {
-  // The field CHECK is defined in migration 011 and widened by migration 014.
-  // We read the LATEST version (014) to verify the full field list.
-  const sql = readMigration('014_add_pmkisan_fields.sql');
+  // The field CHECK is defined in migration 011, widened by 014, then 015.
+  // We read the LATEST version (015) to verify the full field list.
+  const sql = readMigration('015_add_pmuy_fields.sql');
 
-  it('migration 014 exists', () => {
+  it('migration 015 exists', () => {
     expect(sql.length).toBeGreaterThan(0);
   });
 

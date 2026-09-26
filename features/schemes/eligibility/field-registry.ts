@@ -33,6 +33,7 @@ export const SCHEME_FIELD_NAMES = [
   'existingLoan',
   'gender',
   'govtEmployeeCategory',
+  'hasExistingLpgConnection',
   'incomeTaxPayer',
   'isNRI',
   'isPoliticalOfficeHolder',
@@ -41,6 +42,7 @@ export const SCHEME_FIELD_NAMES = [
   'monthlyPension',
   'occupation',
   'ownsCultivableLand',
+  'poorHousehold',
   'requestedLoanAmount',
   'state',
 ] as const;
@@ -117,6 +119,14 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     monetary: false,
     labelEn: 'Gender',
     labelKn: 'ಲಿಂಗ',
+  },
+  {
+    name: 'hasExistingLpgConnection',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Household already has an LPG connection',
+    labelKn: 'ಮನೆಯಲ್ಲಿ ಈಗಾಗಲೇ LPG ಸಂಪರ್ಕ ಇದೆಯೇ',
   },
   {
     name: 'loanPurpose',
@@ -206,6 +216,14 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     labelEn: 'Family owns cultivable land',
     labelKn: 'ಕುಟುಂಬವು ಭೂಮಿ ಹೊಂದಿದೆ',
   },
+  {
+    name: 'poorHousehold',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Belongs to a poor household',
+    labelKn: 'ಬಡತನದ ಕುಟುಂಬಕ್ಕೆ ಸೇರಿದವರೇ',
+  },
 ];
 
 /**
@@ -277,6 +295,16 @@ export interface SchemeApplicant {
    * official land-record confirmation by the State/UT.
    */
   ownsCultivableLand?: boolean;
+  /**
+   * Does the applicant's household already have an LPG connection from an
+   * Oil Marketing Company? Household-level, not personal.
+   */
+  hasExistingLpgConnection?: boolean;
+  /**
+   * Self-declared: does the applicant belong to a poor household based on
+   * the prescribed deprivation declaration? Subject to official verification.
+   */
+  poorHousehold?: boolean;
   /**
    * Government employee category. Values: "none", "mts_class4_groupd",
    * "other_govt". The MTS/Class IV/Group D category is the exception group

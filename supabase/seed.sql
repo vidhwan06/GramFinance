@@ -164,3 +164,64 @@ SELECT s.id, 8, 'AND', 'eligibility', 'isNRI', '=', 'false', true,
     'ಆದಾಯ ತೆರಿಗೆ ಕಾಯ್ದೆಯ ಪ್ರಕಾರ ಎನ್ ಆರ್ ಐಗಳಿಗೆ ಅರ್ಹತೆ ಇಲ್ಲ.',
     0
 FROM public.schemes s WHERE s.official_url = 'https://pmkisan.gov.in/';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PMUY — scheme row (ACTIVE)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PMUY is active. status is deliberately NOT part of the DO UPDATE set below,
+-- so re-running this seed after activation will not demote it back to draft.
+--
+-- To deactivate: set status = 'draft' manually. That is a deliberate human step.
+-- ─────────────────────────────────────────────────────────────────────────────
+INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified, status)
+VALUES (
+    'Pradhan Mantri Ujjwala Yojana (PMUY)',
+    'ಪ್ರಧಾನ ಮಂತ್ರಿ ಉಜ್ಜ್ವಲಾ ಯೋಜನೆ (PMUY)',
+    'Eligibility estimate: GramFinance uses the information you provide to estimate whether you may meet the PMUY eligibility conditions. Official verification: final eligibility is subject to verification by the relevant authorities and Oil Marketing Companies using the prescribed documents and declarations. Administrative requirements: applicants must complete the applicable KYC, documentation, and verification process.',
+    'ಅರ್ಹತೆ ಅಂದಾಜು: GramFinance ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ PMUY ಅರ್ಹತೆ ಷರತ್ತುಗಳನ್ನು ಪೂರೈಸುತ್ತೀರಾ ಎಂದು ಅಂದಾಜು ಮಾಡುತ್ತದೆ. ಅಧಿಕೃತ ಪರಿಶೀಲನೆ: ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕಾರಿಗಳು ಮತ್ತು ತೈಲ ಮಾರಾಟಾ ಕಂಪನಿಗಳ ಪರಿಶೀಲನೆಯ ಮೇಲೆ ಅವಲಂಬಿತವಾಗಿರುತ್ತದೆ. ಆಡಳಿತ ಅಗತ್ಯಗಳು: ಅರ್ಜಿದಾರರು ಅನ್ವಯಿಕ KYC, ದಾಖಲೆ ಮತ್ತು ಪರಿಶೀಲನೆ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಬೇಕು.',
+    ARRAY['woman', 'poor_household'],
+    ARRAY['KYC application form', 'Aadhaar or proof of identity', 'Proof of address', 'Ration card or family composition document', 'Bank account details', 'Deprivation Declaration'],
+    'https://pmuy.gov.in/',
+    '2026-09-26',
+    'active'
+) ON CONFLICT (official_url) DO UPDATE SET
+    name_en             = EXCLUDED.name_en,
+    name_kn             = EXCLUDED.name_kn,
+    description_en      = EXCLUDED.description_en,
+    description_kn      = EXCLUDED.description_kn,
+    target_groups       = EXCLUDED.target_groups,
+    required_documents  = EXCLUDED.required_documents,
+    last_verified       = EXCLUDED.last_verified;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PMUY — scheme_rules (4 rules, 1 AND group)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Group 1 (AND): age >= 18, gender = female, hasExistingLpgConnection = false, poorHousehold = true
+
+INSERT INTO public.scheme_rules (scheme_id, rule_group, group_operator, rule_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT s.id, 1, 'AND', 'eligibility', 'age', '>=', '18', true,
+    'You must be at least 18 years old.',
+    'ನೀವು ಕನಿಷ್ಟ 18 ವರ್ಷ ವಯಸ್ಸಿನವರಾಗಿರಬೇಕು.',
+    0
+FROM public.schemes s WHERE s.official_url = 'https://pmuy.gov.in/';
+
+INSERT INTO public.scheme_rules (scheme_id, rule_group, group_operator, rule_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT s.id, 1, 'AND', 'eligibility', 'gender', '=', '"female"', true,
+    'The PMUY connection must be issued to an adult woman.',
+    'PMUY ಸಂಪರ್ಕವು ವಯಸ್ಕ ಮಹಿಳೆಗೆ ನೀಡಲ್ಪಡಬೇಕು.',
+    1
+FROM public.schemes s WHERE s.official_url = 'https://pmuy.gov.in/';
+
+INSERT INTO public.scheme_rules (scheme_id, rule_group, group_operator, rule_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT s.id, 1, 'AND', 'eligibility', 'hasExistingLpgConnection', '=', 'false', true,
+    'Your household must not already have an LPG connection from an Oil Marketing Company.',
+    'ನಿಮ್ಮ ಮನೆಯಲ್ಲಿ ತೈಲ ಮಾರಾಟಾ ಕಂಪನಿಯಿಂದ ಈಗಾಗಲೇ LPG ಸಂಪರ್ಕವಿರಬಾರದು.',
+    2
+FROM public.schemes s WHERE s.official_url = 'https://pmuy.gov.in/';
+
+INSERT INTO public.scheme_rules (scheme_id, rule_group, group_operator, rule_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT s.id, 1, 'AND', 'eligibility', 'poorHousehold', '=', 'true', true,
+    'You must belong to a poor household based on the prescribed deprivation declaration.',
+    'ನೀವು ನಿಗದಿಪಡಿಸಿದ ಬಡತನದ ಹೇಳಿಕೆಯ ಆಧಾರದ ಮೇಲೆ ಬಡತನದ ಕುಟುಂಬಕ್ಕೆ ಸೇರಿದವರಾಗಿರಬೇಕು.',
+    3
+FROM public.schemes s WHERE s.official_url = 'https://pmuy.gov.in/';

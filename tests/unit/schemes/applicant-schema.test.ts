@@ -147,6 +147,19 @@ describe('applicantSchema', () => {
       expect(result.success).toBe(true);
     });
 
+    it('accepts the PMUY boolean fields', () => {
+      const result = applicantSchema.safeParse({
+        hasExistingLpgConnection: false,
+        poorHousehold: true,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects non-boolean values for PMUY boolean fields', () => {
+      expect(applicantSchema.safeParse({ hasExistingLpgConnection: 'yes' }).success).toBe(false);
+      expect(applicantSchema.safeParse({ poorHousehold: 1 }).success).toBe(false);
+    });
+
     it('rejects non-boolean values for PM-KISAN boolean fields', () => {
       expect(applicantSchema.safeParse({ ownsCultivableLand: 'yes' }).success).toBe(false);
       expect(applicantSchema.safeParse({ incomeTaxPayer: 1 }).success).toBe(false);

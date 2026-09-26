@@ -117,9 +117,10 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
     for (const outcome of json.data!.results) {
       expect(outcome.scheme.status).toBe('active');
     }
-    // PM-KISAN is now active and must be discoverable.
+    // PM-KISAN and PMUY are now active and must be discoverable.
     const urls = json.data!.results.map((r) => r.scheme.nameEn);
     expect(urls.join(' ')).toMatch(/PM-KISAN|Kisan Samman/i);
+    expect(urls.join(' ')).toMatch(/PMUY|Ujjwala/i);
   });
 
   it('carries the disclaimer so a client cannot omit it', async () => {
