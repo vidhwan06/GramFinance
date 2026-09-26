@@ -195,6 +195,48 @@ export interface InvalidRuleReport {
  */
 export type EligibilityStatus = 'eligible' | 'potentially_eligible' | 'not_eligible';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Nested rule tree types (Phase 5B)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A node in the rule tree: either a leaf rule or a nested group.
+ */
+export type RuleNode =
+  | { kind: 'rule'; rule: SchemeRule }
+  | { kind: 'group'; group: RuleGroupNode };
+
+/**
+ * A group node in the rule tree.
+ *
+ * Groups can contain both rules and other groups, allowing arbitrary nesting.
+ */
+export interface RuleGroupNode {
+  id: string;
+  schemeId: string;
+  parentGroupId: string | null;
+  groupOperator: RuleGroupOperator;
+  groupOrder: number;
+  children: RuleNode[];
+}
+
+/**
+ * Result of evaluating a single node in the tree.
+ *
+ * Preserves the tree structure so the UI can explain not just WHAT the result
+ * was, but WHY — including which nested group passed or failed.
+ */
+export interface NodeEvaluation {
+  nodeId: string;
+  nodeType: 'rule' | 'group';
+  outcome: RuleOutcome;
+  /** For rule nodes: the underlying rule evaluation. */
+  rule?: RuleEvaluation;
+  /** For group nodes: the operator and child evaluations. */
+  groupOperator?: RuleGroupOperator;
+  children?: NodeEvaluation[];
+}
+
 export interface SchemeEligibilityResult {
   schemeId: string;
   status: EligibilityStatus;
@@ -215,6 +257,8 @@ export interface SchemeEligibilityResult {
   groupResults: GroupEvaluation[];
   /** Structurally invalid rules that could not be evaluated at all. */
   invalidRules: InvalidRuleReport[];
+  /** Full tree result preserving nested structure. */
+  treeResult: NodeEvaluation | null;
 }
 
 /**

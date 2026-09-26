@@ -9,8 +9,11 @@ import type {
   EligibilityStatus,
   GroupEvaluation,
   InvalidRuleReport,
+  NodeEvaluation,
   RuleEvaluation,
+  RuleGroupNode,
   RuleGroupOperator,
+  RuleNode,
   RuleOutcome,
   SchemeEligibilityResult,
   SchemeRule,
@@ -146,6 +149,144 @@ function statusFromOutcome(outcome: RuleOutcome): EligibilityStatus {
   return 'not_eligible';
 }
 
+/**
+ * Recursively evaluates a node in the rule tree.
+ *
+ * For rule nodes: delegates to the existing single-rule evaluator.
+ * For group nodes: recursively evaluates children, then reduces with the
+ * group's operator.
+ *
+ * Returns a NodeEvaluation that preserves the tree structure for explainability.
+ */
+function evaluateNode(
+  node: RuleNode,
+  applicant: SchemeApplicant
+): NodeEvaluation {
+  if (node.kind === 'rule') {
+    const result = evaluateRule(node.rule, applicant);
+
+    if (result.kind === 'invalid') {
+      return {
+        nodeId: node.rule.id,
+        nodeType: 'rule',
+        outcome: 'unknown',
+        rule: {
+          ruleId: node.rule.id,
+          field: node.rule.field,
+          operator: node.rule.operator,
+          expected: String(node.rule.value),
+          actual: null,
+          outcome: 'unknown',
+          required: node.rule.required,
+          descriptionEn: node.rule.descriptionEn,
+          descriptionKn: node.rule.descriptionKn,
+          reason: 'missing_value',
+        },
+      };
+    }
+
+    return {
+      nodeId: node.rule.id,
+      nodeType: 'rule',
+      outcome: result.evaluation.outcome,
+      rule: result.evaluation,
+    };
+  }
+
+  // Group node
+  const group = node.group;
+  const childResults = group.children.map(child => evaluateNode(child, applicant));
+  const outcomes = childResults.map(r => r.outcome);
+  const outcome = reduceOutcomes(outcomes, group.groupOperator);
+
+  return {
+    nodeId: group.id,
+    nodeType: 'group',
+    outcome,
+    groupOperator: group.groupOperator,
+    children: childResults,
+  };
+}
+
+/**
+ * Flattens a tree result into passed/failed/unknown rule lists.
+ */
+function flattenTreeResult(node: NodeEvaluation): {
+  passed: RuleEvaluation[];
+  failed: RuleEvaluation[];
+  unknown: RuleEvaluation[];
+} {
+  const passed: RuleEvaluation[] = [];
+  const failed: RuleEvaluation[] = [];
+  const unknown: RuleEvaluation[] = [];
+
+  function walk(n: NodeEvaluation): void {
+    if (n.nodeType === 'rule' && n.rule) {
+      if (n.rule.outcome === 'pass') passed.push(n.rule);
+      else if (n.rule.outcome === 'fail') failed.push(n.rule);
+      else unknown.push(n.rule);
+    }
+    if (n.children) {
+      for (const child of n.children) walk(child);
+    }
+  }
+
+  walk(node);
+  return { passed, failed, unknown };
+}
+
+/**
+ * Collects missing information from a tree result.
+ */
+function collectMissingFromTree(node: NodeEvaluation): string[] {
+  const missing = new Set<SchemeFieldName>();
+
+  function walk(n: NodeEvaluation): void {
+    if (n.nodeType === 'rule' && n.rule && n.rule.outcome === 'unknown' && n.rule.required) {
+      missing.add(n.rule.field);
+    }
+    if (n.children) {
+      for (const child of n.children) walk(child);
+    }
+  }
+
+  walk(node);
+  return [...missing].sort();
+}
+
+/**
+ * Evaluates a scheme's rule tree recursively.
+ *
+ * The root group is the entry point. Its operator determines top-level behavior.
+ * Children can be rules or nested groups.
+ */
+export function evaluateEligibilityTree(
+  schemeId: string,
+  rootGroup: RuleGroupNode,
+  applicant: SchemeApplicant
+): SchemeEligibilityResult {
+  const treeResult = evaluateNode({ kind: 'group', group: rootGroup }, applicant);
+  const { passed, failed, unknown } = flattenTreeResult(treeResult);
+  const missingInformation = collectMissingFromTree(treeResult);
+
+  return {
+    schemeId,
+    status: statusFromOutcome(treeResult.outcome),
+    passedRules: passed,
+    failedRules: failed,
+    unknownRules: unknown,
+    missingInformation,
+    groupResults: [], // Populated by caller if needed for flat display
+    invalidRules: [],
+    treeResult,
+  };
+}
+
+/**
+ * Legacy entry point: evaluates flat rules (backward compatible).
+ *
+ * Wraps flat rules in a root AND group and delegates to the tree evaluator.
+ */
 export function evaluateEligibility(
   schemeId: string,
   rules: readonly SchemeRule[],

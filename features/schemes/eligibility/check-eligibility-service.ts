@@ -1,7 +1,8 @@
-import { evaluateEligibility, collectRequiredFields } from './eligibility-engine';
+import { evaluateEligibility, evaluateEligibilityTree, collectRequiredFields } from './eligibility-engine';
 import type { SchemeApplicant, SchemeFieldName } from './field-registry';
 import type {
   EligibilityStatus,
+  RuleGroupNode,
   SchemeEligibilityResult,
   SchemeRule,
   SchemeStatus,
@@ -23,7 +24,10 @@ export interface SchemeForEvaluation {
   nameKn: string;
   status: SchemeStatus;
   lastVerified: string;
+  /** Flat rules (legacy, backward compatible). */
   rules: SchemeRule[];
+  /** Rule tree (new, preferred). */
+  rootGroup: RuleGroupNode | null;
   /** Rule ids that could not be mapped faithfully. Never blocks the result. */
   ruleProblems: string[];
 }
@@ -92,7 +96,10 @@ export function runEligibilityCheck(
       continue;
     }
 
-    const eligibility = evaluateEligibility(scheme.id, scheme.rules, applicant);
+    // Use tree evaluation when available, fall back to flat rules
+    const eligibility = scheme.rootGroup
+      ? evaluateEligibilityTree(scheme.id, scheme.rootGroup, applicant)
+      : evaluateEligibility(scheme.id, scheme.rules, applicant);
 
     byStatus[eligibility.status] += 1;
 

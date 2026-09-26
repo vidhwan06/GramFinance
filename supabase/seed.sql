@@ -225,3 +225,161 @@ SELECT s.id, 1, 'AND', 'eligibility', 'poorHousehold', '=', 'true', true,
     'ನೀವು ನಿಗದಿಪಡಿಸಿದ ಬಡತನದ ಹೇಳಿಕೆಯ ಆಧಾರದ ಮೇಲೆ ಬಡತನದ ಕುಟುಂಬಕ್ಕೆ ಸೇರಿದವರಾಗಿರಬೇಕು.',
     3
 FROM public.schemes s WHERE s.official_url = 'https://pmuy.gov.in/';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PM Vishwakarma — scheme row (kept as DRAFT)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PM Vishwakarma is a new scheme. It is deliberately seeded as 'draft' and
+-- must not be activated until a separate official-source verification and
+-- review step.
+-- ─────────────────────────────────────────────────────────────────────────────
+INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified, status)
+VALUES (
+    'Pradhan Mantri Vishwakarma',
+    'ಪ್ರಧಾನ ಮಂತ್ರಿ ವಿಶ್ವಕರ್ಮ',
+    'Eligibility estimate: GramFinance uses the information you provide to estimate whether you may meet the PM Vishwakarma eligibility conditions. Official verification: final eligibility is subject to the applicable government verification and registration process. Administrative requirements: registration is processed through the official PM Vishwakarma process/portal/CSC as applicable.',
+    'ಅರ್ಹತೆ ಅಂದಾಜು: GramFinance ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ PM Vishwakarma ಅರ್ಹತೆ ಷರತ್ತುಗಳನ್ನು ಪೂರೈಸುತ್ತೀರಾ ಎಂದು ಅಂದಾಜು ಮಾಡುತ್ತದೆ. ಅಧಿಕೃತ ಪರಿಶೀಲನೆ: ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕೃತ ಪರಿಶೀಲನೆ ಮತ್ತು ನೋಂದಣಿ ಪ್ರಕ್ರಿಯೆಗೆ ಒಳಪಟ್ಟಿದೆ. ಆಡಳಿತ ಅಗತ್ಯಗಳು: ನೋಂದಣಿ ಅಧಿಕೃತ PM Vishwakarma ಪ್ರಕ್ರಿಯೆ/ಪೋರ್ಟಲ್/CSC ಮೂಲಕ ಸಂಸ್ಕರಿಸಲ್ಪಡುತ್ತದೆ.',
+    ARRAY['artisans', 'craftspeople', 'traditional_trades'],
+    ARRAY['Aadhaar authentication through CSC', 'Proof of trade engagement', 'Bank account details'],
+    'https://www.pmvishwakarma.gov.in/',
+    '2026-09-26',
+    'draft'
+) ON CONFLICT (official_url) DO UPDATE SET
+    name_en             = EXCLUDED.name_en,
+    name_kn             = EXCLUDED.name_kn,
+    description_en      = EXCLUDED.description_en,
+    description_kn      = EXCLUDED.description_kn,
+    target_groups       = EXCLUDED.target_groups,
+    required_documents  = EXCLUDED.required_documents,
+    last_verified       = EXCLUDED.last_verified;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PM Vishwakarma — rule tree (nested groups)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- The rule tree uses the new rule_groups/rule_nodes architecture.
+-- Structure:
+--   ROOT AND
+--     ├── age >= 18
+--     ├── trade IN [18 trades]
+--     ├── worksWithHandsAndTools = true
+--     ├── selfEmployed = true
+--     ├── worksInUnorganisedSector = true
+--     ├── engagedInTrade = true
+--     ├── familyMemberAlreadyBeneficiary = false
+--     ├── governmentServiceOrFamilyMember = false
+--     └── LOAN OR
+--         ├── hasSimilarGovtLoanLast5Years = false
+--         ├── MUDRA AND
+--         │   ├── similarGovtLoanType = mudra
+--         │   └── similarGovtLoanFullyRepaid = true
+--         └── PM SVANidhi AND
+--             ├── similarGovtLoanType = pm_svanidhi
+--             └── similarGovtLoanFullyRepaid = true
+
+-- Step 1: Create root group
+INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
+SELECT s.id, NULL, 'AND', 0
+FROM public.schemes s WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/';
+
+-- Step 2: Create loan OR group under root
+INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
+SELECT s.id, rg.id, 'OR', 9
+FROM public.schemes s
+JOIN public.rule_groups rg ON rg.scheme_id = s.id AND rg.parent_group_id IS NULL
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/';
+
+-- Step 3: Create MUDRA AND group under loan OR
+INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
+SELECT s.id, rg.id, 'AND', 0
+FROM public.schemes s
+JOIN public.rule_groups rg ON rg.scheme_id = s.id AND rg.group_operator = 'OR'
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/';
+
+-- Step 4: Create PM SVANidhi AND group under loan OR
+INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
+SELECT s.id, rg.id, 'AND', 1
+FROM public.schemes s
+JOIN public.rule_groups rg ON rg.scheme_id = s.id AND rg.group_operator = 'OR'
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/';
+
+-- Step 5: Add 8 ordinary rules to root group
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'age', '>=', '18', true, 'You must be at least 18 years old.', 'ನೀವು ಕನಿಷ್ಟ 18 ವರ್ಷ ವಯಸ್ಸಿನವರಾಗಿರಬೇಕು.', 0
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'trade', 'IN', '["carpenter","boat_maker","armourer","blacksmith","hammer_tool_kit_maker","locksmith","goldsmith","potter","sculptor_stone_worker","cobbler_footwear_artisan","mason","basket_mat_broom_coir_weaver","doll_toy_maker","barber","garland_maker","washerman","tailor","fishing_net_maker"]', true, 'Your occupation must be one of the 18 traditional trades covered by PM Vishwakarma.', 'ನಿಮ್ಮ ವೃತ್ತಿಯು PM Vishwakarma ಅಡಿಯಲ್ಲಿರುವ 18 ಸಾಂಪ್ರದಾಯಿಕ ವೃತ್ತಿಗಳಲ್ಲಿ ಒಂದಾಗಿರಬೇಕು.', 1
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'worksWithHandsAndTools', '=', 'true', true, 'You must work with your hands and tools in the relevant trade.', 'ನೀವು ಸಂಬಂಧಿತ ವೃತ್ತಿಯಲ್ಲಿ ನಿಮ್ಮ ಕೈ ಮತ್ತು ಉಪಕರಣಗಳಿಂದ ಕೆಲಸ ಮಾಡಬೇಕು.', 2
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'selfEmployed', '=', 'true', true, 'You must work on a self-employed basis.', 'ನೀವು ಸ್ವಾಯತ್ತ ಉದ್ಯೋಗದ ಆಧಾರದ ಮೇಲೆ ಕೆಲಸ ಮಾಡಬೇಕು.', 3
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'worksInUnorganisedSector', '=', 'true', true, 'Your work must be in the unorganised sector.', 'ನಿಮ್ಮ ಕೆಲಸವು ಅಸಂಘಟಿತ ಕ್ಷೇತ್ರದಲ್ಲಿರಬೇಕು.', 4
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'engagedInTrade', '=', 'true', true, 'You must be engaged in the trade when you register.', 'ನೀವು ನೋಂದಣಿ ಮಾಡುವಾಗ ವೃತ್ತಿಯಲ್ಲಿ ತೊಡಗಿರಬೇಕು.', 5
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'familyMemberAlreadyBeneficiary', '=', 'false', true, 'Only one member of a family can receive benefits under PM Vishwakarma.', 'ಕುಟುಂಬದ ಒಬ್ಬ ಸದಸ್ಯರು ಮಾತ್ರ PM Vishwakarma ಅಡಿಯಲ್ಲಿ ಪ್ರಯೋಜನ ಪಡೆಯಬಲ್ಲರು.', 6
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'governmentServiceOrFamilyMember', '=', 'false', true, 'People in government service and their family members are not eligible.', 'ಸರ್ಕಾರಿ ಸೇವೆಯಲ್ಲಿರುವವರು ಮತ್ತು ಅವರ ಕುಟುಂಬದ ಸದಸ್ಯರಿಗೆ ಅರ್ಹತೆ ಇಲ್ಲ.', 7
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.parent_group_id IS NULL;
+
+-- Step 6: Add loan rules to loan OR group
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'hasSimilarGovtLoanLast5Years', '=', 'false', true, 'You must meet the scheme's rules for similar government loans taken during the previous five years.', 'ನೀವು ಕಳೆದ ಐದು ವರ್ಷಗಳಲ್ಲಿ ತೆಗೆದುಕೊಂಡ ಹೋಲಿಕೆಯ ಸರ್ಕಾರಿ ಸಾಲಗಳ ಬಗ್ಗೆ ಯೋಜನೆಯ ನಿಯಮಗಳನ್ನು ಪೂರೈಸಬೇಕು.', 0
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.group_operator = 'OR';
+
+-- Step 7: Add MUDRA rules
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'similarGovtLoanType', '=', '"mudra"', true, 'Fully repaid MUDRA loans are covered by the scheme's eligibility exception.', 'ಪೂರ್ತಿ ಮರುಪಾವತಿ ಮಾಡಿದ MUDRA ಸಾಲಗಳು ಯೋಜನೆಯ ಅರ್ಹತೆ ವಿನಾಯಿತಿಯಡಿಯಲ್ಲಿವೆ.', 0
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.group_operator = 'AND' AND rg.group_order = 0;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'similarGovtLoanFullyRepaid', '=', 'true', true, 'The MUDRA loan must have been fully repaid.', 'MUDRA ಸಾಲವು ಪೂರ್ತಿ ಮರುಪಾವತಿ ಮಾಡಲ್ಪಟ್ಟಿರಬೇಕು.', 1
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.group_operator = 'AND' AND rg.group_order = 0;
+
+-- Step 8: Add PM SVANidhi rules
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'similarGovtLoanType', '=', '"pm_svanidhi"', true, 'Fully repaid PM SVANidhi loans are covered by the scheme's eligibility exception.', 'ಪೂರ್ತಿ ಮರುಪಾವತಿ ಮಾಡಿದ PM SVANidhi ಸಾಲಗಳು ಯೋಜನೆಯ ಅರ್ಹತೆ ವಿನಾಯಿತಿಯಡಿಯಲ್ಲಿವೆ.', 0
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.group_operator = 'AND' AND rg.group_order = 1;
+
+INSERT INTO public.rule_nodes (group_id, node_type, field, operator, value, required, description_en, description_kn, priority)
+SELECT rg.id, 'rule', 'similarGovtLoanFullyRepaid', '=', 'true', true, 'The PM SVANidhi loan must have been fully repaid.', 'PM SVANidhi ಸಾಲವು ಪೂರ್ತಿ ಮರುಪಾವತಿ ಮಾಡಲ್ಪಟ್ಟಿರಬೇಕು.', 1
+FROM public.rule_groups rg
+JOIN public.schemes s ON s.id = rg.scheme_id
+WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/' AND rg.group_operator = 'AND' AND rg.group_order = 1;

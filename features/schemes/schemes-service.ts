@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
-import { toSchemeRules } from './eligibility/rule-mapper';
+import { toSchemeRules, reconstructRuleTree } from './eligibility/rule-mapper';
 import { runEligibilityCheck } from './eligibility/check-eligibility-service';
 import type { SchemeFieldName } from './eligibility/field-registry';
-import type { SchemeRule, SchemeStatus } from './types';
+import type { RuleGroupNode, SchemeRule, SchemeStatus } from './types';
 
 /**
  * Server-side reads for the Schemes module.
@@ -186,6 +186,29 @@ export async function getActiveSchemeWithDetails(
 
   const { rules, problems } = toSchemeRules(ruleData ?? []);
 
+  // Load rule tree (Phase 5B)
+  const { data: groupData, error: groupError } = await supabase
+    .from('rule_groups')
+    .select('*')
+    .eq('scheme_id', schemeId)
+    .order('group_order', { ascending: true });
+
+  if (groupError) {
+    throw new Error(`Could not load rule groups: ${groupError.code ?? 'UNKNOWN'}`);
+  }
+
+  const { data: nodeData, error: nodeError } = await supabase
+    .from('rule_nodes')
+    .select('*')
+    .in('group_id', groupData?.map(g => g.id) ?? [])
+    .order('priority', { ascending: true });
+
+  if (nodeError) {
+    throw new Error(`Could not load rule nodes: ${nodeError.code ?? 'UNKNOWN'}`);
+  }
+
+  const rootGroup = reconstructRuleTree(groupData ?? [], nodeData ?? []);
+
   // Reuse the exact Phase 4C service to work out which fields the form needs.
   // With an empty applicant nothing can pass, so this cannot produce a verdict
   // the user ever sees; it only yields requiredFields. Doing it here means the
@@ -199,6 +222,7 @@ export async function getActiveSchemeWithDetails(
         status: schemeRow.status,
         lastVerified: schemeRow.last_verified,
         rules,
+        rootGroup,
         ruleProblems: problems,
       },
     ],

@@ -44,7 +44,17 @@ export const SCHEME_FIELD_NAMES = [
   'ownsCultivableLand',
   'poorHousehold',
   'requestedLoanAmount',
+  'selfEmployed',
+  'similarGovtLoanFullyRepaid',
+  'similarGovtLoanType',
   'state',
+  'engagedInTrade',
+  'familyMemberAlreadyBeneficiary',
+  'governmentServiceOrFamilyMember',
+  'hasSimilarGovtLoanLast5Years',
+  'trade',
+  'worksInUnorganisedSector',
+  'worksWithHandsAndTools',
 ] as const;
 
 export type SchemeFieldName = (typeof SCHEME_FIELD_NAMES)[number];
@@ -224,6 +234,86 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     labelEn: 'Belongs to a poor household',
     labelKn: 'ಬಡತನದ ಕುಟುಂಬಕ್ಕೆ ಸೇರಿದವರೇ',
   },
+  {
+    name: 'selfEmployed',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Self-employed',
+    labelKn: 'ಸ್ವಾಯತ್ತ ಉದ್ಯೋಗ',
+  },
+  {
+    name: 'similarGovtLoanFullyRepaid',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Similar government loan fully repaid',
+    labelKn: 'ಹೋಲಿಕೆಯ ಸರ್ಕಾರಿ ಸಾಲ ಪೂರ್ತಿ ಮರುಪಾವತಿ',
+  },
+  {
+    name: 'similarGovtLoanType',
+    type: 'string',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Similar government loan type',
+    labelKn: 'ಹೋಲಿಕೆಯ ಸರ್ಕಾರಿ ಸಾಲ ಪ್ರಕಾರ',
+  },
+  {
+    name: 'engagedInTrade',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Currently engaged in the trade',
+    labelKn: 'ಪ್ರಸ್ತುತ ವೃತ್ತಿಯಲ್ಲಿ ತೊಡಗಿದ್ದೀರಾ',
+  },
+  {
+    name: 'familyMemberAlreadyBeneficiary',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Family member already a beneficiary',
+    labelKn: 'ಕುಟುಂಬದ ಸದಸ್ಯರು ಈಗಾಗಲೆ ಪ್ರಯೋಜನದಾರರೇ',
+  },
+  {
+    name: 'governmentServiceOrFamilyMember',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Government service or family member',
+    labelKn: 'ಸರ್ಕಾರಿ ಸೇವೆ ಅಥವಾ ಕುಟುಂಬದ ಸದಸ್ಯರು',
+  },
+  {
+    name: 'hasSimilarGovtLoanLast5Years',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Similar government loan in last 5 years',
+    labelKn: 'ಕಳೆದ 5 ವರ್ಷಗಳಲ್ಲಿ ಹೋಲಿಕೆಯ ಸರ್ಕಾರಿ ಸಾಲ',
+  },
+  {
+    name: 'trade',
+    type: 'string',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Traditional trade',
+    labelKn: 'ಸಾಂಪ್ರದಾಯಿಕ ವೃತ್ತಿ',
+  },
+  {
+    name: 'worksInUnorganisedSector',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Works in the unorganised sector',
+    labelKn: 'ಅಸಂಘಟಿತ ಕ್ಷೇತ್ರದಲ್ಲಿ ಕೆಲಸ ಮಾಡುತ್ತೀರಾ',
+  },
+  {
+    name: 'worksWithHandsAndTools',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Works with hands and tools',
+    labelKn: 'ಕೈ ಮತ್ತು ಉಪಕರಣಗಳಿಂದ ಕೆಲಸ ಮಾಡುತ್ತೀರಾ',
+  },
 ];
 
 /**
@@ -305,6 +395,26 @@ export interface SchemeApplicant {
    * the prescribed deprivation declaration? Subject to official verification.
    */
   poorHousehold?: boolean;
+  /** One of the 18 PM Vishwakarma notified trades. */
+  trade?: string;
+  /** Does the applicant work with their hands and tools? */
+  worksWithHandsAndTools?: boolean;
+  /** Is the applicant self-employed? */
+  selfEmployed?: boolean;
+  /** Does the applicant work in the unorganised sector? */
+  worksInUnorganisedSector?: boolean;
+  /** Is the applicant currently engaged in the trade? */
+  engagedInTrade?: boolean;
+  /** Has a family member already received PM Vishwakarma benefits? */
+  familyMemberAlreadyBeneficiary?: boolean;
+  /** Is the applicant or a family member in government service? */
+  governmentServiceOrFamilyMember?: boolean;
+  /** Has the applicant taken a similar government loan in the last 5 years? */
+  hasSimilarGovtLoanLast5Years?: boolean;
+  /** Type of similar government loan (mudra, pm_svanidhi, other_similar_govt_scheme, none). */
+  similarGovtLoanType?: string;
+  /** Has the similar government loan been fully repaid? */
+  similarGovtLoanFullyRepaid?: boolean;
   /**
    * Government employee category. Values: "none", "mts_class4_groupd",
    * "other_govt". The MTS/Class IV/Group D category is the exception group

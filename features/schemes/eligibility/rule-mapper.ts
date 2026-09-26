@@ -1,8 +1,10 @@
-import type { DbSchemeRule } from '@/types/database';
+import type { DbSchemeRule, DbRuleGroup, DbRuleNode } from '@/types/database';
 import { isKnownSchemeField, type SchemeFieldName } from './field-registry';
 import { isKnownRuleOperator } from './rule-evaluator';
 import type {
+  RuleGroupNode,
   RuleGroupOperator,
+  RuleNode,
   RuleOperator,
   SchemeRule,
   SchemeRuleType,
@@ -87,4 +89,89 @@ export function toSchemeRules(rows: readonly DbSchemeRule[]): {
   }
 
   return { rules, problems };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tree reconstruction (Phase 5B)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Reconstructs a rule tree from database rows.
+ *
+ * Takes flat rule_groups and rule_nodes rows and builds the nested tree
+ * structure. The root group (parent_group_id IS NULL) is the entry point.
+ *
+ * Returns null if no root group exists or if the tree is malformed.
+ */
+export function reconstructRuleTree(
+  groups: readonly DbRuleGroup[],
+  nodes: readonly DbRuleNode[]
+): RuleGroupNode | null {
+  // Build lookup maps
+  const groupMap = new Map<string, DbRuleGroup>();
+  for (const g of groups) {
+    groupMap.set(g.id, g);
+  }
+
+  const nodesByGroup = new Map<string, DbRuleNode[]>();
+  for (const n of nodes) {
+    const list = nodesByGroup.get(n.group_id) ?? [];
+    list.push(n);
+    nodesByGroup.set(n.group_id, list);
+  }
+
+  // Find root group
+  const roots = groups.filter(g => g.parent_group_id === null);
+  if (roots.length === 0) return null;
+  if (roots.length > 1) return null; // Multiple roots = malformed
+
+  const rootGroup = roots[0];
+
+  // Recursively build tree
+  function buildGroup(group: DbRuleGroup): RuleGroupNode {
+    const groupNodes = nodesByGroup.get(group.id) ?? [];
+    // Sort by priority
+    groupNodes.sort((a, b) => a.priority - b.priority);
+
+    const children: RuleNode[] = [];
+    for (const node of groupNodes) {
+      if (node.node_type === 'rule') {
+        children.push({ kind: 'rule', rule: nodeToSchemeRule(node) });
+      } else if (node.node_type === 'group' && node.child_group_id) {
+        const childGroup = groupMap.get(node.child_group_id);
+        if (childGroup) {
+          children.push({ kind: 'group', group: buildGroup(childGroup) });
+        }
+      }
+    }
+
+    return {
+      id: group.id,
+      schemeId: group.scheme_id,
+      parentGroupId: group.parent_group_id,
+      groupOperator: group.group_operator as RuleGroupOperator,
+      groupOrder: group.group_order,
+      children,
+    };
+  }
+
+  return buildGroup(rootGroup);
+}
+
+function nodeToSchemeRule(node: DbRuleNode): SchemeRule {
+  return {
+    id: node.id,
+    schemeId: node.group_id, // Will be overwritten by caller if needed
+    ruleGroup: 0, // Not used in tree mode
+    groupOperator: 'AND', // Not used in tree mode
+    ruleType: 'eligibility',
+    field: node.field as SchemeFieldName,
+    operator: node.operator as RuleOperator,
+    value: normaliseRuleValue(node.value),
+    required: node.required,
+    descriptionEn: node.description_en,
+    descriptionKn: node.description_kn,
+    priority: node.priority,
+    createdAt: node.created_at,
+  };
 }

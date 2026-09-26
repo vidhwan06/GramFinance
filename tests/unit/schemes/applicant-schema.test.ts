@@ -160,6 +160,34 @@ describe('applicantSchema', () => {
       expect(applicantSchema.safeParse({ poorHousehold: 1 }).success).toBe(false);
     });
 
+    it('accepts the PM Vishwakarma fields', () => {
+      const result = applicantSchema.safeParse({
+        trade: 'carpenter',
+        worksWithHandsAndTools: true,
+        selfEmployed: true,
+        worksInUnorganisedSector: true,
+        engagedInTrade: true,
+        familyMemberAlreadyBeneficiary: false,
+        governmentServiceOrFamilyMember: false,
+        hasSimilarGovtLoanLast5Years: false,
+        similarGovtLoanType: 'none',
+        similarGovtLoanFullyRepaid: false,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts all 18 PM Vishwakarma trades', () => {
+      const trades = [
+        'carpenter', 'boat_maker', 'armourer', 'blacksmith', 'hammer_tool_kit_maker',
+        'locksmith', 'goldsmith', 'potter', 'sculptor_stone_worker', 'cobbler_footwear_artisan',
+        'mason', 'basket_mat_broom_coir_weaver', 'doll_toy_maker', 'barber',
+        'garland_maker', 'washerman', 'tailor', 'fishing_net_maker',
+      ];
+      for (const trade of trades) {
+        expect(applicantSchema.safeParse({ trade }).success).toBe(true);
+      }
+    });
+
     it('rejects non-boolean values for PM-KISAN boolean fields', () => {
       expect(applicantSchema.safeParse({ ownsCultivableLand: 'yes' }).success).toBe(false);
       expect(applicantSchema.safeParse({ incomeTaxPayer: 1 }).success).toBe(false);

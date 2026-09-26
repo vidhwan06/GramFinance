@@ -137,6 +137,34 @@ function enumOptionsFor(
         { value: 'female', label: language === 'kn' ? 'ಮಹಿಳೆ' : 'Female' },
         { value: 'male', label: language === 'kn' ? 'ಪುರುಷ' : 'Male' },
       ];
+    case 'trade':
+      return [
+        { value: 'carpenter', label: language === 'kn' ? 'ಮರಕತ್ತೆ' : 'Carpenter' },
+        { value: 'boat_maker', label: language === 'kn' ? 'ದೋಣಿ ನಿರ್ಮಾಪಕ' : 'Boat Maker' },
+        { value: 'armourer', label: language === 'kn' ? 'ಆಯುಧ ನಿರ್ಮಾಪಕ' : 'Armourer' },
+        { value: 'blacksmith', label: language === 'kn' ? 'ಕಮ್ಮಾರ' : 'Blacksmith' },
+        { value: 'hammer_tool_kit_maker', label: language === 'kn' ? 'ಸಲಾಕಿ ಮತ್ತು ಉಪಕರಣ ಸೆಟ್ ನಿರ್ಮಾಪಕ' : 'Hammer and Tool Kit Maker' },
+        { value: 'locksmith', label: language === 'kn' ? 'ಲಾಕ್ಸ್ಮಿತ್' : 'Locksmith' },
+        { value: 'goldsmith', label: language === 'kn' ? 'ಸ್ವರ್ಣಕಾರ' : 'Goldsmith' },
+        { value: 'potter', label: language === 'kn' ? 'ಕುಂಬಾರ' : 'Potter' },
+        { value: 'sculptor_stone_worker', label: language === 'kn' ? 'ಶಿಲ್ಪಿ / ಕಲ್ಲಿನ ಕೆಲಸಗಾರ' : 'Sculptor / Stone Worker' },
+        { value: 'cobbler_footwear_artisan', label: language === 'kn' ? 'ಚಮ್ಮಾರ / ಪಾದರಕ್ಷೆ ಕುಶಲಕರ್ಮಿ' : 'Cobbler / Footwear Artisan' },
+        { value: 'mason', label: language === 'kn' ? 'ಕಲ್ಲುಕಾರ' : 'Mason' },
+        { value: 'basket_mat_broom_coir_weaver', label: language === 'kn' ? 'ಬುಟ್ಟಿ / ಚೀಲ / ಸೊಳ್ಳೆ ನೇತಕ / ಕೊರಿ ನೇತಕ' : 'Basket / Mat / Broom Maker / Coir Weaver' },
+        { value: 'doll_toy_maker', label: language === 'kn' ? 'ಸಾಂಪ್ರದಾಯಿಕ ಬೊಂಬೆ ಮತ್ತು ಆಟಿಕೆ ನಿರ್ಮಾಪಕ' : 'Traditional Doll & Toy Maker' },
+        { value: 'barber', label: language === 'kn' ? 'ಬಾರ್ಬರ್' : 'Barber' },
+        { value: 'garland_maker', label: language === 'kn' ? 'ಹಾರ ನಿರ್ಮಾಪಕ' : 'Garland Maker' },
+        { value: 'washerman', label: language === 'kn' ? 'ಒಗ್ಗರೆಕಾರ' : 'Washerman' },
+        { value: 'tailor', label: language === 'kn' ? 'ದರ್ಜಿ' : 'Tailor' },
+        { value: 'fishing_net_maker', label: language === 'kn' ? 'ಮೀನುಗಾರಿಕೆ ಣಿ ನಿರ್ಮಾಪಕ' : 'Fishing Net Maker' },
+      ];
+    case 'similarGovtLoanType':
+      return [
+        { value: 'none', label: language === 'kn' ? 'ಯಾವುದೂ ಇಲ್ಲ' : 'None' },
+        { value: 'mudra', label: language === 'kn' ? 'MUDRA' : 'MUDRA' },
+        { value: 'pm_svanidhi', label: language === 'kn' ? 'PM SVANidhi' : 'PM SVANidhi' },
+        { value: 'other_similar_govt_scheme', label: language === 'kn' ? 'ಇತರೆ ಹೋಲಿಕೆಯ ಸರ್ಕಾರಿ ಯೋಜನೆ' : 'Other similar government scheme' },
+      ];
     default:
       return null;
   }
