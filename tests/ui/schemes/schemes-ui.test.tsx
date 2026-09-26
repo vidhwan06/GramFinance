@@ -167,6 +167,49 @@ describe('SchemeDetailView condition rendering', () => {
       screen.getByText(/not an official government portal/)
     ).toBeDefined();
   });
+
+  it('does not duplicate the official source heading', () => {
+    renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
+    const headings = screen.getAllByText('Official source');
+    expect(headings.length).toBe(1);
+  });
+
+  it('formats the last verified date for display', () => {
+    renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
+    // Should show a formatted date, not the raw ISO string
+    expect(screen.getAllByText(/26 September 2026/).length).toBeGreaterThan(0);
+    expect(screen.queryByText('2026-09-26')).toBeNull();
+  });
+
+  it('renders target groups as human-readable labels', () => {
+    const schemeWithGroups: SchemeDetail = {
+      ...DETAIL,
+      targetGroups: ['woman', 'poor_household'],
+    };
+    renderWithLanguage(<SchemeDetailView scheme={schemeWithGroups} />);
+    expect(screen.getByText('Women')).toBeDefined();
+    expect(screen.getByText('Poor households')).toBeDefined();
+    expect(screen.queryByText('woman')).toBeNull();
+    expect(screen.queryByText('poor_household')).toBeNull();
+  });
+
+  it('renders the three-block about section', () => {
+    renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
+    expect(screen.getByText('Eligibility estimate')).toBeDefined();
+    expect(screen.getByText('Official verification')).toBeDefined();
+    expect(screen.getByText('Administrative requirements')).toBeDefined();
+  });
+
+  it('does not contain lending institution wording', () => {
+    renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
+    expect(screen.queryByText(/lending institution/i)).toBeNull();
+  });
+
+  it('contains scheme-appropriate verification wording', () => {
+    renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
+    expect(screen.getAllByText(/preliminary eligibility estimate/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/relevant authorities/i).length).toBeGreaterThan(0);
+  });
 });
 
 describe('EligibilityForm field rendering', () => {

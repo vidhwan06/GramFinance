@@ -8,6 +8,20 @@ export interface OfficialSourceLinkProps {
   warningLabel: string;
   lastVerifiedLabel: string;
   lastVerified: string;
+  language: 'en' | 'kn';
+}
+
+/**
+ * Formats an ISO date string (YYYY-MM-DD) for human-readable display.
+ */
+function formatDate(isoDate: string, language: 'en' | 'kn'): string {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  return new Intl.DateTimeFormat(language === 'kn' ? 'kn-IN' : 'en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
 }
 
 /**
@@ -27,6 +41,7 @@ export function OfficialSourceLink({
   warningLabel,
   lastVerifiedLabel,
   lastVerified,
+  language,
 }: OfficialSourceLinkProps) {
   return (
     <div className="space-y-2">
@@ -53,7 +68,7 @@ export function OfficialSourceLink({
       )}
 
       <p className="text-xs text-gray-500">
-        {lastVerifiedLabel}: <time dateTime={lastVerified}>{lastVerified}</time>
+        {lastVerifiedLabel}: <time dateTime={lastVerified}>{formatDate(lastVerified, language)}</time>
       </p>
     </div>
   );

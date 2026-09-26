@@ -131,5 +131,11 @@ export const kn: TranslationKeys = {
     conditionsMet: 'ಪೂರೈದ ನಿಯಮಗಳು',
     orGroupHint: 'ಈ ನಿಯಮಗಳಲ್ಲಿ ಕನಿಷ್ಟ ಒಂದು ಪೂರೈಯಬೇಕು.',
     andGroupHint: 'ಈ ನಿಯಮಗಳೆಲ್ಲವೂ ಪೂರೈಯಬೇಕು.',
+    aboutEligibilityEstimate: 'ಅರ್ಹತೆ ಅಂದಾಜು',
+    aboutEligibilityEstimateDesc: 'GramFinance ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ ಈ ಯೋಜನೆಯ ಅರ್ಹತೆ ಷರತ್ತುಗಳನ್ನು ಪೂರೈಸುತ್ತೀರಾ ಎಂದು ಅಂದಾಜು ಮಾಡುತ್ತದೆ.',
+    aboutOfficialVerification: 'ಅಧಿಕೃತ ಪರಿಶೀಲನೆ',
+    aboutOfficialVerificationDesc: 'ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕಾರಿಗಳು ಮತ್ತು ಅನ್ವಯಿಕ ಯೋಜನೆ ಪ್ರಕ್ರಿಯೆಯ ಮೂಲಕ ಪರಿಶೀಲನೆಗೆ ಒಳಪಟ್ಟಿದೆ.',
+    aboutAdminRequirements: 'ಆಡಳಿತ ಅಗತ್ಯಗಳು',
+    aboutAdminRequirementsDesc: 'ಅರ್ಜಿದಾರರು ಅನ್ವಯಿಕ KYC, ದಾಖಲೆ ಮತ್ತು ಪರಿಶೀಲನೆ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಬೇಕು.',
   },
 };

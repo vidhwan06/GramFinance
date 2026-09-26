@@ -132,9 +132,37 @@ function enumOptionsFor(
         { value: 'mts_class4_groupd', label: language === 'kn' ? 'MTS / ಕ್ಲಾಸ್ IV / ಗ್ರೂಪ್ D' : 'MTS / Class IV / Group D' },
         { value: 'other_govt', label: language === 'kn' ? 'ಇತರೆ ಸರ್ಕಾರಿ ಉದ್ಯೋಗಿ' : 'Other government employee' },
       ];
+    case 'gender':
+      return [
+        { value: 'female', label: language === 'kn' ? 'ಮಹಿಳೆ' : 'Female' },
+        { value: 'male', label: language === 'kn' ? 'ಪುರುಷ' : 'Male' },
+      ];
     default:
       return null;
   }
+}
+
+/**
+ * Human-readable labels for target group identifiers.
+ *
+ * The database stores machine-friendly identifiers (e.g. "woman",
+ * "poor_household"). This mapping translates them to human-readable labels
+ * for display. The database values are never changed.
+ */
+export function targetGroupLabel(
+  group: string,
+  language: 'en' | 'kn'
+): string {
+  const labels: Record<string, { en: string; kn: string }> = {
+    woman: { en: 'Women', kn: 'ಮಹಿಳೆಯರು' },
+    poor_household: { en: 'Poor households', kn: 'ಬಡತನದ ಕುಟುಂಬಗಳು' },
+    farmer: { en: 'Farmers', kn: 'ರೈತರು' },
+    small_holder: { en: 'Smallholders', kn: 'ಸಣ್ಣ ಭೂಮಿದಾರರು' },
+    marginal_farmer: { en: 'Marginal farmers', kn: 'ಅಲ್ಪ ರೈತರು' },
+  };
+  const label = labels[group];
+  if (!label) return group;
+  return language === 'kn' ? label.kn : label.en;
 }
 
 /**

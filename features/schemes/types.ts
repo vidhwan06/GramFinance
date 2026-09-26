@@ -225,7 +225,7 @@ export interface SchemeEligibilityResult {
  * Copy shown to users must respect that.
  */
 export const ELIGIBILITY_DISCLAIMER_EN =
-  'This is a preliminary assessment based on the information you provided. It is not an approval or a guarantee. Final eligibility is decided by the lending institution.';
+  'This is a preliminary eligibility estimate based on the information you provide. It is not an approval or guarantee. Final eligibility is subject to verification by the relevant authorities and the applicable scheme process.';
 
 export const ELIGIBILITY_DISCLAIMER_KN =
-  'ನೀವು ನಮೂದಿಸಿದ ಮಾಹಿತಿಯ ಆಧಾರದ ಮೇಲೆ ಇದು ಪ್ರಾಥಮಿಕ ಮೌಲ್ಯಮಾಪನೆ ಮಾತ್ರ. ಇದು ಅನುಮೋದನೆ ಅಲ್ಲ. ಅಂತಿಮ ಅರ್ಹತೆಯನ್ನು ಸಾಲ ನೀಡುವ ಸಂಸ್ಥೆ ನಿರ್ಧರಿಸುತ್ತದೆ.';
+  'ನೀವು ನಮೂದಿಸಿದ ಮಾಹಿತಿಯ ಆಧಾರದ ಮೇಲೆ ಇದು ಪ್ರಾಥಮಿಕ ಅರ್ಹತೆ ಅಂದಾಜು ಮಾತ್ರ. ಇದು ಅನುಮೋದನೆ ಅಥವಾ ಖಾತರಿ ಅಲ್ಲ. ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕಾರಿಗಳು ಮತ್ತು ಅನ್ವಯಿಕ ಯೋಜನೆ ಪ್ರಕ್ರಿಯೆಯ ಮೂಲಕ ಪರಿಶೀಲನೆಗೆ ಒಳಪಟ್ಟಿದೆ.';

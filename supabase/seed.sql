@@ -180,7 +180,7 @@ VALUES (
     'Eligibility estimate: GramFinance uses the information you provide to estimate whether you may meet the PMUY eligibility conditions. Official verification: final eligibility is subject to verification by the relevant authorities and Oil Marketing Companies using the prescribed documents and declarations. Administrative requirements: applicants must complete the applicable KYC, documentation, and verification process.',
     'ಅರ್ಹತೆ ಅಂದಾಜು: GramFinance ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ PMUY ಅರ್ಹತೆ ಷರತ್ತುಗಳನ್ನು ಪೂರೈಸುತ್ತೀರಾ ಎಂದು ಅಂದಾಜು ಮಾಡುತ್ತದೆ. ಅಧಿಕೃತ ಪರಿಶೀಲನೆ: ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕಾರಿಗಳು ಮತ್ತು ತೈಲ ಮಾರಾಟಾ ಕಂಪನಿಗಳ ಪರಿಶೀಲನೆಯ ಮೇಲೆ ಅವಲಂಬಿತವಾಗಿರುತ್ತದೆ. ಆಡಳಿತ ಅಗತ್ಯಗಳು: ಅರ್ಜಿದಾರರು ಅನ್ವಯಿಕ KYC, ದಾಖಲೆ ಮತ್ತು ಪರಿಶೀಲನೆ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಬೇಕು.',
     ARRAY['woman', 'poor_household'],
-    ARRAY['KYC application form', 'Aadhaar or proof of identity', 'Proof of address', 'Ration card or family composition document', 'Bank account details', 'Deprivation Declaration'],
+    ARRAY['KYC application form', 'Aadhaar or proof of identity', 'Proof of address', 'Ration card or family composition document', 'Aadhaar copy of adult family members appearing in the family-composition document', 'Bank account details', 'Deprivation Declaration'],
     'https://pmuy.gov.in/',
     '2026-09-26',
     'active'
