@@ -308,7 +308,9 @@ describe('domain constants match the database', () => {
   });
 
   it('the SQL field CHECK and the TypeScript registry are the same set', () => {
-    const sqlFields = fieldCheckLiterals(sql, 'scheme_rules_field_check');
+    // Read the latest migration that defines the field CHECK (014 widens 011)
+    const sql014 = readMigration('014_add_pmkisan_fields.sql');
+    const sqlFields = fieldCheckLiterals(sql014, 'scheme_rules_field_check');
     expect(sqlFields.length).toBeGreaterThan(0);
     expect([...sqlFields].sort()).toEqual([...SCHEME_FIELD_NAMES].sort());
   });

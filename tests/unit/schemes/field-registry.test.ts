@@ -23,7 +23,7 @@ import { fieldCheckLiterals, readMigration } from '../../helpers/sql';
  */
 
 describe('closed field registry', () => {
-  it('contains exactly the approved V1 fields', () => {
+  it('contains exactly the approved fields', () => {
     expect([...SCHEME_FIELD_NAMES].sort()).toEqual(
       [
         'age',
@@ -33,8 +33,15 @@ describe('closed field registry', () => {
         'employmentType',
         'existingLoan',
         'gender',
+        'govtEmployeeCategory',
+        'incomeTaxPayer',
+        'isNRI',
+        'isPoliticalOfficeHolder',
+        'isRegisteredProfessional',
         'loanPurpose',
+        'monthlyPension',
         'occupation',
+        'ownsCultivableLand',
         'requestedLoanAmount',
         'state',
       ].sort()
@@ -107,7 +114,7 @@ describe('prototype-pollution and unknown-field rejection', () => {
 
 describe('monetary unit discipline (decision 13)', () => {
   it('marks exactly the monetary fields, in INR', () => {
-    expect([...getMonetaryFieldNames()].sort()).toEqual(['annualIncome', 'requestedLoanAmount']);
+    expect([...getMonetaryFieldNames()].sort()).toEqual(['annualIncome', 'monthlyPension', 'requestedLoanAmount']);
 
     for (const name of getMonetaryFieldNames()) {
       const def = getSchemeFieldDefinition(name)!;
@@ -147,9 +154,11 @@ describe('monetary unit discipline (decision 13)', () => {
 });
 
 describe('TypeScript registry and SQL CHECK constraint agree', () => {
-  const sql = readMigration('011_scheme_eligibility_foundation.sql');
+  // The field CHECK is defined in migration 011 and widened by migration 014.
+  // We read the LATEST version (014) to verify the full field list.
+  const sql = readMigration('014_add_pmkisan_fields.sql');
 
-  it('migration 011 exists', () => {
+  it('migration 014 exists', () => {
     expect(sql.length).toBeGreaterThan(0);
   });
 

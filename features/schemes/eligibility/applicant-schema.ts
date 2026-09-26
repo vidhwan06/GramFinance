@@ -53,6 +53,10 @@ function validatorFor(field: SchemeFieldDefinition): z.ZodType {
     case 'number':
       return numberValidatorFor(field);
     case 'string':
+      // govtEmployeeCategory has a closed set of valid values.
+      if (field.name === 'govtEmployeeCategory') {
+        return z.enum(['none', 'mts_class4_groupd', 'other_govt']);
+      }
       return z.string().trim().min(1).max(MAX_TEXT_LENGTH);
     case 'boolean':
       return z.boolean();

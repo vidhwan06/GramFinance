@@ -23,7 +23,7 @@
  * Do NOT add `* 100` or `/ 100` anywhere in the eligibility engine.
  */
 
-/** Every field a V1 rule is permitted to reference. Mirrors the SQL CHECK. */
+/** Every field a rule is permitted to reference. Mirrors the SQL CHECK. */
 export const SCHEME_FIELD_NAMES = [
   'age',
   'annualIncome',
@@ -32,8 +32,15 @@ export const SCHEME_FIELD_NAMES = [
   'employmentType',
   'existingLoan',
   'gender',
+  'govtEmployeeCategory',
+  'incomeTaxPayer',
+  'isNRI',
+  'isPoliticalOfficeHolder',
+  'isRegisteredProfessional',
   'loanPurpose',
+  'monthlyPension',
   'occupation',
+  'ownsCultivableLand',
   'requestedLoanAmount',
   'state',
 ] as const;
@@ -143,6 +150,62 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     labelEn: 'State',
     labelKn: 'ರಾಜ್ಯ',
   },
+  {
+    name: 'govtEmployeeCategory',
+    type: 'string',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Government employee category',
+    labelKn: 'ಸರ್ಕಾರಿ ಉದ್ಯೋಗಿ ವರ್ಗ',
+  },
+  {
+    name: 'incomeTaxPayer',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Paid income tax last year',
+    labelKn: 'ಕಳೆದ ವರ್ಷ ಆದಾಯ ತೆರಿಗೆ ಪಾಡಿದ್ದೀರಾ',
+  },
+  {
+    name: 'isNRI',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Non-Resident Indian',
+    labelKn: 'ಎನ್ ಆರ್ ಐ',
+  },
+  {
+    name: 'isPoliticalOfficeHolder',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Held constitutional or public office',
+    labelKn: 'ಸಂವಿಧಾನಿಕ ಅಥವಾ ಸಾರ್ವಜನಿಕ ಹುದ್ದೆ ಹೊಂದಿದ್ದೀರಾ',
+  },
+  {
+    name: 'isRegisteredProfessional',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Registered professional practicing',
+    labelKn: 'ನೋಂದಾಯಿತ ವೃತ್ತಿಪರ ವೃತ್ತಿ ಪಾಲಿಸುತ್ತೀರಾ',
+  },
+  {
+    name: 'monthlyPension',
+    type: 'number',
+    unit: 'INR',
+    monetary: true,
+    labelEn: 'Monthly pension amount',
+    labelKn: 'ಮಾಸಿಕ ಪನ್ಷನ್ ಮೊತ್ತ',
+  },
+  {
+    name: 'ownsCultivableLand',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Family owns cultivable land',
+    labelKn: 'ಕುಟುಂಬವು ಭೂಮಿ ಹೊಂದಿದೆ',
+  },
 ];
 
 /**
@@ -208,6 +271,36 @@ export interface SchemeApplicant {
   requestedLoanAmount?: number;
   employmentType?: string;
   existingLoan?: boolean;
+  /**
+   * Self-declared: does the family own cultivable land as per land records?
+   * This is NOT an authoritative government verification — it requires
+   * official land-record confirmation by the State/UT.
+   */
+  ownsCultivableLand?: boolean;
+  /**
+   * Government employee category. Values: "none", "mts_class4_groupd",
+   * "other_govt". The MTS/Class IV/Group D category is the exception group
+   * that remains eligible despite government employment.
+   */
+  govtEmployeeCategory?: string;
+  /** INR rupees per month. Only relevant for retired pensioners. */
+  monthlyPension?: number;
+  /** Did the person pay income tax in the last assessment year? */
+  incomeTaxPayer?: boolean;
+  /** Is the person a Non-Resident Indian per the Income Tax Act? */
+  isNRI?: boolean;
+  /**
+   * Has the person held any of the PM-KISAN-listed constitutional or public
+   * offices: constitutional post holders, Ministers/State Ministers,
+   * Lok Sabha/Rajya Sabha members, State Legislative Assembly/Council
+   * members, Municipal Corporation Mayors, District Panchayat Chairpersons?
+   */
+  isPoliticalOfficeHolder?: boolean;
+  /**
+   * Is the person a registered professional (doctor, engineer, lawyer,
+   * chartered accountant, architect) practicing their profession?
+   */
+  isRegisteredProfessional?: boolean;
 }
 
 /**

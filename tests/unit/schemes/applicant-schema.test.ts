@@ -44,6 +44,13 @@ describe('applicantSchema', () => {
       requestedLoanAmount: 200000,
       employmentType: 'self-employed',
       existingLoan: false,
+      ownsCultivableLand: true,
+      govtEmployeeCategory: 'none',
+      monthlyPension: 0,
+      incomeTaxPayer: false,
+      isNRI: false,
+      isPoliticalOfficeHolder: false,
+      isRegisteredProfessional: false,
     });
     expect(result.success).toBe(true);
   });
@@ -127,6 +134,55 @@ describe('applicantSchema', () => {
       expect(applicantSchema.safeParse({ existingLoan: true }).success).toBe(true);
       expect(applicantSchema.safeParse({ existingLoan: 'true' }).success).toBe(false);
       expect(applicantSchema.safeParse({ existingLoan: 1 }).success).toBe(false);
+    });
+
+    it('accepts the PM-KISAN boolean fields', () => {
+      const result = applicantSchema.safeParse({
+        ownsCultivableLand: true,
+        incomeTaxPayer: false,
+        isNRI: false,
+        isPoliticalOfficeHolder: false,
+        isRegisteredProfessional: false,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects non-boolean values for PM-KISAN boolean fields', () => {
+      expect(applicantSchema.safeParse({ ownsCultivableLand: 'yes' }).success).toBe(false);
+      expect(applicantSchema.safeParse({ incomeTaxPayer: 1 }).success).toBe(false);
+      expect(applicantSchema.safeParse({ isNRI: 'no' }).success).toBe(false);
+      expect(applicantSchema.safeParse({ isPoliticalOfficeHolder: 'true' }).success).toBe(false);
+      expect(applicantSchema.safeParse({ isRegisteredProfessional: 0 }).success).toBe(false);
+    });
+  });
+
+  describe('monthlyPension (PM-KISAN pension exclusion)', () => {
+    it('accepts zero and positive values', () => {
+      expect(applicantSchema.safeParse({ monthlyPension: 0 }).success).toBe(true);
+      expect(applicantSchema.safeParse({ monthlyPension: 5000 }).success).toBe(true);
+      expect(applicantSchema.safeParse({ monthlyPension: 10000 }).success).toBe(true);
+      expect(applicantSchema.safeParse({ monthlyPension: 50000 }).success).toBe(true);
+    });
+
+    it('rejects negative pension', () => {
+      expect(applicantSchema.safeParse({ monthlyPension: -1 }).success).toBe(false);
+    });
+
+    it('rejects non-numeric pension', () => {
+      expect(applicantSchema.safeParse({ monthlyPension: '5000' }).success).toBe(false);
+    });
+  });
+
+  describe('govtEmployeeCategory (PM-KISAN govt employee exclusion)', () => {
+    it('accepts known category values', () => {
+      for (const value of ['none', 'mts_class4_groupd', 'other_govt']) {
+        expect(applicantSchema.safeParse({ govtEmployeeCategory: value }).success).toBe(true);
+      }
+    });
+
+    it('rejects unknown category values', () => {
+      expect(applicantSchema.safeParse({ govtEmployeeCategory: 'unknown' }).success).toBe(false);
+      expect(applicantSchema.safeParse({ govtEmployeeCategory: '' }).success).toBe(false);
     });
   });
 });
