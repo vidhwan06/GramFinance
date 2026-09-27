@@ -9,6 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Paper background — the document-like base
+        paper: '#F7F6F2',
+        // Primary ink — the dominant text color
+        ink: '#182437',
+        // Muted ink — secondary/tertiary text
+        'muted-ink': '#5B6472',
+        // Rule / border color — hairline rules and dividers
+        rule: '#D8D4C9',
+        // Seal red — reserved for verification, actions, CTAs, active states
+        'seal-red': '#8C2E22',
+        // Eligible — semantic green for pass/satisfied states
+        eligible: '#2F6B4F',
+        // Unknown — semantic ochre for uncertain/incomplete states
+        unknown: '#A87A1E',
+        // Background/foreground CSS variable references
         background: "var(--background)",
         foreground: "var(--foreground)",
         primary: {
@@ -21,8 +36,6 @@ const config: Config = {
           900: '#14532d',
         },
         warning: {
-          // Was '#fffbe finished' — a corrupted value that emitted broken CSS
-          // for any bg-warning-50 / border-warning-50 class. This is amber-50.
           50: '#fffbeb',
           500: '#f59e0b',
           600: '#d97706',
@@ -33,7 +46,7 @@ const config: Config = {
           500: '#ef4444',
           600: '#dc2626',
           700: '#b91c1c',
-        }
+        },
       },
     },
   },

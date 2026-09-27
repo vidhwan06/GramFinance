@@ -1,0 +1,27 @@
+warning: in the working copy of 'features/schemes/components/SchemeDetailView.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/features/schemes/components/SchemeDetailView.tsx b/features/schemes/components/SchemeDetailView.tsx[m
+[1mindex 1e5d05a..beb25e6 100644[m
+[1m--- a/features/schemes/components/SchemeDetailView.tsx[m
+[1m+++ b/features/schemes/components/SchemeDetailView.tsx[m
+[36m@@ -83,6 +83,21 @@[m [mexport function SchemeDetailView({ scheme }: SchemeDetailViewProps) {[m
+         </p>[m
+       </header>[m
+ [m
+[32m+[m[32m      {scheme.description_en && ([m
+[32m+[m[32m        <Card>[m
+[32m+[m[32m          <CardHeader>[m
+[32m+[m[32m            <CardTitle className="text-base">{language === 'kn' ? 'ಈ ಯೋಜನೆ ಬಗ್ಗೆ' : 'About this scheme'}</CardTitle>[m
+[32m+[m[32m          </CardHeader>[m
+[32m+[m[32m          <CardContent>[m
+[32m+[m[32m            <p className="text-sm text-gray-700 leading-relaxed">[m
+[32m+[m[32m              {language === 'kn'[m
+[32m+[m[32m                ? scheme.description_kn[m
+[32m+[m[32m                : scheme.description_en}[m
+[32m+[m[32m            </p>[m
+[32m+[m[32m          </CardContent>[m
+[32m+[m[32m        </Card>[m
+[32m+[m[32m      )}[m
+[32m+[m
+       <Card>[m
+         <CardHeader>[m
+           <CardTitle className="text-base">{language === 'kn' ? 'ಈ ಯೋಜನೆ ಬಗ್ಗೆ' : 'About this scheme'}</CardTitle>[m

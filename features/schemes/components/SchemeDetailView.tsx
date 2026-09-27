@@ -83,6 +83,21 @@ export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
         </p>
       </header>
 
+      {scheme.descriptionEn && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{language === 'kn' ? 'ಈ ಯೋಜನೆ ಬಗ್ಗೆ' : 'About this scheme'}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              {language === 'kn'
+                ? scheme.descriptionKn
+                : scheme.descriptionEn}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{language === 'kn' ? 'ಈ ಯೋಜನೆ ಬಗ್ಗೆ' : 'About this scheme'}</CardTitle>

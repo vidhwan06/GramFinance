@@ -21,7 +21,7 @@ export function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white shadow-lg">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-rule bg-paper shadow-sm md:hidden" aria-label="Mobile navigation">
       <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2 sm:max-w-xl">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -32,13 +32,13 @@ export function BottomNavigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-green-700 min-h-[48px]',
+                'flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-seal-red min-h-[48px]',
                 isActive
-                  ? 'text-green-700 font-bold bg-green-50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'text-seal-red font-bold bg-white'
+                  : 'text-muted-ink hover:text-ink hover:bg-white'
               )}
             >
-              <Icon className={cn('h-5 w-5 mb-0.5', isActive ? 'text-green-700' : 'text-gray-500')} />
+              <Icon className={cn('h-5 w-5 mb-0.5', isActive ? 'text-seal-red' : 'text-muted-ink')} aria-hidden="true" />
               <span className="truncate max-w-[64px] text-[11px]">{item.label}</span>
             </Link>
           );

@@ -11,13 +11,13 @@ export function Badge({ className, variant = 'primary', children, ...props }: Ba
     warning: 'bg-amber-100 text-amber-900 border-amber-300',
     danger: 'bg-red-100 text-red-800 border-red-300',
     success: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    neutral: 'bg-gray-100 text-gray-800 border-gray-300',
+    neutral: 'bg-paper text-ink border-rule',
   };
 
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold transition-colors',
+        'inline-flex items-center rounded border px-2.5 py-0.5 text-xs font-semibold border transition-colors',
         variants[variant],
         className
       )}

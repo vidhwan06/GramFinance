@@ -104,7 +104,7 @@ export const en = {
     orGroupHint: 'At least one of these conditions must be met.',
     andGroupHint: 'All of these conditions must be met.',
     aboutEligibilityEstimate: 'Eligibility estimate',
-    aboutEligibilityEstimateDesc: 'GramFinance uses the information you provide to estimate whether you may meet this scheme’s eligibility conditions.',
+    aboutEligibilityEstimateDesc: 'GramFinance uses the information you provide to estimate whether you may meet this scheme\u2019s eligibility conditions.',
     aboutOfficialVerification: 'Official verification',
     aboutOfficialVerificationDesc: 'Final eligibility is subject to verification by the relevant authorities and the applicable scheme process.',
     aboutAdminRequirements: 'Administrative requirements',
@@ -113,27 +113,62 @@ export const en = {
   home: {
     welcomeTitle: 'GramFinance',
     welcomeSubtitle: 'A Digital Financial Safety & Literacy Platform for Rural Households',
-    cards: {
-      check: {
-        title: 'Check Before You Pay',
-        desc: 'Scan suspicious messages or payment requests before acting.',
-      },
-      loan: {
-        title: 'Understand a Loan',
-        desc: 'Calculate total interest and real EMI costs upfront.',
-      },
-      schemes: {
-        title: 'Find Financial Support',
-        desc: 'Discover relevant official government assistance schemes.',
-      },
-      learn: {
-        title: 'Financial Learning',
-        desc: 'Master banking, saving, insurance, and fraud awareness.',
-      },
-      assistant: {
-        title: 'Ask Financial Assistant',
-        desc: 'Get plain-language answers to financial questions.',
-      },
+    heroTitle: 'Financial decisions, made clearer.',
+    heroSubtitle: 'GramFinance helps you understand financial concepts, check suspicious messages, understand loans, find relevant support, and ask financial questions — all in one place.',
+    capabilities: {
+      heading: 'One place for everyday financial questions',
+      subtitle: 'Six capabilities, one calm interface.',
+      learn: { title: 'Learn', desc: 'Financial literacy in plain language. Banking, savings, insurance, and digital payments.' },
+      check: { title: 'Check a Message', desc: 'Scan suspicious messages and payment requests. Get risk indicators and safety guidance.' },
+      understand: { title: 'Understand a Loan', desc: 'Calculate EMI, total interest, and real borrowing costs before you commit.' },
+      find: { title: 'Find Support', desc: 'Discover relevant government financial-support schemes. Results are estimates, not approvals.' },
+      ask: { title: 'Ask GramFinance', desc: 'Plain-language financial answers. Explains terms, messages, and guides you to the right module.' },
+      language: { title: 'Language', desc: 'English and Kannada. Built for accessibility and readability from the start.' },
+    },
+    questions: {
+      heading: 'Different questions. One place to start.',
+      subtitle: 'Whether you are curious, concerned, or planning ahead — start here.',
+    },
+    governmentSupport: {
+      heading: 'Government Support',
+      subtitle: 'Verified public assistance schemes. GramFinance is a financial literacy and safety product — schemes are one capability among several.',
+      viewAll: 'Browse all schemes',
+      disclaimer: 'Eligibility shown here is a preliminary estimate, not an approval.',
+    },
+    explainability: {
+      heading: 'How GramFinance explains itself',
+      subtitle: 'Every result shows what was considered, what was known, and what was uncertain.',
+      whatWasConsidered: 'What was considered',
+      whatWasKnown: 'What was known',
+      whatWasUnknown: 'What was unknown',
+      why: 'Why this result',
+    },
+    trust: {
+      heading: 'What GramFinance is',
+      subheading: 'And what it is not',
+      is: 'GramFinance is',
+      isNot: 'GramFinance is not',
+      isList: [
+        'A financial companion built on clarity',
+        'Explainable, honest, and transparent',
+        'Available in English and Kannada',
+        'Accessible to users of all literacy levels',
+      ],
+      isNotList: [
+        'A government portal or official authority',
+        'A guarantor of eligibility or approval',
+        'A substitute for official verification',
+        'A colourful dashboard or marketing app',
+      ],
+    },
+    cta: {
+      heading: 'Start with the question you have.',
+      subheading: 'Every path leads to a calm, clear next step.',
+    },
+    footer: {
+      tagline: 'Understand. Verify. Decide Safely.',
+      helpline: 'National Cybercrime Helpline: 1930',
+      madeWith: 'Built for rural households, by a community project.',
     },
   },
 };

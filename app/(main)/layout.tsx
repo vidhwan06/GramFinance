@@ -5,7 +5,7 @@ import { PageContainer } from '@/components/layout/PageContainer';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-paper">
       <Header />
       <PageContainer>{children}</PageContainer>
       <BottomNavigation />
