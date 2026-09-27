@@ -1,16 +1,16 @@
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
 import {
   eligibilityRequestSchema,
   formatValidationIssues,
 } from '@/features/schemes/eligibility/applicant-schema';
-import { toSchemeRules } from '@/features/schemes/eligibility/rule-mapper';
 import {
-  runEligibilityCheck,
-  type SchemeForEvaluation,
-} from '@/features/schemes/eligibility/check-eligibility-service';
+  loadSchemeForEvaluation,
+  loadSchemesForEvaluation,
+  loadAllActiveSchemesForEvaluation,
+} from '@/features/schemes/eligibility/load-scheme-rules';
+import { runEligibilityCheck } from '@/features/schemes/eligibility/check-eligibility-service';
 
 /**
  * POST /api/schemes/eligibility
@@ -25,17 +25,12 @@ import {
  * service-role key. That means row-level security applies to this query exactly
  * as it applies to the browser: a draft, inactive or expired scheme is
  * invisible to this endpoint, so it cannot be used to discover one.
- *
- * The explicit `status = 'active'` filter is defence in depth on top of that
- * policy, not a substitute for it.
  */
 
 export const dynamic = 'force-dynamic';
 
 /** Applicant profiles are tiny. Anything larger is not a real request. */
 const MAX_BODY_BYTES = 16 * 1024;
-
-const SCHEME_COLUMNS = 'id, name_en, name_kn, status, last_verified';
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,65 +58,18 @@ export async function POST(request: NextRequest) {
 
     const { schemeId, applicant } = parsed.data;
 
-    // `cookies()` requires a request scope, so the client is created here and
-    // not at module scope.
-    const supabase = await createClient();
-
-    let schemeQuery = supabase
-      .from('schemes')
-      .select(SCHEME_COLUMNS)
-      .eq('status', 'active');
-
-    if (schemeId) {
-      schemeQuery = schemeQuery.eq('id', schemeId);
-    }
-
-    const { data: schemeRows, error: schemeError } = await schemeQuery;
-
-    if (schemeError) {
-      console.error('[eligibility] scheme lookup failed', {
-        code: schemeError.code,
-        message: schemeError.message,
-      });
-      throw ErrorFactories.internal('Could not load schemes.');
-    }
+    // Load schemes with both flat rules and rule trees.
+    // The evaluation engine uses the rule tree when present, falls back to flat rules.
+    const schemes = schemeId
+      ? await loadSchemeForEvaluation(schemeId).then(s => s ? [s] : [])
+      : await loadAllActiveSchemesForEvaluation();
 
     // A requested scheme that is missing, or exists but is not active, is
     // reported identically: "not found". Distinguishing them would confirm the
     // existence of an unpublished scheme.
-    if (schemeId && (!schemeRows || schemeRows.length === 0)) {
+    if (schemeId && schemes.length === 0) {
       throw ErrorFactories.notFound('Scheme not found.');
     }
-
-    const schemeIds = (schemeRows ?? []).map((row) => row.id);
-
-    const { data: ruleRows, error: ruleError } =
-      schemeIds.length > 0
-        ? await supabase.from('scheme_rules').select('*').in('scheme_id', schemeIds)
-        : { data: [], error: null };
-
-    if (ruleError) {
-      console.error('[eligibility] rule lookup failed', {
-        code: ruleError.code,
-        message: ruleError.message,
-      });
-      throw ErrorFactories.internal('Could not load scheme rules.');
-    }
-
-    const schemes: SchemeForEvaluation[] = (schemeRows ?? []).map((scheme) => {
-      const { rules, problems } = toSchemeRules(
-        (ruleRows ?? []).filter((row) => row.scheme_id === scheme.id)
-      );
-      return {
-        id: scheme.id,
-        nameEn: scheme.name_en,
-        nameKn: scheme.name_kn,
-        status: scheme.status,
-        lastVerified: scheme.last_verified,
-        rules,
-        ruleProblems: problems,
-      };
-    });
 
     const outcome = runEligibilityCheck(schemes, applicant);
 

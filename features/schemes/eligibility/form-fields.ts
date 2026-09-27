@@ -187,6 +187,9 @@ export function targetGroupLabel(
     farmer: { en: 'Farmers', kn: 'ರೈತರು' },
     small_holder: { en: 'Smallholders', kn: 'ಸಣ್ಣ ಭೂಮಿದಾರರು' },
     marginal_farmer: { en: 'Marginal farmers', kn: 'ಅಲ್ಪ ರೈತರು' },
+    artisans: { en: 'Artisans', kn: 'ಕೌಶಲ್ಯಕರ್ಮಿಗಳು' },
+    craftspeople: { en: 'Craftspeople', kn: 'ಕಲಾಕಾರರು' },
+    traditional_trades: { en: 'Traditional Trades', kn: 'ಸಾಂಪ್ರದಾಯಿಕ ವೃತ್ತಿಗಳು' },
   };
   const label = labels[group];
   if (!label) return group;

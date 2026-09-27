@@ -3,7 +3,6 @@ import { FileText } from 'lucide-react';
 
 export interface DocumentChecklistProps {
   documents: string[];
-  title: string;
   emptyLabel: string;
 }
 
@@ -13,12 +12,13 @@ export interface DocumentChecklistProps {
  * Nothing is added here. If the record lists three documents, three are shown.
  * If it lists none, the empty message is shown rather than a generic guess at
  * what a loan usually needs.
+ *
+ * The section title is rendered by the parent (e.g., via CardHeader/CardTitle)
+ * so this component only renders the list/empty state.
  */
-export function DocumentChecklist({ documents, title, emptyLabel }: DocumentChecklistProps) {
+export function DocumentChecklist({ documents, emptyLabel }: DocumentChecklistProps) {
   return (
     <div>
-      <h3 className="text-sm font-bold text-gray-800 mb-2">{title}</h3>
-
       {documents.length === 0 ? (
         <p className="text-sm text-gray-500">{emptyLabel}</p>
       ) : (

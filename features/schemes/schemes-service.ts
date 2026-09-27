@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { toSchemeRules, reconstructRuleTree } from './eligibility/rule-mapper';
 import { runEligibilityCheck } from './eligibility/check-eligibility-service';
+import { loadSchemeForEvaluation } from './eligibility/load-scheme-rules';
 import type { SchemeFieldName } from './eligibility/field-registry';
 import type { RuleGroupNode, SchemeRule, SchemeStatus } from './types';
 
@@ -157,57 +158,10 @@ export async function getActiveSchemeWithDetails(
   schemeId: string
 ): Promise<SchemeDetail | null> {
   assertServer();
-  const supabase = await createClient();
 
-  const { data: schemeData, error: schemeError } = await supabase
-    .from('schemes')
-    .select(SCHEME_COLUMNS)
-    .eq('id', schemeId)
-    .eq('status', 'active')
-    .maybeSingle();
-
-  if (schemeError) {
-    throw new Error(`Could not load scheme: ${schemeError.code ?? 'UNKNOWN'}`);
-  }
-  if (!schemeData) return null;
-
-  const schemeRow = schemeData as SchemeRow;
-
-  const { data: ruleData, error: ruleError } = await supabase
-    .from('scheme_rules')
-    .select('*')
-    .eq('scheme_id', schemeId)
-    .order('rule_group', { ascending: true })
-    .order('priority', { ascending: true });
-
-  if (ruleError) {
-    throw new Error(`Could not load scheme rules: ${ruleError.code ?? 'UNKNOWN'}`);
-  }
-
-  const { rules, problems } = toSchemeRules(ruleData ?? []);
-
-  // Load rule tree (Phase 5B)
-  const { data: groupData, error: groupError } = await supabase
-    .from('rule_groups')
-    .select('*')
-    .eq('scheme_id', schemeId)
-    .order('group_order', { ascending: true });
-
-  if (groupError) {
-    throw new Error(`Could not load rule groups: ${groupError.code ?? 'UNKNOWN'}`);
-  }
-
-  const { data: nodeData, error: nodeError } = await supabase
-    .from('rule_nodes')
-    .select('*')
-    .in('group_id', groupData?.map(g => g.id) ?? [])
-    .order('priority', { ascending: true });
-
-  if (nodeError) {
-    throw new Error(`Could not load rule nodes: ${nodeError.code ?? 'UNKNOWN'}`);
-  }
-
-  const rootGroup = reconstructRuleTree(groupData ?? [], nodeData ?? []);
+  // Load scheme with both flat rules and rule tree using shared logic.
+  const scheme = await loadSchemeForEvaluation(schemeId);
+  if (!scheme) return null;
 
   // Reuse the exact Phase 4C service to work out which fields the form needs.
   // With an empty applicant nothing can pass, so this cannot produce a verdict
@@ -216,24 +170,36 @@ export async function getActiveSchemeWithDetails(
   const outcome = runEligibilityCheck(
     [
       {
-        id: schemeRow.id,
-        nameEn: schemeRow.name_en,
-        nameKn: schemeRow.name_kn,
-        status: schemeRow.status,
-        lastVerified: schemeRow.last_verified,
-        rules,
-        rootGroup,
-        ruleProblems: problems,
+        id: scheme.id,
+        nameEn: scheme.nameEn,
+        nameKn: scheme.nameKn,
+        status: scheme.status,
+        lastVerified: scheme.lastVerified,
+        rules: scheme.rules,
+        rootGroup: scheme.rootGroup,
+        ruleProblems: scheme.ruleProblems,
       },
     ],
     {}
   );
+
+  // We need the full scheme row for documents, target_groups, etc.
+  const supabase = await createClient();
+  const { data: schemeData, error: schemeError } = await supabase
+    .from('schemes')
+    .select(SCHEME_COLUMNS)
+    .eq('id', schemeId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (schemeError || !schemeData) return null;
+  const schemeRow = schemeData as SchemeRow;
 
   return {
     ...toListItem(schemeRow),
     requiredDocuments: schemeRow.required_documents ?? [],
     officialSource: classifyOfficialSource(schemeRow.official_url),
     requiredFields: outcome.results[0]?.requiredFields ?? [],
-    rules,
+    rules: scheme.rules,
   };
 }

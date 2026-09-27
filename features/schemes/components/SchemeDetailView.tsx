@@ -199,7 +199,6 @@ export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
         <CardContent>
           <DocumentChecklist
             documents={scheme.requiredDocuments}
-            title={t.schemes.documentsTitle}
             emptyLabel={t.schemes.documentsEmpty}
           />
         </CardContent>
