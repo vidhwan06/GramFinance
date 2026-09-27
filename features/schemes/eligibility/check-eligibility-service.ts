@@ -17,6 +17,17 @@ import { ELIGIBILITY_DISCLAIMER_EN, ELIGIBILITY_DISCLAIMER_KN } from '../types';
  * later admin or batch job without going through HTTP.
  */
 
+// Re-export for consumers who need these types.
+export type { SchemeRule, RuleGroupNode } from '../types';
+
+/**
+ * Orchestration between the data layer and the eligibility engine.
+ *
+ * Pure: it takes already-loaded schemes and rules and returns a verdict. It does
+ * no I/O, so it is unit-testable without a database, and it can be reused by a
+ * later admin or batch job without going through HTTP.
+ */
+
 /** A scheme plus its rules, as loaded from the database. */
 export interface SchemeForEvaluation {
   id: string;

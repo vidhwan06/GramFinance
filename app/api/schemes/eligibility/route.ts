@@ -7,7 +7,6 @@ import {
 } from '@/features/schemes/eligibility/applicant-schema';
 import {
   loadSchemeForEvaluation,
-  loadSchemesForEvaluation,
   loadAllActiveSchemesForEvaluation,
 } from '@/features/schemes/eligibility/load-scheme-rules';
 import { runEligibilityCheck } from '@/features/schemes/eligibility/check-eligibility-service';

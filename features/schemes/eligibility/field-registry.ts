@@ -28,6 +28,7 @@ export const SCHEME_FIELD_NAMES = [
   'age',
   'annualIncome',
   'applicantCategory',
+  'caste',
   'district',
   'employmentType',
   'existingLoan',
@@ -35,9 +36,11 @@ export const SCHEME_FIELD_NAMES = [
   'govtEmployeeCategory',
   'hasExistingLpgConnection',
   'incomeTaxPayer',
+  'isFarmer',
   'isNRI',
   'isPoliticalOfficeHolder',
   'isRegisteredProfessional',
+  'landHoldingAcres',
   'loanPurpose',
   'monthlyPension',
   'occupation',
@@ -99,6 +102,14 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     labelKn: 'ಅರ್ಜಿದಾರರ ವರ್ಗ',
   },
   {
+    name: 'caste',
+    type: 'string',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Caste category',
+    labelKn: 'ಜಾತಿ ವರ್ಗ',
+  },
+  {
     name: 'district',
     type: 'string',
     unit: 'none',
@@ -147,6 +158,14 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     labelKn: 'ಸಾಲದ ಉದ್ದೇಶ',
   },
   {
+    name: 'landHoldingAcres',
+    type: 'number',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Land holding in acres',
+    labelKn: 'ಭೂಮಿ ದories ಎಕರ್‌ಗಳಲ್ಲಿ',
+  },
+  {
     name: 'occupation',
     type: 'string',
     unit: 'none',
@@ -193,6 +212,14 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     monetary: false,
     labelEn: 'Non-Resident Indian',
     labelKn: 'ಎನ್ ಆರ್ ಐ',
+  },
+  {
+    name: 'isFarmer',
+    type: 'boolean',
+    unit: 'none',
+    monetary: false,
+    labelEn: 'Is a farmer',
+    labelKn: 'ರೈತನಾಗಿರುವುದೇ',
   },
   {
     name: 'isPoliticalOfficeHolder',
@@ -374,6 +401,7 @@ export interface SchemeApplicant {
   district?: string;
   gender?: string;
   applicantCategory?: string;
+  caste?: string;
   loanPurpose?: string;
   /** INR rupees. Not paise. */
   requestedLoanAmount?: number;
@@ -427,6 +455,8 @@ export interface SchemeApplicant {
   incomeTaxPayer?: boolean;
   /** Is the person a Non-Resident Indian per the Income Tax Act? */
   isNRI?: boolean;
+  /** Is the person a farmer? */
+  isFarmer?: boolean;
   /**
    * Has the person held any of the PM-KISAN-listed constitutional or public
    * offices: constitutional post holders, Ministers/State Ministers,
@@ -439,6 +469,8 @@ export interface SchemeApplicant {
    * chartered accountant, architect) practicing their profession?
    */
   isRegisteredProfessional?: boolean;
+  /** Land holding in acres. */
+  landHoldingAcres?: number;
 }
 
 /**

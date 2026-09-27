@@ -363,6 +363,7 @@ export function evaluateEligibility(
     missingInformation: collectMissingInformation(evaluatedGroups),
     groupResults,
     invalidRules,
+    treeResult: null,
   };
 }
 

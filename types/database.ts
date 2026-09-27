@@ -151,6 +151,43 @@ export type DbSchemeRule = {
 };
 
 /**
+ * Rule groups for nested rule tree architecture (Phase 5B).
+ * Mirrors the `public.rule_groups` table created in migration 016.
+ */
+export type DbRuleGroup = {
+  id: string;
+  scheme_id: string;
+  parent_group_id: string | null;
+  group_operator: RuleGroupOperator;
+  group_order: number;
+  created_at: string;
+};
+
+/**
+ * Rule nodes for nested rule tree architecture (Phase 5B).
+ * Mirrors the `public.rule_nodes` table created in migration 016.
+ */
+export type DbRuleNode = {
+  id: string;
+  group_id: string;
+  node_type: 'rule' | 'group';
+
+  // Rule-specific (NULL for group nodes)
+  field: string | null;
+  operator: SchemeRuleOperator | null;
+  value: number | string | boolean | Array<number | string | boolean> | null;
+  required: boolean;
+  description_en: string | null;
+  description_kn: string | null;
+  priority: number;
+
+  // Group-specific (NULL for rule nodes)
+  child_group_id: string | null;
+
+  created_at: string;
+};
+
+/**
  * Authorization foundation for future admin features.
  *
  * RLS is enabled with ZERO policies and all client grants are revoked, so no

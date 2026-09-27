@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { toSchemeRules, reconstructRuleTree } from './rule-mapper';
 import type { SchemeForEvaluation, SchemeRule, RuleGroupNode } from './check-eligibility-service';
 import type { SchemeStatus } from '../types';
+import type { DbRuleGroup, DbRuleNode } from '@/types/database';
 
 /**
  * Loads a single scheme with its flat rules and rule tree (if any).
@@ -51,10 +52,12 @@ export async function loadSchemeForEvaluation(
     throw new Error(`Could not load rule groups: ${groupError.code ?? 'UNKNOWN'}`);
   }
 
+  const groupIds = (groupData as DbRuleGroup[] ?? []).map(g => g.id);
+
   const { data: nodeData, error: nodeError } = await supabase
     .from('rule_nodes')
     .select('*')
-    .in('group_id', groupData?.map(g => g.id) ?? [])
+    .in('group_id', groupIds)
     .order('priority', { ascending: true });
 
   if (nodeError) {

@@ -377,6 +377,7 @@ function outcomeFor(status: EligibilityStatus): SchemeOutcome {
       missingInformation: status === 'eligible' ? [] : ['annualIncome'],
       groupResults: [],
       invalidRules: [],
+      treeResult: null,
     },
     requiredFields: ['age', 'annualIncome'],
   };

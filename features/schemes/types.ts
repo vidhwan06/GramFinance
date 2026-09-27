@@ -9,10 +9,13 @@
  * than replaced, and no second `Scheme` type exists in the codebase.
  */
 
-import type { SchemeFieldName } from './eligibility/field-registry';
+import type { SchemeFieldName, SchemeApplicant } from './eligibility/field-registry';
 
 /** Lifecycle state. Mirrors the `schemes_status_check` CHECK constraint. */
 export type SchemeStatus = 'draft' | 'active' | 'inactive' | 'expired';
+
+/** Re-export for convenience. */
+export type { SchemeApplicant } from './eligibility/field-registry';
 
 /** Mirrors `scheme_rules_rule_type_check`. */
 export type SchemeRuleType = 'eligibility' | 'loan_terms';

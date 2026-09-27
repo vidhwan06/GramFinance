@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { evaluateEligibilityTree } from '@/features/schemes/eligibility/eligibility-engine';
 import { reduceAnd, reduceOr } from '@/features/schemes/eligibility/tri-state';
 import type { RuleGroupNode, RuleNode, SchemeApplicant } from '@/features/schemes/types';
-import type { SchemeRule } from '@/features/schemes/types';
+import type { SchemeRule } from '@/features/schemes/eligibility/check-eligibility-service';
 
 /**
  * Phase 5B: Nested rule group engine tests.

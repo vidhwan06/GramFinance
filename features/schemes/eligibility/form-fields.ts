@@ -137,6 +137,13 @@ function enumOptionsFor(
         { value: 'female', label: language === 'kn' ? 'ಮಹಿಳೆ' : 'Female' },
         { value: 'male', label: language === 'kn' ? 'ಪುರುಷ' : 'Male' },
       ];
+    case 'caste':
+      return [
+        { value: 'SC', label: language === 'kn' ? 'ಅನಯการ್ಯ ಜಾತಿ' : 'Scheduled Caste (SC)' },
+        { value: 'ST', label: language === 'kn' ? 'ಅನಯಕಾರ್ಯ ತೆವಳು' : 'Scheduled Tribe (ST)' },
+        { value: 'OBC', label: language === 'kn' ? 'ಹಿಂದುಳಿದ ವರ್ಗಗಳು' : 'Other Backward Classes (OBC)' },
+        { value: 'General', label: language === 'kn' ? 'ಸಾಮಾನ್ಯ' : 'General' },
+      ];
     case 'trade':
       return [
         { value: 'carpenter', label: language === 'kn' ? 'ಮರಕತ್ತೆ' : 'Carpenter' },
@@ -249,6 +256,18 @@ function helperTextFor(
       return language === 'kn'
         ? 'ಇದು ಸಂಸ್ಥಾತ್ಮಕ ಭೂಮಿದಾರರ ಹೊರಗಿಡುವಿಕೆಯನ್ನು ನಿರ್ಧರಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ.'
         : 'This helps us determine whether the institutional-landholder exclusion applies.';
+    case 'caste':
+      return language === 'kn'
+        ? 'ಈ ಯೋಜನೆಗೆ ಅನಯಕಾರ್ಯ ಜಾತಿ (SC) ಪ್ರrafoರ್ಥಿಗಳು ಮಾತ್ರ ಅರ್ಹರಾಗಿದ್ದಾರೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ಜಾತಿ ವರ್ಗವನ್ನು ಆಯ್ಕೆಮಾಡಿ.'
+        : 'This scheme is only for Scheduled Caste (SC) applicants. Please select your caste category.';
+    case 'isFarmer':
+      return language === 'kn'
+        ? 'ಈ ಯೋಜನೆ ಸಣ್ಣ/ವರ್ಗಿಕೆ ರೈತರುಗಳಿಗಾಗಿದ್ದು, ನೀವು ರೈತನಾಗಿದ್ಧೀರಾ ಎಂದು ತಿಳಿಸಿ.'
+        : 'This scheme is for small/marginal farmers. Please confirm if you are a farmer.';
+    case 'landHoldingAcres':
+      return language === 'kn'
+        ? 'ಗಂಗಾ ಕಲ್ಯಾಣ ಯೋಜನೆ 1.5ರಿಂದ 5 ಎಕರ್ ಭೂಮಿ ಹೊಂದಿರುವ ರೈತರುಗಳಿಗಾಗಿದೆ. ನಿಮ್ಮ ಭೂಮಿ ಎಕರ್‌ಗಳಲ್ಲಿ ನಮೂದಿಸಿ.'
+        : 'Ganga Kalyana scheme is for farmers with 1.5 to 5 acres of land. Please enter your land holding in acres.';
     default:
       return null;
   }

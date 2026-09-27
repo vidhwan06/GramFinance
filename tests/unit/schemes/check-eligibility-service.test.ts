@@ -41,7 +41,8 @@ function scheme(
   id: string,
   status: SchemeStatus,
   rules: SchemeRule[] = [],
-  ruleProblems: string[] = []
+  ruleProblems: string[] = [],
+  rootGroup = null
 ): SchemeForEvaluation {
   return {
     id,
@@ -51,6 +52,7 @@ function scheme(
     lastVerified: '2026-09-26',
     rules,
     ruleProblems,
+    rootGroup,
   };
 }
 

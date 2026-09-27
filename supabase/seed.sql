@@ -254,3 +254,33 @@ VALUES (
 
 -- PM Vishwakarma rule tree is managed by migration 019_pm_vishwakarma_rule_tree.sql
 -- Do not insert rule_groups/rule_nodes here. Seed is for scheme metadata only.
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Ganga Kalyana Scheme — scheme row (ACTIVE)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Ganga Kalyana is active. status is deliberately NOT part of the DO UPDATE
+-- set below, so re-running this seed after activation will not demote it.
+-- ─────────────────────────────────────────────────────────────────────────────
+INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified, status)
+VALUES (
+    'Ganga Kalyana Scheme (Individual Irrigation)',
+    'ಗಂಗಾ ಕಲ್ಯಾಣ ಯೋಜನೆ (ವ್ಯತ್ಯಾಸತ್ಮಕ ನೀರಾವರಿ)',
+    'Individual irrigation scheme for SC small and marginal farmers in Karnataka. Provides assistance for borewell, pump set/accessories and electrification. Eligibility: SC farmer with 1.5 to 5 acres land holding. Benefit varies by district: 6 districts get ₹4.5L unit cost (₹4L subsidy + ₹50k loan), other districts get ₹3.5L unit cost (₹3L subsidy + ₹50k loan). This is a preliminary assessment, not an official government eligibility determination.',
+    'ಕರ್ನಾಟಕದ ಎಸ್‌ಸಿ ಸಣ್ಣ ಮತ್ತು ವರ್ಗಿಕೆ ರೈತರಿಗೆ ವ್ಯತ್ಯಾಸತ್ಮಕ ನೀರಾವರಿ ಯೋಜನೆ. ಬೋರ್ವೆಲ್, ಪಂಪ್ ಸೆಟ್/ಅನುಪಕರಣಗಳು ಮತ್ತು ವೈದ್ಯುತೀಕರಣದತ್ತಿ ಸಹಾಯ. ಅರ್ಹತೆ: 1.5ರಿಂದ 5 ಎಕರ್ ಭೂಮಿ ಹೊಂದಿರುವ ಎಸ್‌ಸಿ ರೈತ. ಲಾಭ ಜಿಲ್ಲೆಗನುಸಾರ ಅಲಗಡೆ: 6 ಜಿಲ್ಲೆಗಳಿಗೆ ₹4.5ಲಕ್ಷ ಯುನಿಟ್ ಕೊಸ್ಟ್ (₹4ಲಕ್ಷ ಸಬ್ಸಿಡಿ + ₹50,000 ಸಾಲ), ಇತರ ಜಿಲ್ಲೆಗಳಿಗೆ ₹3.5ಲಕ್ಷ ಯುನಿಟ್ ಕೊಸ್ಟ್ (₹3ಲಕ್ಷ ಸಬ್ಸಿಡಿ + ₹50,000 ಸಾಲ). ಇದು ಪ್ರಾಥಮಿಕ ಮೌಲ್ಯಮಾಪನೆ, ಅಧಿಕೃತ ಅರ್ಹತಾ ನಿರ್ಧಾರವಲ್ಲ.',
+    ARRAY['farmer', 'small_holder', 'marginal_farmer'],
+    ARRAY[]::TEXT[],
+    'https://adcl.karnataka.gov.in/27/ganga-kalyana-scheme/en',
+    '2026-09-27',
+    'active'
+) ON CONFLICT (official_url) DO UPDATE SET
+    name_en             = EXCLUDED.name_en,
+    name_kn             = EXCLUDED.name_kn,
+    description_en      = EXCLUDED.description_en,
+    description_kn      = EXCLUDED.description_kn,
+    target_groups       = EXCLUDED.target_groups,
+    states              = EXCLUDED.states,
+    required_documents  = EXCLUDED.required_documents,
+    last_verified       = EXCLUDED.last_verified;
+
+-- Ganga Kalyana rule tree is managed by migration 019_ganga_kalyana_scheme.sql
+-- Do not insert rule_groups/rule_nodes here. Seed is for scheme metadata only.

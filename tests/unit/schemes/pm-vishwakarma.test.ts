@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { evaluateEligibilityTree } from '@/features/schemes/eligibility/eligibility-engine';
 import type { RuleGroupNode, RuleNode, SchemeApplicant } from '@/features/schemes/types';
-import type { SchemeRule } from '@/features/schemes/types';
+import type { SchemeRule } from '@/features/schemes/eligibility/check-eligibility-service';
 
 /**
  * PM Vishwakarma eligibility rule tree tests.
