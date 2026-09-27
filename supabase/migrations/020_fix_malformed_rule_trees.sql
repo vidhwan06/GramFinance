@@ -50,24 +50,24 @@ WHERE scheme_id = (
 -- ─────────────────────────────────────────────────────────────────────────────
 DO $$
 DECLARE
-    scheme_id UUID;
+    v_scheme_id UUID;
     root_id UUID;
     loan_or_id UUID;
 BEGIN
     -- Get scheme ID
-    SELECT id INTO scheme_id 
-    FROM public.schemes 
+    SELECT id INTO v_scheme_id 
+    FROM public.schemes s 
     WHERE official_url = 'https://www.pmvishwakarma.gov.in/';
     
-    IF scheme_id IS NULL THEN
+    IF v_scheme_id IS NULL THEN
         RAISE NOTICE 'PM Vishwakarma scheme not found, skipping tree fix';
         RETURN;
     END IF;
 
     -- Get root group
     SELECT id INTO root_id
-    FROM public.rule_groups
-    WHERE scheme_id = scheme_id AND parent_group_id IS NULL;
+    FROM public.rule_groups rg
+    WHERE rg.scheme_id = v_scheme_id AND rg.parent_group_id IS NULL;
 
     IF root_id IS NULL THEN
         RAISE NOTICE 'PM Vishwakarma root group not found, skipping tree fix';
@@ -76,8 +76,8 @@ BEGIN
 
     -- Get loan OR child group
     SELECT id INTO loan_or_id
-    FROM public.rule_groups
-    WHERE scheme_id = scheme_id AND parent_group_id = root_id AND group_operator = 'OR';
+    FROM public.rule_groups rg
+    WHERE rg.scheme_id = v_scheme_id AND rg.parent_group_id = root_id AND rg.group_operator = 'OR';
 
     IF loan_or_id IS NULL THEN
         RAISE NOTICE 'PM Vishwakarma loan OR group not found, skipping tree fix';
@@ -88,7 +88,7 @@ BEGIN
     DELETE FROM public.rule_nodes
     WHERE group_id = root_id
       AND field IN ('similarGovtLoanType', 'similarGovtLoanFullyRepaid')
-      AND value IN ('mudra'::jsonb, 'true'::jsonb);
+      AND value IN ('"mudra"'::jsonb, 'true'::jsonb);
 
     -- Step 2: Add missing root -> loan OR group node (idempotent)
     IF NOT EXISTS (

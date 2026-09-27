@@ -26,7 +26,7 @@ BEGIN;
 
 DO $$
 DECLARE
-    scheme_id UUID;
+    v_scheme_id UUID;
     root_id UUID;
     loan_or_id UUID;
     mudra_id UUID;
@@ -36,11 +36,11 @@ BEGIN
     -- ──────────────────────────────────────────────────────────────────────────
     -- 1. FIND OR CREATE SCHEME
     -- ──────────────────────────────────────────────────────────────────────────
-    SELECT id INTO scheme_id
-    FROM public.schemes
-    WHERE official_url = 'https://www.pmvishwakarma.gov.in/';
+    SELECT id INTO v_scheme_id
+    FROM public.schemes AS s
+    WHERE s.official_url = 'https://www.pmvishwakarma.gov.in/';
 
-    IF scheme_id IS NULL THEN
+    IF v_scheme_id IS NULL THEN
         RAISE NOTICE 'PM Vishwakarma scheme not found, skipping tree creation';
         RETURN;
     END IF;
@@ -49,12 +49,12 @@ BEGIN
     -- 2. FIND OR CREATE ROOT GROUP (AND, group_order=0, parent_group_id=NULL)
     -- ──────────────────────────────────────────────────────────────────────────
     SELECT id INTO root_id
-    FROM public.rule_groups
-    WHERE scheme_id = scheme_id AND parent_group_id IS NULL;
+    FROM public.rule_groups AS rg
+    WHERE rg.scheme_id = v_scheme_id AND rg.parent_group_id IS NULL;
 
     IF root_id IS NULL THEN
         INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
-        VALUES (scheme_id, NULL, 'AND', 0)
+        VALUES (v_scheme_id, NULL, 'AND', 0)
         RETURNING id INTO root_id;
     END IF;
 
@@ -62,12 +62,12 @@ BEGIN
     -- 3. FIND OR CREATE LOAN OR GROUP (OR, group_order=9, parent=root)
     -- ──────────────────────────────────────────────────────────────────────────
     SELECT id INTO loan_or_id
-    FROM public.rule_groups
-    WHERE scheme_id = scheme_id AND parent_group_id = root_id AND group_operator = 'OR';
+    FROM public.rule_groups AS rg
+    WHERE rg.scheme_id = v_scheme_id AND rg.parent_group_id = root_id AND rg.group_operator = 'OR';
 
     IF loan_or_id IS NULL THEN
         INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
-        VALUES (scheme_id, root_id, 'OR', 9)
+        VALUES (v_scheme_id, root_id, 'OR', 9)
         RETURNING id INTO loan_or_id;
     END IF;
 
@@ -75,12 +75,12 @@ BEGIN
     -- 4. FIND OR CREATE MUDRA AND GROUP (AND, group_order=0, parent=loan_or)
     -- ──────────────────────────────────────────────────────────────────────────
     SELECT id INTO mudra_id
-    FROM public.rule_groups
-    WHERE scheme_id = scheme_id AND parent_group_id = loan_or_id AND group_order = 0;
+    FROM public.rule_groups AS rg
+    WHERE rg.scheme_id = v_scheme_id AND rg.parent_group_id = loan_or_id AND rg.group_order = 0;
 
     IF mudra_id IS NULL THEN
         INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
-        VALUES (scheme_id, loan_or_id, 'AND', 0)
+        VALUES (v_scheme_id, loan_or_id, 'AND', 0)
         RETURNING id INTO mudra_id;
     END IF;
 
@@ -88,12 +88,12 @@ BEGIN
     -- 5. FIND OR CREATE PM SVANIDHI AND GROUP (AND, group_order=1, parent=loan_or)
     -- ──────────────────────────────────────────────────────────────────────────
     SELECT id INTO svanidhi_id
-    FROM public.rule_groups
-    WHERE scheme_id = scheme_id AND parent_group_id = loan_or_id AND group_order = 1;
+    FROM public.rule_groups AS rg
+    WHERE rg.scheme_id = v_scheme_id AND rg.parent_group_id = loan_or_id AND rg.group_order = 1;
 
     IF svanidhi_id IS NULL THEN
         INSERT INTO public.rule_groups (scheme_id, parent_group_id, group_operator, group_order)
-        VALUES (scheme_id, loan_or_id, 'AND', 1)
+        VALUES (v_scheme_id, loan_or_id, 'AND', 1)
         RETURNING id INTO svanidhi_id;
     END IF;
 

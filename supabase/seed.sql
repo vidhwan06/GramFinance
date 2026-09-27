@@ -252,7 +252,7 @@ VALUES (
     required_documents  = EXCLUDED.required_documents,
     last_verified       = EXCLUDED.last_verified;
 
--- PM Vishwakarma rule tree is managed by migration 019_pm_vishwakarma_rule_tree.sql
+-- PM Vishwakarma rule tree is managed by migration 022_pm_vishwakarma_rule_tree.sql
 -- Do not insert rule_groups/rule_nodes here. Seed is for scheme metadata only.
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -282,5 +282,5 @@ VALUES (
     required_documents  = EXCLUDED.required_documents,
     last_verified       = EXCLUDED.last_verified;
 
--- Ganga Kalyana rule tree is managed by migration 019_ganga_kalyana_scheme.sql
--- Do not insert rule_groups/rule_nodes here. Seed is for scheme metadata only.
+-- Ganga Kalyana rule tree is managed by migration 021_ganga_kalyana_scheme.sql
+-- Do not insert rule_groups/rule_nodes here. Seed is for scheme metadata only.
