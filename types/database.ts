@@ -202,6 +202,45 @@ export type DbUserRole = {
   created_at: string;
 };
 
+// ── Fraud Checker types ─────────────────────────────────────────────
+export type FraudInputType = 'message' | 'url' | 'upi' | 'phone' | 'scheme_claim' | 'general';
+export type FraudRiskLevel = 'low' | 'medium' | 'high';
+export type FraudCheckStatus = 'completed' | 'failed';
+export type FraudSignalSeverity = 'low' | 'medium' | 'high';
+export type FraudSignalCategory = 'payment' | 'credential' | 'urgency' | 'government_claim' | 'link' | 'identity' | 'general';
+
+export type DbFraudCheck = {
+  id: string;
+  input_type: FraudInputType;
+  input_text: string;
+  normalized_text: string;
+  risk_level: FraudRiskLevel;
+  risk_score: number;
+  status: FraudCheckStatus;
+  created_at: string;
+};
+
+export type DbFraudSignal = {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  severity: FraudSignalSeverity;
+  category: FraudSignalCategory;
+  weight: number;
+  enabled: boolean;
+  created_at: string;
+};
+
+export type DbFraudCheckSignal = {
+  id: string;
+  fraud_check_id: string;
+  fraud_signal_id: string;
+  matched_text: string;
+  explanation: string;
+  created_at: string;
+};
+
 /** Public reference content. Readable by anon and authenticated. */
 export type DbFraudPattern = {
   id: string;
@@ -328,6 +367,44 @@ export type DbFraudPatternInsert = {
   id?: string;
 };
 
+export type DbFraudCheckInsert = {
+  input_type: FraudInputType;
+  input_text: string;
+  normalized_text: string;
+  risk_level?: FraudRiskLevel;
+  risk_score?: number;
+  status?: FraudCheckStatus;
+  id?: string;
+  created_at?: string;
+};
+
+export type DbFraudCheckUpdate = AllOptional<DbFraudCheck>;
+
+export type DbFraudSignalInsert = {
+  code: string;
+  name: string;
+  description: string;
+  severity: FraudSignalSeverity;
+  category: FraudSignalCategory;
+  weight: number;
+  enabled?: boolean;
+  id?: string;
+  created_at?: string;
+};
+
+export type DbFraudSignalUpdate = AllOptional<DbFraudSignal>;
+
+export type DbFraudCheckSignalInsert = {
+  fraud_check_id: string;
+  fraud_signal_id: string;
+  matched_text: string;
+  explanation: string;
+  id?: string;
+  created_at?: string;
+};
+
+export type DbFraudCheckSignalUpdate = AllOptional<DbFraudCheckSignal>;
+
 export type DbFeedbackInsert = {
   module: string;
   rating: number;
@@ -396,6 +473,39 @@ export interface Database {
         Update: AllOptional<DbFraudPattern>;
         Relationships: [];
       };
+      fraud_checks: {
+        Row: DbFraudCheck;
+        Insert: DbFraudCheckInsert;
+        Update: DbFraudCheckUpdate;
+        Relationships: [];
+      };
+      fraud_signals: {
+        Row: DbFraudSignal;
+        Insert: DbFraudSignalInsert;
+        Update: DbFraudSignalUpdate;
+        Relationships: [];
+      };
+      fraud_check_signals: {
+        Row: DbFraudCheckSignal;
+        Insert: DbFraudCheckSignalInsert;
+        Update: DbFraudCheckSignalUpdate;
+        Relationships: [
+          {
+            foreignKeyName: 'fraud_check_signals_fraud_check_id_fkey';
+            columns: ['fraud_check_id'];
+            isOneToOne: false;
+            referencedRelation: 'fraud_checks';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'fraud_check_signals_fraud_signal_id_fkey';
+            columns: ['fraud_signal_id'];
+            isOneToOne: false;
+            referencedRelation: 'fraud_signals';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       feedback: {
         Row: DbFeedback;
         Insert: DbFeedbackInsert;
@@ -407,6 +517,11 @@ export interface Database {
     Functions: Record<string, never>;
     Enums: {
       user_language: UserLanguage;
+      fraud_input_type: FraudInputType;
+      fraud_risk_level: FraudRiskLevel;
+      fraud_check_status: FraudCheckStatus;
+      fraud_signal_severity: FraudSignalSeverity;
+      fraud_signal_category: FraudSignalCategory;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -427,4 +542,4 @@ export type TableUpdate<T extends TableName> = Database['public']['Tables'][T]['
  * Tables an unauthenticated (anon) caller may read. Everything else is either
  * authenticated-only or owner-scoped. Keep in sync with migrations 008 + 010.
  */
-export type PublicTableName = 'lessons' | 'schemes' | 'fraud_patterns';
+export type PublicTableName = 'lessons' | 'schemes' | 'fraud_patterns' | 'fraud_checks' | 'fraud_signals' | 'fraud_check_signals';
