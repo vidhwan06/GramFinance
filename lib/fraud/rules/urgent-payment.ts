@@ -21,7 +21,9 @@ const SIGNAL = {
 
 const PAYMENT_KEYWORDS = [
   /\bpay\b/i,
+  /\bpay\w*/i,
   /\bsend\s+money\b/i,
+  /\bsend\s+payment\b/i,
   /\btransfer\b/i,
   /\bsend\s+immediately\b/i,
 ];
@@ -40,6 +42,8 @@ const URGENCY_PATTERNS = [
   /limited\s+time/i,
   /within\s+\d+\s+hours?/i,
   /within\s+\d+\s+minutes/i,
+  /reactivate/i,
+  /final\s+notice/i,
 ];
 
 export function detectUrgentPayment(

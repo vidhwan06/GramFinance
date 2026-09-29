@@ -39,6 +39,13 @@ const REQUEST_PATTERNS = [
   /send\s+me\s+your\s+debit\s+pin/i,
   /share\s+your\s+debit\s+pin/i,
   /give\s+me\s+your\s+pin/i,
+  // "enter your" patterns for credential requests
+  /enter\s+your\s+(atm\s+)?pin/i,
+  /enter\s+your\s+(banking\s+)?password/i,
+  /enter\s+your\s+login\s+credentials/i,
+  /enter\s+your\s+debit\s+pin/i,
+  /provide\s+your\s+(atm\s+)?pin/i,
+  /provide\s+your\s+(banking\s+)?password/i,
 ];
 
 // Negative indicators

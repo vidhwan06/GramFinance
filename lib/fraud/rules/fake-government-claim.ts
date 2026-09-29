@@ -31,6 +31,18 @@ const GOVERNMENT_CLAIM_PATTERNS = [
   /exclusive\s+(?:government\s+)?benefit/i,
   /government\s+scheme\s+(?:has\s+been\s+approved\s+for\s+|is\s+available\s+to\s+)you/i,
   /you\s+are\s+pre-qualified\s+for\s+(?:a\s+)?government\s+benefit/i,
+  // "government benefit" claim variants - allow optional text between "a" and "government benefit"
+  /you\s+have\s+been\s+selected\s+for\s+(?:a\s+[^.]*?)?government\s+benefit/i,
+  /you\s+are\s+eligible\s+for\s+(?:a\s+[^.]*?)?government\s+benefit/i,
+  /government\s+benefit\s+(?:has\s+been\s+approved\s+for\s+|is\s+available\s+to\s+)you/i,
+  // "government assistance" / "government payment" / "financial assistance" claim variants
+  // Support both "you have been selected" and "has been selected" / "was selected" patterns
+  /(?:you\s+have|has|was)\s+been\s+selected\s+for\s+(?:a\s+[^.]*?)?government\s+assistance/i,
+  /(?:you\s+are|is)\s+eligible\s+for\s+(?:a\s+[^.]*?)?government\s+assistance/i,
+  /(?:you\s+have|has|was)\s+been\s+selected\s+for\s+(?:a\s+[^.]*?)?government\s+payment/i,
+  /(?:you\s+are|is)\s+eligible\s+for\s+(?:a\s+[^.]*?)?government\s+payment/i,
+  /(?:you\s+have|has|was)\s+been\s+selected\s+for\s+(?:a\s+[^.]*?)?financial\s+assistance/i,
+  /(?:you\s+are|is)\s+eligible\s+for\s+(?:a\s+[^.]*?)?financial\s+assistance/i,
 ];
 
 export function detectFakeGovernmentClaim(

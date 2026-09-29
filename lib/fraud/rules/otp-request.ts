@@ -32,6 +32,26 @@ const REQUEST_PATTERNS = [
   /tell\s+me\s+your\s+otp/i,
   /send\s+your\s+otp/i,
   /share\s+me\s+the\s+otp/i,
+  // "share the otp you receive" / "otp you receive" patterns
+  /share\s+the\s+otp\s+you\s+receive/i,
+  /otp\s+you\s+receive/i,
+  /provide\s+the\s+otp\s+you\s+receive/i,
+  /send\s+the\s+otp\s+you\s+receive/i,
+  // "send the otp received" / "otp received" patterns
+  /send\s+the\s+otp\s+received/i,
+  /share\s+the\s+otp\s+received/i,
+  /provide\s+the\s+otp\s+received/i,
+  /otp\s+received\s+on\s+(?:your\s+)?(?:mobile|phone)/i,
+  /send\s+otp\s+received/i,
+  /share\s+otp\s+received/i,
+  // "enter your otp" / "enter the otp" patterns
+  /enter\s+your\s+otp/i,
+  /enter\s+the\s+otp/i,
+  /input\s+your\s+otp/i,
+  /input\s+the\s+otp/i,
+  // "enter your ... otp" with words in between (e.g., "enter your atm pin and otp")
+  /enter\s+your\s+[^.]*?\botp\b/i,
+  /enter\s+the\s+[^.]*?\botp\b/i,
 ];
 
 // Negative indicators - the message is warning against sharing, not requesting
