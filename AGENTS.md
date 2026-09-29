@@ -7,7 +7,7 @@ Next.js 15 (App Router), React 19, TypeScript, Tailwind, Supabase, Vitest. Bilin
 ```bash
 npm run dev                                            # http://localhost:3000
 npm run build                                          # also runs lint + typecheck
-npm test                                               # vitest run — 278 tests / 14 files
+npm test                                               # vitest run — 678 tests / 42 files
 npx tsc --noEmit                                       # there is NO `typecheck` script
 npx vitest run tests/unit                              # offline only, no network
 npx vitest run -t "Money Utilities"                    # single test by name
@@ -22,11 +22,24 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
 
 ## Implementation status — check before assuming a feature exists
 
-**Only the loan calculator is implemented end to end.** Everything else is scaffold:
+**The loan calculator and fraud checker are implemented end to end.** Other features are scaffold:
 
-- All 5 routes in `app/api/*` are stubs echoing `{ message: '... placeholder ready.' }`.
-- `features/fraud/` contains **only `types.ts`**. There is no `features/fraud/engine/` and no deterministic rules engine (an earlier version of this file wrongly claimed one). `/check` renders a placeholder card.
-- No page or component calls `fetch`, Gemini, Tesseract, or a Supabase client. The clients in `lib/supabase/*` are wired and typed but only exercised by the integration test.
+- **Loan calculator** — complete with V2 engine, UI, comparison, prepayment simulation.
+- **Fraud checker (Phase 5)** — complete implementation:
+  - Domain types in `lib/fraud/types.ts`
+  - Input normalization in `lib/fraud/normalizer.ts`
+  - 7 deterministic fraud rules in `lib/fraud/rules/`: `OTP_REQUEST`, `ACCOUNT_ACCESS_REQUEST`, `URGENT_PAYMENT`, `UNOFFICIAL_FEE`, `PERSONAL_UPI`, `SUSPICIOUS_LINK`, `FAKE_GOVERNMENT_CLAIM` — each with negative-pattern guards to avoid flagging educational/warning content
+  - Risk scoring in `lib/fraud/risk-calculator.ts`: sum of weights clamped 0–100; bands 0–29 low, 30–59 medium, 60–100 high
+  - Recommendations in `lib/fraud/recommendations.ts`: per-signal + general; cybercrime helpline `1930` surfaced
+  - Scheme recognition in `lib/fraud/scheme-recognition.ts`: deterministic matching against active schemes from Supabase with alias map
+  - Scheme claim analysis in `lib/fraud/scheme-claim-analyzer.ts`: three-state evaluation (`supported`/`contradicted`/`unknown`); absence of info is `unknown`, never `contradicted`
+  - Engine orchestration in `lib/fraud/fraud-engine.ts`: normalize → run rules → score → recommend → recognize schemes → analyze claims
+  - API route `POST /api/fraud/check` in `app/api/fraud/check/route.ts`: Zod validation (strict), calls engine with active schemes, returns envelope `{success, data, meta}`
+  - UI components in `features/fraud/components/`: `FraudChecker` (container), `FraudInput`, `FraudResult`, `FraudRiskSummary`, `FraudSignalList`, `SchemeFindings`, `FraudRecommendations`, `EmptyResult`
+  - Full bilingual support via `features/language/translations/en.ts` and `kn.ts`
+  - Test coverage: 8 unit, 5 integration, 34 UI tests — all passing
+- Other API routes in `app/api/*` (schemes, lessons, feedback, AI) are stubs echoing `{ message: '... placeholder ready.' }`.
+- No page or component calls Gemini, Tesseract. Supabase client used only server-side in `/api/fraud/check` for scheme data.
 - `middleware.ts` calls `supabase.auth.getUser()` on every request but no-ops when the Supabase env vars are missing, so the app renders fine with no backend.
 
 ## Supabase
@@ -55,6 +68,22 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
 - `supabase/seed-demo.sql` holds clearly-labelled `DEMO_SCHEME_*` fixtures (one `active`, one `draft`) used by the RLS tests. They are **not real schemes** — never show them to users or copy their rules into real records.
 - Rules are structured data only: no JS, no `eval`, no `Function`. Never let a rule row contain code.
 - Domain language is deliberately cautious — `eligible` / `potentially_eligible` / `not_eligible`, and copy must never promise approval. The API returns the disclaimer in the response body so a client cannot forget it.
+
+## Fraud Checker (Phase 5)
+
+- **Deterministic rules engine** — no ML/LLM in the verdict path. Every signal is explainable via matched pattern, weight, severity, explanation.
+- **7 detection rules** in `lib/fraud/rules/`: `OTP_REQUEST`, `ACCOUNT_ACCESS_REQUEST`, `URGENT_PAYMENT`, `UNOFFICIAL_FEE`, `PERSONAL_UPI`, `SUSPICIOUS_LINK`, `FAKE_GOVERNMENT_CLAIM`.
+- **Negative-pattern guards** on credential/fee rules — educational/warning messages (e.g., "Never share your OTP") do NOT trigger.
+- **Risk scoring** — sum of matched signal weights, clamped 0–100. Bands: 0–29 low, 30–59 medium, 60–100 high.
+- **Scheme recognition** — deterministic matching against active schemes from Supabase. Uses normalized name matching + alias map (PM-KISAN, PMUY, PM-VISHWAKARMA, GANGA KALYAN).
+- **Scheme claim analysis** — three-state evaluation: `supported` (consistent with scheme data), `contradicted` (conflicts with scheme data), `unknown` (insufficient data to verify). **Absence of info is `unknown`, never `contradicted`**. Language: "The available scheme information does not verify this claim."
+- **Recommendations** — per-signal + general. Cybercrime helpline `1930` surfaced when relevant.
+- **API** — `POST /api/fraud/check` validates with Zod (strict), calls engine with active schemes, returns `{success, data, meta}`. No service-role key; uses anon-key server client with caller's session.
+- **UI** — `FraudChecker` container orchestrates input→result flow. Components: `FraudInput` (validation, char counter, helpline note), `FraudResult` (risk summary, signals, scheme findings, recommendations, disclaimer), `EmptyResult` (calm "no warning signs" + disclaimer, never "safe").
+- **Accessibility** — ARIA roles/labels, live regions, color+glyph+text for risk, internal codes never exposed.
+- **Bilingual** — all copy in `features/language/translations/en.ts` and `kn.ts`; feature-local dictionaries avoided.
+- **Test coverage** — 8 unit (engine, rules, risk, recommendations, normalizer, scheme recognition, claim analysis), 5 integration (API), 34 UI (components, flows) — all passing.
+- **Limitations** — no OCR/screenshot upload; phone/UPI/URL input types accepted but rules treat as generic text; `officialUrl` not populated in scheme recognition; no persistence/history; no rate limiting.
 
 ## Loan engine (`features/loan/engine/`) — the load-bearing code
 
