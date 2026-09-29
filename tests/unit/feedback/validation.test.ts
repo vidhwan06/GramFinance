@@ -52,6 +52,30 @@ describe('feedbackInputSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects an unknown module value', () => {
+    const result = feedbackInputSchema.safeParse({
+      module: 'not-a-real-module',
+      rating: 4,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an empty module value', () => {
+    const result = feedbackInputSchema.safeParse({
+      module: '',
+      rating: 4,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts all valid module values', () => {
+    const validModules = ['general', 'loan', 'schemes', 'fraud-check', 'learn'];
+    for (const mod of validModules) {
+      const result = feedbackInputSchema.safeParse({ module: mod, rating: 4 });
+      expect(result.success).toBe(true);
+    }
+  });
+
   it('rejects comment over 1000 characters', () => {
     const result = feedbackInputSchema.safeParse({
       module: 'loan',

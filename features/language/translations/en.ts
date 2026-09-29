@@ -142,6 +142,7 @@ export const en = {
     commentLabel: 'Additional comments (optional)',
     commentHelper: 'Tell us what went well or what could be better.',
     commentPlaceholder: 'Type your feedback here...',
+    submitAnother: 'Submit another feedback',
   },
   home: {
     welcomeTitle: 'GramFinance',

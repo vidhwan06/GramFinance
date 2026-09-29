@@ -13,18 +13,14 @@ import { z } from 'zod';
  * comment: optional free text, capped at 1000 chars.
  */
 
-/** Maximum length of the module identifier (matches VARCHAR(50)). */
-export const MODULE_MAX_LENGTH = 50;
-
 /** Maximum length of the free-text comment. */
 export const COMMENT_MAX_LENGTH = 1000;
 
+/** Allowed module identifiers — must match the values offered by the form. */
+export const MODULE_VALUES = ['general', 'loan', 'schemes', 'fraud-check', 'learn'] as const;
+
 export const feedbackInputSchema = z.strictObject({
-  module: z
-    .string()
-    .trim()
-    .min(1, 'Module is required.')
-    .max(MODULE_MAX_LENGTH, `Module must be ${MODULE_MAX_LENGTH} characters or fewer.`),
+  module: z.string().trim().pipe(z.enum(MODULE_VALUES)),
   rating: z
     .number()
     .int('Rating must be a whole number.')

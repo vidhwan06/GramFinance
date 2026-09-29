@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
 import { Alert } from '@/components/ui/Alert';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
+import { cn } from '@/lib/utils/cn';
 
 /**
  * Feedback form component.
@@ -71,9 +72,24 @@ export function FeedbackForm() {
 
   if (formState.status === 'success') {
     return (
-      <Alert variant="success" title={t.feedback.successTitle}>
-        {t.feedback.successMessage}
-      </Alert>
+      <div className="space-y-4">
+        <Alert variant="success" title={t.feedback.successTitle}>
+          {t.feedback.successMessage}
+        </Alert>
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={() => {
+            setModule('');
+            setRating(null);
+            setComment('');
+            setFormState({ status: 'idle' });
+          }}
+        >
+          {t.feedback.submitAnother}
+        </Button>
+      </div>
     );
   }
 
@@ -173,7 +189,4 @@ export function FeedbackForm() {
   );
 }
 
-/** Utility for conditional class merging (matches the project's cn pattern). */
-function cn(...classes: (string | boolean | undefined)[]): string {
-  return classes.filter(Boolean).join(' ');
-}
+
