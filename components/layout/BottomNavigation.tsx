@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
 import { cn } from '@/lib/utils/cn';
-import { Home, BookOpen, Calculator, ShieldAlert, Landmark, MessageSquare } from 'lucide-react';
+import { Home, BookOpen, Calculator, ShieldAlert, Landmark, MessageSquare, Star } from 'lucide-react';
 
 export function BottomNavigation() {
   const pathname = usePathname();
@@ -18,6 +18,7 @@ export function BottomNavigation() {
     { href: '/check', label: t.nav.check, icon: ShieldAlert },
     { href: '/schemes', label: t.nav.schemes, icon: Landmark },
     { href: '/assistant', label: t.nav.assistant, icon: MessageSquare },
+    { href: '/feedback', label: t.nav.feedback, icon: Star },
   ];
 
   return (
