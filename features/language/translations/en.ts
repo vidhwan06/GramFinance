@@ -109,6 +109,7 @@ export const en = {
     aboutOfficialVerificationDesc: 'Final eligibility is subject to verification by the relevant authorities and the applicable scheme process.',
     aboutAdminRequirements: 'Administrative requirements',
     aboutAdminRequirementsDesc: 'Applicants must complete the applicable KYC, documentation, and verification process.',
+    aboutEligibilityAndVerification: 'Eligibility and verification',
   },
   home: {
     welcomeTitle: 'GramFinance',

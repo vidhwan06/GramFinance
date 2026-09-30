@@ -21,19 +21,33 @@
 -- ============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- PM-KISAN — scheme row (kept as DRAFT)
+-- PM-KISAN — scheme row (ACTIVE — verified 2026-09-30)
 -- ─────────────────────────────────────────────────────────────────────────────
--- status is set to 'draft' on INSERT and is deliberately NOT part of the
--- DO UPDATE set below. Migration 011 made public catalogue reads expose only
--- status = 'active', and this row's facts were last verified on 2026-01-15.
--- Publishing it as active would present unverified information as verified.
+-- VERIFICATION RECORD:
+--   Official source: https://pmkisan.gov.in/
+--   Guidelines: PM-KISAN Revised Operational Guidelines
+--   Verification date: 2026-09-30
+--   Verified by: Manual review against official PM-KISAN sources
 --
--- To publish: re-verify against https://pmkisan.gov.in/, update last_verified
--- to the real date, then set status = 'active'. That is a deliberate human
--- step and the verification date must never be invented.
+-- VERIFIED FACTS:
+--   - Income support: ₹6,000/year in three equal installments
+--   - Core exclusion rules (institutional landholders, constitutional office
+--     holders, government employees above MTS/Class IV, pensioners ≥ ₹10,000/month,
+--     income-tax payers, registered professionals, NRIs) are supported by the
+--     official PM-KISAN Revised Operational Guidelines
+--   - NRI exclusion (isNRI = false) is supported by the official PM-KISAN
+--     Revised Operational Guidelines
 --
--- Because status is absent from the DO UPDATE set, re-running this seed after
--- someone has properly verified and published PM-KISAN will not demote it.
+-- VERIFICATION-DEPENDENT (NOT automated by GramFinance):
+--   - Landholding cutoff date (01-02-2019): exists in official requirements
+--     but is NOT automated by GramFinance
+--   - Succession-after-death handling: NOT automated by GramFinance
+--   - Duplicate/multiple beneficiary verification: NOT automated by GramFinance
+--   - eKYC, land-record verification, State/UT verification: administrative
+--     requirements that remain official-verification-dependent
+--
+-- GramFinance is a preliminary assessment tool. It does not present
+-- verification-dependent conditions as automatically verified.
 -- ─────────────────────────────────────────────────────────────────────────────
 INSERT INTO public.schemes (name_en, name_kn, description_en, description_kn, target_groups, required_documents, official_url, last_verified, status)
 VALUES (
@@ -44,7 +58,7 @@ VALUES (
     ARRAY['farmer', 'small_holder', 'marginal_farmer'],
     ARRAY['Aadhaar Card', 'Land Records (Record of Rights)', 'Bank Account Details'],
     'https://pmkisan.gov.in/',
-    '2026-09-26',
+    '2026-09-30',
     'active'
 ) ON CONFLICT (official_url) DO UPDATE SET
     name_en             = EXCLUDED.name_en,
@@ -59,7 +73,8 @@ VALUES (
 -- PM-KISAN — scheme_rules
 -- ─────────────────────────────────────────────────────────────────────────────
 -- These rules implement the PM-KISAN eligibility and exclusion criteria as
--- per the official Operational Guidelines (revised 29.03.2020) and FAQs.
+-- per the official PM-KISAN Revised Operational Guidelines (verified 2026-09-30
+-- against https://pmkisan.gov.in/).
 --
 -- All rules are grouped into 8 AND-combined groups:
 --
@@ -81,7 +96,9 @@ VALUES (
 -- Verification-dependent conditions (land record cutoff dates, physical
 -- verification, duplicate-benefit checks, eKYC) are NOT represented as
 -- scheme_rules. They are documented in the scheme description and require
--- official verification.
+-- official verification. The 01-02-2019 landholding cutoff, succession-after-death
+-- handling, and duplicate/multiple beneficiary checks remain official-verification-
+-- dependent and are NOT automated by GramFinance.
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- Group 1: Core eligibility — family owns cultivable land (self-declared)

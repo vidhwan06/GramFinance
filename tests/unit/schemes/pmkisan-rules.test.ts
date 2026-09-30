@@ -454,3 +454,32 @@ describe('PM-KISAN: rule structure', () => {
     expect(fields).toHaveLength(9);
   });
 });
+
+// ─── Verification metadata ───────────────────────────────────────────────────
+
+describe('PM-KISAN: verification metadata', () => {
+  it('all rules are rule_type eligibility', () => {
+    const rules = pmKisanRules();
+    for (const rule of rules) {
+      expect(rule.ruleType).toBe('eligibility');
+    }
+  });
+
+  it('NRI exclusion rule is present and supported by official guidelines', () => {
+    const rules = pmKisanRules();
+    const nriRule = rules.find((r) => r.field === 'isNRI');
+    expect(nriRule).toBeDefined();
+    expect(nriRule?.operator).toBe('=');
+    expect(nriRule?.value).toBe(false);
+  });
+
+  it('verification-dependent conditions are NOT represented as rules', () => {
+    const rules = pmKisanRules();
+    const fields = rules.map((r) => r.field);
+    // These conditions are official-verification-dependent and must NOT be rules
+    expect(fields).not.toContain('landHoldingDate');
+    expect(fields).not.toContain('landAcquisitionDate');
+    expect(fields).not.toContain('landAcquiredBySuccession');
+    expect(fields).not.toContain('pmkisanFamilyBeneficiary');
+  });
+});

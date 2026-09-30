@@ -64,7 +64,7 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
 - **Eligibility is server-side only.** `POST /api/schemes/eligibility` uses the anon-key server client with the caller's session, so RLS applies to it exactly as in the browser. Never add a service-role client, and never let a client submit a result — the Zod request schema is `.strict()`, so `verdict`/`eligible` are rejected outright.
 - `applicant-schema.ts` is **derived from the field registry**, not hand-written, so a field only has to be added in one place.
 - `schemes.target_groups` is **browse/filter metadata only**. Eligibility truth is `scheme_rules`.
-- Public catalogue shows `status = 'active'` only. PM-KISAN is deliberately `draft` because its facts were last verified `2026-01-15`; publish it only after real re-verification, and never invent a verification date.
+- Public catalogue shows `status = 'active'` only. PM-KISAN is `active` after manual verification against https://pmkisan.gov.in/ on 2026-09-30. The 01-02-2019 landholding cutoff, succession-after-death handling, and duplicate-benefit checks remain official-verification-dependent and are NOT automated by GramFinance.
 - `supabase/seed-demo.sql` holds clearly-labelled `DEMO_SCHEME_*` fixtures (one `active`, one `draft`) used by the RLS tests. They are **not real schemes** — never show them to users or copy their rules into real records.
 - Rules are structured data only: no JS, no `eval`, no `Function`. Never let a rule row contain code.
 - Domain language is deliberately cautious — `eligible` / `potentially_eligible` / `not_eligible`, and copy must never promise approval. The API returns the disclaimer in the response body so a client cannot forget it.

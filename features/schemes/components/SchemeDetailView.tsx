@@ -100,7 +100,7 @@ export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">{language === 'kn' ? 'ಈ ಯೋಜನೆ ಬಗ್ಗೆ' : 'About this scheme'}</CardTitle>
+          <CardTitle className="text-base">{t.schemes.aboutEligibilityAndVerification}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

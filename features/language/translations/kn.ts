@@ -111,6 +111,7 @@ export const kn: TranslationKeys = {
     aboutOfficialVerificationDesc: 'ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕಾರಿಗಳು ಮತ್ತು ಅನ್ವಯಿಕ ಯೋಜನೆ ಪ್ರಕ್ರಿಯೆಯ ಮೂಲಕ ಪರಿಶೀಲನೆಗೆ ಒಳಪಟ್ಟಿದೆ.',
     aboutAdminRequirements: 'ಆಡಳಿತ ಅಗತ್ಯಗಳು',
     aboutAdminRequirementsDesc: 'ಅರ್ಜಿದಾರರು ಅನ್ವಯಿಕ KYC, ದಾಖಲೆ ಮತ್ತು ಪರಿಶೀಲನೆ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಬೇಕು.',
+    aboutEligibilityAndVerification: 'ಅರ್ಹತೆ ಮತ್ತು ಪರಿಶೀಲನೆ',
   },
   home: {
     welcomeTitle: 'ಗ್ರಾಮ್‌ಫೈನಾನ್ಸ್',

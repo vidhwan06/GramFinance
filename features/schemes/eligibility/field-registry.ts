@@ -163,7 +163,7 @@ export const SCHEME_FIELD_REGISTRY: readonly SchemeFieldDefinition[] = [
     unit: 'none',
     monetary: false,
     labelEn: 'Land holding in acres',
-    labelKn: 'ಭೂಮಿ ದories ಎಕರ್‌ಗಳಲ್ಲಿ',
+    labelKn: 'ಭೂಮಿ ಹೊಂದಿಕೆ ಎಕರೆಗಳಲ್ಲಿ',
   },
   {
     name: 'occupation',

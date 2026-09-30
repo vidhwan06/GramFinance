@@ -174,6 +174,17 @@ describe('SchemeDetailView condition rendering', () => {
     expect(headings.length).toBe(1);
   });
 
+  it('uses distinct headings for description and eligibility cards', () => {
+    renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
+    // The first card is the description; the second is eligibility/verification.
+    // They must not share a heading.
+    expect(screen.getByText('About this scheme')).toBeDefined();
+    expect(screen.getByText('Eligibility and verification')).toBeDefined();
+    // Ensure the old duplicate is gone.
+    const aboutHeadings = screen.getAllByText('About this scheme');
+    expect(aboutHeadings.length).toBe(1);
+  });
+
   it('formats the last verified date for display', () => {
     renderWithLanguage(<SchemeDetailView scheme={DETAIL} />);
     // Should show a formatted date, not the raw ISO string
