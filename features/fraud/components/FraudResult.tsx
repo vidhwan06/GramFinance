@@ -2,13 +2,7 @@
 
 import React from 'react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
-import {
-  FraudRiskSummary,
-  FraudSignalList,
-  SchemeFindings,
-  FraudRecommendations,
-  EmptyResult,
-} from './';
+import { FraudRiskSummary, FraudExplanation, EmptyResult } from './';
 import type { FraudCheckResult } from '@/lib/fraud/types';
 
 /**
@@ -16,10 +10,12 @@ import type { FraudCheckResult } from '@/lib/fraud/types';
  *
  * Renders:
  *   - Risk summary (low / medium / high)
- *   - List of fraud signals
- *   - Scheme recognition information
- *   - Scheme findings (supported / contradicted / unknown)
- *   - Recommendations
+ *   - Explanation section combining:
+ *       * What this message says / is trying to do
+ *       * Why it was flagged (warning indicators with evidence)
+ *       * What you should do (recommendations)
+ *       * Scheme findings (if applicable)
+ *       * Important limitation disclaimer
  */
 export function FraudResult({
   result,
@@ -46,33 +42,8 @@ export function FraudResult({
       {/* Risk Summary */}
       <FraudRiskSummary riskLevel={result.riskLevel} riskScore={result.riskScore} />
 
-      {/* Fraud Signals */}
-      {result.signals.length > 0 && (
-        <FraudSignalList signals={result.signals} />
-      )}
-
-      {/* Scheme Recognition */}
-      {result.recognizedSchemes.length > 0 && (
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-3">
-            {t.fraud.schemeRecognized}
-          </h3>
-          <SchemeFindings
-            schemeFindings={result.schemeFindings}
-            recognizedSchemes={result.recognizedSchemes}
-          />
-        </div>
-      )}
-
-      {/* Recommendations */}
-      {result.recommendations.length > 0 && (
-        <FraudRecommendations recommendations={result.recommendations} />
-      )}
-
-      {/* Disclaimer */}
-      <p className="text-xs text-gray-400 border-t border-rule pt-4">
-        {t.fraud.disclaimer}
-      </p>
+      {/* Explanation Section */}
+      <FraudExplanation result={result} />
     </div>
   );
 }

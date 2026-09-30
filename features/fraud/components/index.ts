@@ -6,3 +6,4 @@ export { FraudSignalList } from './FraudSignalList';
 export { SchemeFindings } from './SchemeFindings';
 export { FraudRecommendations } from './FraudRecommendations';
 export { EmptyResult } from './EmptyResult';
+export { FraudExplanation } from './FraudExplanation';

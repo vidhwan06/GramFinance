@@ -5,6 +5,7 @@ import { useLanguage } from '@/features/language/hooks/useLanguage';
 import { cn } from '@/lib/utils/cn';
 import { OfficialSourceLink } from '@/features/schemes/components/OfficialSourceLink';
 import type { SchemeClaimFinding, RecognizedScheme } from '@/lib/fraud/types';
+import { translateSchemeFindingExplanation } from '@/features/fraud/lib/fraud-translations';
 
 /**
  * Displays scheme-claim analysis findings in the three-state format.
@@ -55,6 +56,11 @@ export function SchemeFindings({
       <ul className="space-y-3" role="list">
         {schemeFindings.map((finding) => {
           const status = finding.status;
+          const translatedExplanation = translateSchemeFindingExplanation(
+            finding.explanation,
+            finding.schemeName,
+            t
+          );
 
           return (
             <li
@@ -73,7 +79,7 @@ export function SchemeFindings({
                     {finding.schemeName}
                   </p>
                   <p className="text-xs text-gray-600 mt-0.5">
-                    {finding.explanation}
+                    {translatedExplanation}
                   </p>
                   <p className="text-xs font-medium text-gray-500 mt-1">
                     {statusLabels[status]}

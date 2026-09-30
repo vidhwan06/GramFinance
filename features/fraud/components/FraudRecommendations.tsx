@@ -3,6 +3,7 @@
 import React from 'react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
 import type { Recommendation } from '@/lib/fraud/types';
+import { translateRecommendation } from '@/features/fraud/lib/fraud-translations';
 
 /**
  * Displays practical safety recommendations returned by the fraud checker.
@@ -44,7 +45,7 @@ export function FraudRecommendations({
               •
             </span>
             <span className="flex-1 text-sm text-gray-700">
-              {rec.text}
+              {translateRecommendation(rec.text, t)}
             </span>
           </li>
         ))}

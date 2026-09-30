@@ -234,6 +234,91 @@ export const en = {
     cybercrimeHelpline: 'National Cybercrime Helpline: 1930',
     disclaimer: 'The checker provides risk indicators and evidence, not a definitive legal determination of fraud.',
     emptyResult: 'No obvious warning signs detected',
+
+    // Explanation section
+    explanationWhatMessageDoes: 'What this message is trying to do',
+    explanationWhatMessageSays: 'What this message says',
+    explanationWhyFlagged: 'Why it was flagged',
+    explanationNoWarning: 'No warning indicators detected',
+    explanationNoWarningDesc: 'No obvious warning indicators were detected by this checker.',
+    explanationWhatToVerify: 'What to verify anyway',
+    explanationVerifyAnyway:
+      'This does not prove the message is genuine. Verify unexpected transactions, claims, or requests through official channels (bank app, government portal, customer care).',
+    explanationGenuineDesc:
+      'The message does not contain any of the fraud warning indicators this checker currently looks for. It appears to be a standard informational or transactional message.',
+    explanationAdditionalDisclaimer:
+      'The checker provides risk indicators based on known patterns, not a definitive legal determination. Absence of warning signs does not guarantee legitimacy.',
+
+    // Scheme finding explanations
+    schemePaymentContradicted: 'This claim does not match the scheme information currently available for {scheme}. The available scheme information does not verify this fee requirement. This is a potential warning sign.',
+    schemePaymentUnknown: 'The available scheme information does not verify this fee requirement for {scheme}. Please verify through the official source.',
+    schemeBenefitUnknown: 'This benefit claim does not match the scheme information currently available for {scheme}. The available scheme information does not verify the specific benefit amount mentioned. This is a potential warning sign. Please verify the claim using the official government source.',
+    schemeEligibilityUnknown: 'This eligibility claim does not match the scheme information currently available for {scheme}. The available scheme information does not verify automatic eligibility for all applicants. Please verify the claim using the official government source.',
+
+    // Signal titles
+    signalTitleOtpRequest: 'OTP request',
+    signalTitleAccountAccessRequest: 'Account access request',
+    signalTitleUrgentAccountAction: 'Urgent account action demand',
+    signalTitleUrgentPayment: 'Urgent payment demand',
+    signalTitleUnofficialFee: 'Unofficial fee request',
+    signalTitlePersonalUpi: 'Personal UPI payment request',
+    signalTitleSuspiciousLink: 'Suspicious link',
+    signalTitleFakeGovernmentClaim: 'Potentially misleading government claim',
+
+    // Signal explanations
+    signalExplanationOtpRequest: 'The message asks you to share a one-time password (OTP) or verification code.',
+    signalExplanationAccountAccessRequest: 'The message requests your banking password, ATM PIN, login credentials, or other sensitive account information.',
+    signalExplanationUrgentAccountAction: 'The message uses threatening language (like "account will be blocked") to pressure you into taking immediate action on your account, such as updating KYC or verifying details.',
+    signalExplanationUrgentPayment: 'The message combines payment language with urgent or threatening pressure to pay immediately.',
+    signalExplanationUnofficialFee: 'The message claims you must pay a fee (processing, registration, activation) to receive a government benefit, subsidy, or scheme payment.',
+    signalExplanationPersonalUpi: 'The message asks you to send money to a personal UPI ID (like name@bank) in a context where an official government or institutional channel would be expected.',
+    signalExplanationSuspiciousLink: 'The message contains a link with characteristics commonly used in phishing (e.g., mismatched domain, IP address, or government-like naming on unofficial domains).',
+    signalExplanationFakeGovernmentClaim: 'The message makes a claim about a government scheme or benefit that conflicts with known scheme information or uses language typical of fraudulent offers.',
+
+    // Why it matters
+    signalWhyOtpRequest: 'Legitimate organizations never ask for OTPs over messages. Sharing an OTP gives someone else access to your account or transaction.',
+    signalWhyAccountAccessRequest: 'No bank or government agency will ask for your password, PIN, or full credentials via a message or link. This is a credential theft attempt.',
+    signalWhyUrgentAccountAction: 'Scammers create false urgency to bypass your caution. Real banks give you time and direct you to their official app or branch — not a link in a message.',
+    signalWhyUrgentPayment: 'Legitimate payment requests do not threaten immediate consequences. Always verify independently before sending money.',
+    signalWhyUnofficialFee: 'Government schemes do not charge fees to release benefits. Any request to pay for a "government benefit" is a scam.',
+    signalWhyPersonalUpi: 'Government payments are never made to personal UPI IDs. Official payments use government treasury accounts or verified portals.',
+    signalWhySuspiciousLink: 'Clicking phishing links can lead to fake login pages that steal your credentials or install malware. Always visit official websites directly.',
+    signalWhyFakeGovernmentClaim: 'Fraudsters often impersonate government schemes to gain trust. Always verify scheme claims on the official government portal.',
+
+    // Summary parts for generateMessageSummary
+    summaryPartCredentialPhishing: 'asks the recipient to provide banking credentials (such as ATM PIN, password, or OTP) through a link',
+    summaryPartOtpAndCredentials: 'asks the recipient to disclose an OTP and banking credentials',
+    summaryPartOtpOnly: 'asks the recipient to share a one-time password (OTP) or verification code',
+    summaryPartAccountAccessOnly: 'requests banking passwords, PINs, or login credentials',
+    summaryPartUrgentAccountAction: 'pressures the recipient to take urgent action on their account (such as KYC update or verification)',
+    summaryPartUrgentPayment: 'uses urgent language to pressure the recipient into making a payment',
+    summaryPartUnofficialFee: 'claims a fee must be paid to receive a government benefit or scheme payment',
+    summaryPartPersonalUpi: 'requests payment to a personal UPI identifier',
+    summaryPartSuspiciousLink: 'contains a suspicious link',
+    summaryPartFakeGovernmentClaim: 'makes a government-scheme claim that may be misleading',
+    summaryPartUnknown: 'The message contains some warning indicators but the overall intent is unclear.',
+    summaryPrefixSingle: 'This message appears to ',
+    summaryPrefixMulti: 'This message appears to ',
+    summaryConnector: ', and ',
+
+    // Recommendations
+    recommendationOtpRequest1: 'Do not share OTPs or verification codes with anyone.',
+    recommendationOtpRequest2: 'If in doubt, call the national cybercrime helpline: 1930.',
+    recommendationAccountAccessRequest1: 'Do not share passwords, PINs, or banking credentials with anyone.',
+    recommendationAccountAccessRequest2: 'If in doubt, call the national cybercrime helpline: 1930.',
+    recommendationUrgentAccountAction1: 'Do not enter your banking credentials, PIN, or OTP through a link in a message.',
+    recommendationUrgentAccountAction2: "Verify account-related requests through your bank's official app, website, or customer care.",
+    recommendationUrgentAccountAction3: 'If in doubt, call the national cybercrime helpline: 1930.',
+    recommendationUrgentPayment1: 'Do not send money until the request has been independently verified.',
+    recommendationUnofficialFee1: 'Do not pay unofficial fees for government benefits.',
+    recommendationUnofficialFee2: 'Verify the claim through the official government source.',
+    recommendationPersonalUpi1: 'Do not send money to personal UPI IDs for government-related payments.',
+    recommendationPersonalUpi2: 'Verify the payment channel through official sources.',
+    recommendationSuspiciousLink1: 'Do not click on suspicious links.',
+    recommendationSuspiciousLink2: 'Verify URLs through official government websites.',
+    recommendationFakeGovernmentClaim1: 'Verify the scheme through its official government source.',
+    recommendationGeneral1: 'If you are unsure, verify the claim using an official government channel before taking action.',
+    recommendationGeneral2: 'If you suspect fraud, call the national cybercrime helpline: 1930.',
   },
 };
 

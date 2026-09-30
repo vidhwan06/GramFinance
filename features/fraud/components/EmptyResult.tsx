@@ -19,28 +19,49 @@ export function EmptyResult({
   const { t } = useLanguage();
 
   return (
-    <div className="border border-rule bg-white p-6 text-center rounded-xl">
-      <div className="text-3xl mb-3" aria-hidden="true">
-        <svg
-          className="h-10 w-10 mx-auto text-green-600"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
-          <polyline points="22 4 12 14.01 9 11.01" />
-        </svg>
+    <div className="space-y-6">
+      {/* What this message says */}
+      <section aria-labelledby="summary-heading">
+        <h3 id="summary-heading" className="text-lg font-bold text-gray-900 mb-3">
+          {t.fraud.explanationWhatMessageSays}
+        </h3>
+        <div className="rounded-lg border border-rule bg-white p-4 text-left">
+          <p className="text-base text-gray-700 leading-relaxed">
+            {t.fraud.explanationGenuineDesc}
+          </p>
+        </div>
+      </section>
+
+      {/* No warning indicators */}
+      <section aria-labelledby="no-warning-heading">
+        <h3 id="no-warning-heading" className="text-lg font-bold text-gray-900 mb-3">
+          {t.fraud.explanationNoWarning}
+        </h3>
+        <div className="rounded-lg border border-green-300 bg-green-50 p-4 text-left">
+          <p className="text-base text-gray-700 leading-relaxed">
+            {t.fraud.explanationNoWarningDesc}
+          </p>
+        </div>
+      </section>
+
+      {/* What to verify anyway */}
+      <section aria-labelledby="verify-heading">
+        <h3 id="verify-heading" className="text-lg font-bold text-gray-900 mb-3">
+          {t.fraud.explanationWhatToVerify}
+        </h3>
+        <div className="rounded-lg border border-rule bg-white p-4 text-left">
+          <p className="text-base text-gray-700 leading-relaxed">
+            {t.fraud.explanationVerifyAnyway}
+          </p>
+        </div>
+      </section>
+
+      {/* Disclaimer */}
+      <div className="border-t border-rule pt-4">
+        <p className="text-xs text-gray-400">{t.fraud.disclaimer}</p>
       </div>
-      <p className="text-xl font-bold text-gray-900 mb-2">
-        {t.fraud.noSignalsTitle}
-      </p>
-      <p className="text-base text-gray-600 leading-relaxed mb-3">
-        {t.fraud.noSignalsDesc}
-      </p>
-      <p className="text-sm text-gray-500 mb-4">
-        {t.fraud.noSignalsDisclaimer}
-      </p>
+
+      {/* Retry button */}
       <button
         onClick={onRetry}
         className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-seal-red hover:text-seal-red/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-seal-red focus-visible:ring-offset-2 rounded-lg min-h-[48px]"

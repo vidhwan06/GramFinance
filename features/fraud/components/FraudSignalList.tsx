@@ -4,13 +4,17 @@ import React from 'react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
 import { cn } from '@/lib/utils/cn';
 import type { FraudSignalMatch } from '@/lib/fraud/types';
+import {
+  getTranslatedSignalName,
+  getTranslatedSignalExplanation,
+} from '@/features/fraud/lib/fraud-translations';
 
 /**
  * Lists the fraud warning signals detected in the message.
  *
  * For each signal displays:
- *   - Signal name
- *   - Explanation of what was detected
+ *   - Signal name (translated)
+ *   - Explanation of what was detected (translated)
  *
  * If matchedText is available, it is shown as a detected phrase.
  * Signal severity is indicated by color glyph and tone, not by color alone.
@@ -48,6 +52,8 @@ export function FraudSignalList({
       <ul className="space-y-3" role="list">
         {signals.map((signal) => {
           const sev = signal.severity || 'low';
+          const translatedName = getTranslatedSignalName(signal.code, signal.name, t);
+          const translatedExplanation = getTranslatedSignalExplanation(signal.code, signal.explanation, t);
 
           return (
             <li
@@ -63,10 +69,10 @@ export function FraudSignalList({
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink">
-                    {signal.name}
+                    {translatedName}
                   </p>
                   <p className="text-xs text-gray-600 mt-0.5">
-                    {signal.explanation}
+                    {translatedExplanation}
                   </p>
                   {signal.matchedText && (
                     <p className="text-xs text-gray-500 mt-1.5 italic">
