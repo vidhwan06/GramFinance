@@ -22,6 +22,20 @@ export const en = {
     offline: 'You are currently offline. Some live features may be limited.',
     helplineNotice: 'National Cybercrime Helpline: 1930',
   },
+  assistant: {
+    title: 'AI Assistant',
+    subtitle: 'Ask financial questions in plain language.',
+    inputPlaceholder: 'Type your question here...',
+    send: 'Send',
+    loading: 'Thinking...',
+    error: 'Sorry, I could not respond. Please try again.',
+    emptyTitle: 'Ask GramFinance',
+    emptyMessage: 'Explain financial concepts, guide you to the right tool, and answer general financial-literacy questions.',
+    disclaimer: 'This assistant is informational and not an authority. It does not determine eligibility, classify fraud, or provide official government guidance.',
+    eligibilityDeferral: 'Check Scheme Eligibility',
+    fraudDeferral: 'Check a Message',
+    loanDeferral: 'Open Loan Calculator',
+  },
   loan: {
     comparison: {
       openBtn: 'Compare Side-by-Side with Another Loan Option',
