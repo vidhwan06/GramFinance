@@ -48,6 +48,43 @@ describe('detectDeferral', () => {
       href: '/schemes',
     });
   });
+
+  it('detects loan calculation requests', () => {
+    expect(detectDeferral('calculate my loan')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+    expect(detectDeferral('calculate EMI')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+    expect(detectDeferral('EMI calculation')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+    expect(detectDeferral('loan interest calculation')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+    expect(detectDeferral('how much will my EMI be')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+    expect(detectDeferral('loan repayment calculation')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+    expect(detectDeferral('monthly loan payment')).toEqual({
+      type: 'loan',
+      href: '/loan',
+    });
+  });
+
+  it('does not defer educational loan questions', () => {
+    expect(detectDeferral('what is a loan?')).toBeNull();
+    expect(detectDeferral('what is EMI?')).toBeNull();
+    expect(detectDeferral('how does interest work?')).toBeNull();
+  });
 });
 
 describe('isInvestmentAdviceRequest', () => {

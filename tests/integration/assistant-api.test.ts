@@ -184,4 +184,92 @@ describe('Assistant API', () => {
     expect(calls).not.toContain('123456789012');
     consoleSpy.mockRestore();
   });
+
+  it('blocks investment advice and does not return model-generated content', async () => {
+    // Even if Gemini returns investment advice, the API must not pass it through
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => 'You should invest in XYZ stock for guaranteed 50% returns.' },
+    });
+
+    const response = await POST(
+      makeRequest({ message: 'Should I invest in mutual funds?', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.success).toBe(true);
+    // The reply must be the deterministic safety message, NOT the model output
+    expect(body.data.reply).toBe(
+      'I cannot provide investment advice or guarantee returns. Please consult a SEBI-registered financial advisor for personalized guidance.'
+    );
+    expect(body.data.reply).not.toContain('XYZ stock');
+    expect(body.data.reply).not.toContain('guaranteed 50% returns');
+  });
+
+  it('does not call Gemini for investment advice requests', async () => {
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => 'Some investment advice' },
+    });
+
+    await POST(
+      makeRequest({ message: 'Where should I put my money?', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    // Gemini should never be called for investment advice
+    expect(mockGenerateContent).not.toHaveBeenCalled();
+  });
+
+  it('still calls Gemini for normal financial-literacy questions', async () => {
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => 'EMI is Equated Monthly Installment.' },
+    });
+
+    const response = await POST(
+      makeRequest({ message: 'What is EMI?', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.data.reply).toBe('EMI is Equated Monthly Installment.');
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns AI_UNAVAILABLE when Gemini response is empty', async () => {
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => '' },
+    });
+
+    const response = await POST(
+      makeRequest({ message: 'What is EMI?', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('AI_UNAVAILABLE');
+  });
+
+  it('returns AI_UNAVAILABLE when Gemini response is whitespace-only', async () => {
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => '   \n\t  ' },
+    });
+
+    const response = await POST(
+      makeRequest({ message: 'What is EMI?', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('AI_UNAVAILABLE');
+  });
+
+  it('handles Gemini timeout as AI_UNAVAILABLE', async () => {
+    mockGenerateContent.mockRejectedValueOnce(
+      new Error('[GoogleGenerativeAI Error]: The operation was aborted due to timeout')
+    );
+
+    const response = await POST(
+      makeRequest({ message: 'What is EMI?', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('AI_UNAVAILABLE');
+  });
 });

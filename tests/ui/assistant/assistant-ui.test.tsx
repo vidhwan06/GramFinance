@@ -213,4 +213,73 @@ describe('AssistantPage', () => {
     expect(strong?.textContent).toBe('bold');
     expect(strong?.parentElement?.textContent).not.toContain('**');
   });
+
+  it('renders eligibility deferral link', async () => {
+    stubAssistantResponse('You may qualify for PM-KISAN.', {
+      type: 'eligibility',
+      href: '/schemes',
+    });
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'Am I eligible?');
+    await userEvent.click(screen.getByLabelText('Send'));
+    const link = await screen.findByText('Check Scheme Eligibility');
+    expect(link).toBeDefined();
+    expect(link.closest('a')?.getAttribute('href')).toBe('/schemes');
+  });
+
+  it('renders fraud deferral link', async () => {
+    stubAssistantResponse('This could be a scam.', {
+      type: 'fraud',
+      href: '/check',
+    });
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'Is this fraud?');
+    await userEvent.click(screen.getByLabelText('Send'));
+    const link = await screen.findByText('Check a Message');
+    expect(link).toBeDefined();
+    expect(link.closest('a')?.getAttribute('href')).toBe('/check');
+  });
+
+  it('renders loan deferral link', async () => {
+    stubAssistantResponse('Your EMI depends on the loan amount.', {
+      type: 'loan',
+      href: '/loan',
+    });
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'Calculate my EMI');
+    await userEvent.click(screen.getByLabelText('Send'));
+    const link = await screen.findByText('Open Loan Calculator');
+    expect(link).toBeDefined();
+    expect(link.closest('a')?.getAttribute('href')).toBe('/loan');
+  });
+
+  it('does not render deferral UI when no deferral is returned', async () => {
+    stubAssistantResponse('EMI is Equated Monthly Installment.', null);
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'What is EMI?');
+    await userEvent.click(screen.getByLabelText('Send'));
+    await screen.findByText('EMI is Equated Monthly Installment.');
+    expect(screen.queryByText('Check Scheme Eligibility')).toBeNull();
+    expect(screen.queryByText('Check a Message')).toBeNull();
+    expect(screen.queryByText('Open Loan Calculator')).toBeNull();
+  });
+
+  it('renders Kannada deferral link', async () => {
+    mockUseLanguage.mockReturnValue({ t: KN_T, language: 'kn', setLanguage: vi.fn() });
+    stubAssistantResponse('ನೀವು PM-KISAN ಗೆ ಅರ್ಹರಿದ್ದೀರಿ.', {
+      type: 'eligibility',
+      href: '/schemes',
+    });
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...');
+    await userEvent.type(input, 'ನಾನು ಅರ್ಹರೇ?');
+    await userEvent.click(screen.getByLabelText('ಕಳುಹಿಸಿ'));
+    const link = await screen.findByText('ಯೋಜನೆ ಅರ್ಹತೆ ಪರಿಶೀಲಿಸಿ');
+    expect(link).toBeDefined();
+    expect(link.closest('a')?.getAttribute('href')).toBe('/schemes');
+  });
 });

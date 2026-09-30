@@ -51,6 +51,21 @@ const FRAUD_PATTERNS = [
   /\bis this message (fraud|suspicious|safe)\b/i,
 ];
 
+/**
+ * Loan calculation patterns — match requests to COMPUTE or CALCULATE
+ * loan-related figures, not educational questions about loans.
+ *
+ * The distinction: "calculate my EMI" is a calculation request (defer),
+ * while "what is EMI?" is educational (answer directly).
+ */
+const LOAN_CALCULATION_PATTERNS = [
+  /\bcalculate\b.*\b(loan|emi|repayment|payment|interest)\b/i,
+  /\b(loan|emi|repayment|payment|interest)\b.*\bcalculat/i,
+  /\bhow much\b.*\b(emi|repayment|payment)\b/i,
+  /\bmonthly\b.*\b(loan|emi|repayment|payment)\b/i,
+  /\b(loan|emi|repayment|payment)\b.*\bmonthly\b/i,
+];
+
 const INVESTMENT_PATTERNS = [
   /\bshould i invest\b/i,
   /\bis (it|this) (a )?good investment\b/i,
@@ -75,6 +90,12 @@ export function detectDeferral(message: string): Deferral | null {
   for (const pattern of FRAUD_PATTERNS) {
     if (pattern.test(message)) {
       return { type: 'fraud', href: DEFERRAL_LINKS.fraud };
+    }
+  }
+
+  for (const pattern of LOAN_CALCULATION_PATTERNS) {
+    if (pattern.test(message)) {
+      return { type: 'loan', href: DEFERRAL_LINKS.loan };
     }
   }
 

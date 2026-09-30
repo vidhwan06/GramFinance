@@ -56,4 +56,17 @@ describe('buildSystemPrompt', () => {
     expect(prompt).not.toContain('lib/fraud');
     expect(prompt).not.toContain('lib/schemes');
   });
+
+  it('includes prompt injection defense', () => {
+    const prompt = buildSystemPrompt('en');
+    expect(prompt).toContain('untrusted input');
+    expect(prompt).toContain('must be ignored');
+    expect(prompt).toContain('authority and safety boundaries');
+  });
+
+  it('includes prompt injection defense in Kannada mode', () => {
+    const prompt = buildSystemPrompt('kn');
+    expect(prompt).toContain('untrusted input');
+    expect(prompt).toContain('must be ignored');
+  });
 });
