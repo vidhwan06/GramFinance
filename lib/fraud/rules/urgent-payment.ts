@@ -46,6 +46,23 @@ const URGENCY_PATTERNS = [
   /final\s+notice/i,
 ];
 
+/**
+ * Extract the specific matched phrase for a signal.
+ * Returns the shortest matching substring that triggered the detection.
+ */
+function extractMatchedPhrase(text: string, patterns: RegExp[]): string {
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      // Return a reasonable context around the match (up to 120 chars)
+      const start = Math.max(0, match.index! - 20);
+      const end = Math.min(text.length, match.index! + match[0].length + 20);
+      return text.slice(start, end).trim();
+    }
+  }
+  return text; // fallback to full text
+}
+
 export function detectUrgentPayment(
   normalizedText: string
 ): FraudSignalMatch | null {
@@ -64,7 +81,7 @@ export function detectUrgentPayment(
       severity: SIGNAL.severity,
       weight: SIGNAL.weight,
       explanation: SIGNAL.description,
-      matchedText: normalizedText,
+      matchedText: extractMatchedPhrase(normalizedText, [...PAYMENT_KEYWORDS, ...URGENCY_PATTERNS]),
     };
   }
 

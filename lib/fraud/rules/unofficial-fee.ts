@@ -43,10 +43,11 @@ const FEE_PATTERNS = [
   /pay\s+(?:\d+\s+)?(?:rupees?|₹|rs\.?)\s+(?:to\s+(?:receive\s+|get\s+))(?:your\s+)?(?:government\s+|scheme\s+|benefit\s+|subsidy)/i,
   /pay\s+(?:\d+\s+)?\w*\s+to\s+(?:receive\s+|get\s+)(?:your\s+)?(?:benefit|subsidy)/i,
   // "pay a ₹X processing fee" / "pay a ₹X fee" - standalone fee mention in government/benefit context
-  /pay\s+(?:a\s+|)(?:\d+\s+)?(?:rupees?|₹|rs\.?)\s+(?:processing\s+|registration\s+|application\s+|service\s+)?fee\b/i,
+  // Handles both "₹500" and "500" (currency symbol directly before number, no space)
+  /pay\s+(?:a\s+|)(?:(?:₹|rs\.?|rupees?)\s*\d+|\d+\s*(?:₹|rs\.?|rupees?))\s+(?:processing\s+|registration\s+|application\s+|service\s+)?fee\b/i,
   /pay\s+(?:a\s+|)\w*\s*processing\s+fee\b/i,
   // "pay a ₹X fee" / "pay a fee" - generic fee with amount (with rupee symbol)
-  /pay\s+(?:a\s+|)(?:\d+\s+)?(?:rupees?|₹|rs\.?)\s+fee\b/i,
+  /pay\s+(?:a\s+|)(?:(?:₹|rs\.?|rupees?)\s*\d+|\d+\s*(?:₹|rs\.?|rupees?))\s+fee\b/i,
   // "pay a 500 fee" - generic fee with plain number
   /pay\s+(?:a\s+|)(?:\d+\s+)?fee\b/i,
   // "send the fee" / "send fee" in government/benefit context

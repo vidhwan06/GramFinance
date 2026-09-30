@@ -43,6 +43,11 @@ const GOVERNMENT_CLAIM_PATTERNS = [
   /(?:you\s+are|is)\s+eligible\s+for\s+(?:a\s+[^.]*?)?government\s+payment/i,
   /(?:you\s+have|has|was)\s+been\s+selected\s+for\s+(?:a\s+[^.]*?)?financial\s+assistance/i,
   /(?:you\s+are|is)\s+eligible\s+for\s+(?:a\s+[^.]*?)?financial\s+assistance/i,
+  // "selected for [scheme name] benefit" patterns (e.g., "selected for PM-KISAN benefit")
+  /(?:you\s+have|has|was)\s+been\s+selected\s+for\s+(?:a\s+[^.]*?)?(?:pm-?kisan|pmuy|pm-?vishwakarma|ganga-?kalyan|aadhaar|ayushman|jan-?dhan|mudra|standup|startup)\s+benefit/i,
+  /you\s+are\s+eligible\s+for\s+(?:a\s+[^.]*?)?(?:pm-?kisan|pmuy|pm-?vishwakarma|ganga-?kalyan|aadhaar|ayushman|jan-?dhan|mudra|standup|startup)\s+benefit/i,
+  // "congratulations" + government/scheme benefit claim
+  /congratulations[^.]*?(?:government|scheme|benefit|pm-?kisan|pmuy|pm-?vishwakarma|ganga-?kalyan|aadhaar|ayushman|jan-?dhan|mudra)/i,
 ];
 
 export function detectFakeGovernmentClaim(

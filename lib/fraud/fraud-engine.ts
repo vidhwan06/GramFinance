@@ -15,6 +15,7 @@ import { generateRecommendations } from '@/lib/fraud/recommendations';
 import { detectOtpRequest } from '@/lib/fraud/rules/otp-request';
 import { detectAccountAccessRequest } from '@/lib/fraud/rules/account-access-request';
 import { detectUrgentPayment } from '@/lib/fraud/rules/urgent-payment';
+import { detectUrgentAccountAction } from '@/lib/fraud/rules/urgent-account-action';
 import { detectUnofficialFee } from '@/lib/fraud/rules/unofficial-fee';
 import { detectPersonalUPI } from '@/lib/fraud/rules/personal-upi';
 import { detectSuspiciousLink } from '@/lib/fraud/rules/suspicious-link';
@@ -34,6 +35,7 @@ import type { SchemeListItem } from '@/features/schemes/schemes-service';
 const RULES = [
   detectOtpRequest,
   detectAccountAccessRequest,
+  detectUrgentAccountAction,
   detectUrgentPayment,
   detectUnofficialFee,
   detectPersonalUPI,

@@ -17,6 +17,11 @@ const RECOMMENDATIONS_BY_SIGNAL: Record<string, string[]> = {
     'Do not share passwords, PINs, or banking credentials with anyone.',
     `If in doubt, call the national cybercrime helpline: ${HELPLINE}.`,
   ],
+  URGENT_ACCOUNT_ACTION: [
+    'Do not enter your banking credentials, PIN, or OTP through a link in a message.',
+    'Verify account-related requests through your bank\'s official app, website, or customer care.',
+    `If in doubt, call the national cybercrime helpline: ${HELPLINE}.`,
+  ],
   URGENT_PAYMENT: [
     'Do not send money until the request has been independently verified.',
   ],

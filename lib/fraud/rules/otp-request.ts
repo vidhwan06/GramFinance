@@ -52,6 +52,14 @@ const REQUEST_PATTERNS = [
   // "enter your ... otp" with words in between (e.g., "enter your atm pin and otp")
   /enter\s+your\s+[^.]*?\botp\b/i,
   /enter\s+the\s+[^.]*?\botp\b/i,
+  // "enter ... otp" / "input ... otp" without "your/the" (e.g., "enter atm pin and otp")
+  /enter\s+[^.]*?\botp\b/i,
+  /input\s+[^.]*?\botp\b/i,
+  // "provide ... otp" / "share ... otp" / "send ... otp" / "give ... otp" without "your/me/the"
+  /provide\s+[^.]*?\botp\b/i,
+  /share\s+[^.]*?\botp\b/i,
+  /send\s+[^.]*?\botp\b/i,
+  /give\s+[^.]*?\botp\b/i,
 ];
 
 // Negative indicators - the message is warning against sharing, not requesting
@@ -62,6 +70,23 @@ const NEGATIVE_PATTERNS = [
   /\byou\s+should\s+never\s+share\b/i,
   /\bnever\s+give\s+anyone\b/i,
 ];
+
+/**
+ * Extract the specific matched phrase for a signal.
+ * Returns the shortest matching substring that triggered the detection.
+ */
+function extractMatchedPhrase(text: string, patterns: RegExp[]): string {
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      // Return a reasonable context around the match (up to 120 chars)
+      const start = Math.max(0, match.index! - 20);
+      const end = Math.min(text.length, match.index! + match[0].length + 20);
+      return text.slice(start, end).trim();
+    }
+  }
+  return text; // fallback to full text
+}
 
 export function detectOtpRequest(normalizedText: string): FraudSignalMatch | null {
   const hasOtpKeyword =
@@ -86,7 +111,7 @@ export function detectOtpRequest(normalizedText: string): FraudSignalMatch | nul
       severity: SIGNAL.severity,
       weight: SIGNAL.weight,
       explanation: SIGNAL.description,
-      matchedText: normalizedText,
+      matchedText: extractMatchedPhrase(normalizedText, REQUEST_PATTERNS),
     };
   }
 

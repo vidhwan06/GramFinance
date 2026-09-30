@@ -141,7 +141,11 @@ describe('FraudChecker', () => {
     await user.click(screen.getByRole('button', { name: 'Check message' }));
 
     await waitFor(() => {
-      expect(screen.getByText('No obvious warning signs detected')).toBeDefined();
+      // New EmptyResult structure - check for new headings
+      expect(screen.getByText('What this message says')).toBeDefined();
+      expect(screen.getByText('No warning indicators detected')).toBeDefined();
+      expect(screen.getByText('What to verify anyway')).toBeDefined();
+      // The old "No obvious warning signs detected" text is no longer the main heading
     });
   });
 
@@ -171,7 +175,7 @@ describe('FraudChecker', () => {
     await user.click(screen.getByRole('button', { name: 'Check message' }));
 
     await waitFor(() => {
-      expect(screen.getByText('No obvious warning signs detected')).toBeDefined();
+      expect(screen.getByText('What this message says')).toBeDefined();
     });
 
     // Try again
@@ -453,14 +457,24 @@ describe('FraudRecommendations', () => {
 // ── EmptyResult Tests ──────────────────────────────────────────────────────
 
 describe('EmptyResult', () => {
-  it('shows no warning signs message', () => {
+  it('shows what message says section', () => {
     renderWithLanguage(<EmptyResult onRetry={() => {}} />);
-    expect(screen.getByText('No obvious warning signs detected')).toBeDefined();
+    expect(screen.getByText('What this message says')).toBeDefined();
+  });
+
+  it('shows no warning indicators section', () => {
+    renderWithLanguage(<EmptyResult onRetry={() => {}} />);
+    expect(screen.getByText('No warning indicators detected')).toBeDefined();
+  });
+
+  it('shows what to verify section', () => {
+    renderWithLanguage(<EmptyResult onRetry={() => {}} />);
+    expect(screen.getByText('What to verify anyway')).toBeDefined();
   });
 
   it('shows disclaimer about not guaranteeing legitimacy', () => {
     renderWithLanguage(<EmptyResult onRetry={() => {}} />);
-    expect(screen.getByText(/does not guarantee/i)).toBeDefined();
+    expect(screen.getByText(/does not prove/i)).toBeDefined();
   });
 
   it('does not say "This message is safe"', () => {
