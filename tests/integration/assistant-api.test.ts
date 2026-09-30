@@ -107,6 +107,50 @@ describe('Assistant API', () => {
     expect(body.error.message).not.toContain('API Error');
   });
 
+  it('maps Gemini quota/429 to 503 AI_UNAVAILABLE', async () => {
+    mockGenerateContent.mockRejectedValueOnce(
+      new Error('[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent: [429 Too Many Requests] Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.5-flash')
+    );
+
+    const response = await POST(
+      makeRequest({ message: 'Hello', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('AI_UNAVAILABLE');
+    expect(body.error.message).toBe('The AI assistant is temporarily unavailable. Please try again later.');
+    // Should not leak Gemini internals
+    expect(body.error.message).not.toContain('Quota exceeded');
+    expect(body.error.message).not.toContain('generativelanguage.googleapis.com');
+  });
+
+  it('maps Gemini 503 to 503 AI_UNAVAILABLE', async () => {
+    mockGenerateContent.mockRejectedValueOnce(
+      new Error('[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent: [503 Service Unavailable]')
+    );
+
+    const response = await POST(
+      makeRequest({ message: 'Hello', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.error.code).toBe('AI_UNAVAILABLE');
+  });
+
+  it('does not map GramFinance rate limiter to AI_UNAVAILABLE', async () => {
+    const { isRateLimited } = await import('@/lib/ai/rate-limiter');
+    vi.mocked(isRateLimited).mockReturnValueOnce(true);
+
+    const response = await POST(
+      makeRequest({ message: 'Hello', language: 'en' }) as unknown as Parameters<typeof POST>[0]
+    );
+    expect(response.status).toBe(429);
+    const body = await response.json();
+    expect(body.error.code).toBe('RATE_LIMITED');
+    expect(body.error.code).not.toBe('AI_UNAVAILABLE');
+  });
+
   it('includes deferral for eligibility questions', async () => {
     const response = await POST(
       makeRequest({ message: 'Am I eligible for PM-KISAN?', language: 'en' }) as unknown as Parameters<typeof POST>[0]

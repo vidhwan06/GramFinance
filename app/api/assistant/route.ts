@@ -37,6 +37,24 @@ const assistantRequestSchema = z.object({
   language: z.enum(['en', 'kn']),
 }).strict();
 
+/**
+ * Detect Gemini SDK upstream errors (quota exceeded, temporary unavailability).
+ *
+ * The Gemini SDK wraps HTTP errors as "[GoogleGenerativeAI Error]: ...".
+ * We check for that prefix plus known upstream status codes to distinguish
+ * provider-side failures from GramFinance's own errors.
+ */
+function isGeminiUpstreamError(error: Error): boolean {
+  const msg = error.message;
+  if (!msg.includes('GoogleGenerativeAI Error')) return false;
+  return (
+    msg.includes('429') ||
+    msg.includes('RESOURCE_EXHAUSTED') ||
+    msg.includes('503') ||
+    msg.includes('Service Unavailable')
+  );
+}
+
 /** Extract a rate-limit key from the request. */
 function getRateLimitKey(request: NextRequest): string {
   // Prefer the session user ID if available
@@ -115,7 +133,12 @@ export async function POST(request: NextRequest) {
       console.error('[assistant] unexpected failure');
     }
 
-    // Gemini failures become a safe service-unavailable
+    // Gemini upstream errors (quota, temporary unavailability) → 503 AI_UNAVAILABLE
+    if (error instanceof Error && isGeminiUpstreamError(error)) {
+      return errorResponse(ErrorFactories.aiUnavailable());
+    }
+
+    // Missing API key → service unavailable
     if (error instanceof Error && error.message.includes('GEMINI_API_KEY')) {
       return errorResponse(
         ErrorFactories.serviceUnavailable('AI assistant is not available.')

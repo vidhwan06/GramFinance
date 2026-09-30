@@ -142,4 +142,75 @@ describe('AssistantPage', () => {
     expect(screen.getByText('ಸಹಾಯಕ (AI)')).toBeDefined();
     expect(screen.getByPlaceholderText('ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...')).toBeDefined();
   });
+
+  it('renders Markdown bold text', async () => {
+    stubAssistantResponse('**bold text**');
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'test');
+    await userEvent.click(screen.getByLabelText('Send'));
+    expect(await screen.findByText('bold text')).toBeDefined();
+    const strong = document.querySelector('strong');
+    expect(strong).not.toBeNull();
+    expect(strong?.textContent).toBe('bold text');
+  });
+
+  it('renders Markdown headings', async () => {
+    stubAssistantResponse('## Heading 2');
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'test');
+    await userEvent.click(screen.getByLabelText('Send'));
+    expect(await screen.findByText('Heading 2')).toBeDefined();
+    const h2 = document.querySelector('h2');
+    expect(h2).not.toBeNull();
+  });
+
+  it('renders Markdown bullet lists', async () => {
+    stubAssistantResponse('- item 1\n- item 2');
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'test');
+    await userEvent.click(screen.getByLabelText('Send'));
+    expect(await screen.findByText('item 1')).toBeDefined();
+    const ul = document.querySelector('ul');
+    expect(ul).not.toBeNull();
+    const items = ul?.querySelectorAll('li');
+    expect(items?.length).toBe(2);
+  });
+
+  it('renders Markdown numbered lists', async () => {
+    stubAssistantResponse('1. first\n2. second');
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'test');
+    await userEvent.click(screen.getByLabelText('Send'));
+    expect(await screen.findByText('first')).toBeDefined();
+    const ol = document.querySelector('ol');
+    expect(ol).not.toBeNull();
+  });
+
+  it('renders Markdown inline code', async () => {
+    stubAssistantResponse('Use `EMI` to calculate');
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'test');
+    await userEvent.click(screen.getByLabelText('Send'));
+    expect(await screen.findByText('EMI')).toBeDefined();
+    const code = document.querySelector('code');
+    expect(code).not.toBeNull();
+  });
+
+  it('does not render raw Markdown syntax', async () => {
+    stubAssistantResponse('**bold** and _italic_');
+    render(<AssistantPage />);
+    const input = screen.getByPlaceholderText('Type your question here...');
+    await userEvent.type(input, 'test');
+    await userEvent.click(screen.getByLabelText('Send'));
+    // The raw asterisks should not be visible as text
+    const strong = document.querySelector('strong');
+    expect(strong).not.toBeNull();
+    expect(strong?.textContent).toBe('bold');
+    expect(strong?.parentElement?.textContent).not.toContain('**');
+  });
 });

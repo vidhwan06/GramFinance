@@ -12,10 +12,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /** Default model when GEMINI_MODEL is not set. */
-const DEFAULT_MODEL = 'gemini-1.5-flash';
+const DEFAULT_MODEL = 'gemini-3.5-flash';
 
-/** Maximum output tokens — keeps responses concise and cost bounded. */
-const MAX_OUTPUT_TOKENS = 1024;
+/** Maximum output tokens — enough for detailed financial explanations with examples. */
+const MAX_OUTPUT_TOKENS = 4096;
 
 let cachedClient: GoogleGenerativeAI | null = null;
 let cachedModelName: string | null = null;

@@ -10,7 +10,7 @@
 
 export type AssistantLanguage = 'en' | 'kn';
 
-const ROLE = `You are GramFinance's AI assistant. You explain financial concepts and guide users to the appropriate GramFinance tools.`;
+const ROLE = `You are GramFinance's AI assistant. You explain financial concepts and guide users to the appropriate GramFinance tools. Do not repeat the user's question back to them.`;
 
 const AUTHORITY_BOUNDARY = `You do not determine eligibility, classify fraud, or provide official government guidance.`;
 

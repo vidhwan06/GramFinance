@@ -28,4 +28,6 @@ export const ErrorFactories = {
     new ApiError(message, 500, 'INTERNAL_ERROR'),
   serviceUnavailable: (message = 'Service temporarily unavailable') =>
     new ApiError(message, 533, 'SERVICE_UNAVAILABLE'),
+  aiUnavailable: (message = 'The AI assistant is temporarily unavailable. Please try again later.') =>
+    new ApiError(message, 503, 'AI_UNAVAILABLE'),
 };
