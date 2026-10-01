@@ -24,6 +24,8 @@ export const ErrorFactories = {
     new ApiError(message, 404, 'NOT_FOUND'),
   rateLimited: (message = 'Too Many Requests — Please wait a moment') =>
     new ApiError(message, 429, 'RATE_LIMITED'),
+  payloadTooLarge: (message = 'Request body is too large.') =>
+    new ApiError(message, 413, 'PAYLOAD_TOO_LARGE'),
   internal: (message = 'An unexpected internal error occurred') =>
     new ApiError(message, 500, 'INTERNAL_ERROR'),
   serviceUnavailable: (message = 'Service temporarily unavailable') =>

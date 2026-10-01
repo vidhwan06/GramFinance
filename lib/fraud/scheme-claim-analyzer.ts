@@ -112,16 +112,20 @@ function analyzePaymentClaim(
 
   if (!isPaymentClaim) return null;
 
-  // Look for official documentation about fees in the scheme data
-  // If the scheme has no fee documentation, this is "unknown" not "contradicted"
+  // Look for official documentation about fees in the scheme data.
+  //
+  // hasOfficialFeeInfo is true only when the scheme carries fee documentation,
+  // which is the sole basis on which a payment claim can be evaluated. Absence
+  // of that documentation is NOT evidence either way: it must resolve to
+  // "unknown", never to "contradicted" (see the module header).
   const hasOfficialFeeInfo = fullScheme?.descriptionEn?.toLowerCase().includes('fee') ?? false;
 
   const description = fullScheme?.descriptionEn?.substring(0, 200) ?? '';
 
-  // The claim is contradicted if the scheme is a known government scheme
-  // and government schemes don't typically require unofficial payments
-  // But we must be careful: "unknown" when we can't verify
-  const status: SchemeClaimStatus = hasOfficialFeeInfo ? 'unknown' : 'contradicted';
+  // With documented fee information the claim is measured against it and can be
+  // contradicted; without it there is nothing to measure against, so the honest
+  // answer is "unknown".
+  const status: SchemeClaimStatus = hasOfficialFeeInfo ? 'contradicted' : 'unknown';
 
   const explanation =
     status === 'contradicted'

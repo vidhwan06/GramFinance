@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
+import { readJsonBody } from '@/lib/api/read-json';
 import { getGenerativeModel } from '@/lib/ai/gemini';
 import { buildSystemPrompt } from '@/lib/ai/prompt';
 import { isRateLimited } from '@/lib/ai/rate-limiter';
@@ -31,6 +32,14 @@ export const dynamic = 'force-dynamic';
 
 /** Maximum message length — generous but bounded. */
 const MAX_MESSAGE_LENGTH = 2000;
+
+/**
+ * Hard cap on the raw request body.
+ *
+ * Comfortably above the worst-case encoding of a 2,000-character message, and
+ * enforced before anything is buffered — see `readJsonBody`.
+ */
+const MAX_BODY_BYTES = 8 * 1024;
 
 /** Maximum time to wait for a Gemini response before aborting. */
 const GEMINI_TIMEOUT_MS = 30_000;
@@ -66,14 +75,21 @@ function isGeminiUpstreamError(error: Error): boolean {
  * The assistant route is unauthenticated — there is no trustworthy
  * server-set user identity available. A client-supplied x-user-id
  * header would be spoofable, so it is intentionally NOT trusted.
- * The key is derived from the forwarding IP when present, falling
- * back to a shared anonymous bucket.
+ *
+ * When x-forwarded-for is present it is a comma-separated chain, one
+ * entry appended per proxy. Only the LAST entry is written by the
+ * nearest (trusted) proxy; everything to its left arrived from the
+ * client and can be prepended at will, so a leftmost pick would hand
+ * every attacker a fresh bucket and defeat the limiter entirely.
+ * The key is also length-capped: headers are client-controlled and a
+ * bucket key is retained in memory for the whole window.
  */
 function getRateLimitKey(request: NextRequest): string {
   const fwd = request.headers.get('x-forwarded-for');
   if (fwd) {
-    const ip = fwd.split(',')[0]?.trim();
-    if (ip) return `ip:${ip}`;
+    const hops = fwd.split(',');
+    const ip = hops[hops.length - 1]?.trim();
+    if (ip) return `ip:${ip.slice(0, 64)}`;
   }
 
   return 'anonymous';
@@ -87,11 +103,13 @@ export async function POST(request: NextRequest) {
       throw ErrorFactories.rateLimited();
     }
 
-    // 2. Parse and validate
+    // 2. Parse and validate. The body is size-capped before it is buffered,
+    //    so an oversized upload never reaches memory or the model.
     let payload: unknown;
     try {
-      payload = await request.json();
-    } catch {
+      payload = await readJsonBody(request, MAX_BODY_BYTES);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'ApiError') throw error;
       throw ErrorFactories.badRequest('Request body must be valid JSON.');
     }
 

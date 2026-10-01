@@ -13,10 +13,20 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
+import { readJsonBody } from '@/lib/api/read-json';
 import { runFraudEngine } from '@/lib/fraud/fraud-engine';
 import { listActiveSchemes } from '@/features/schemes/schemes-service';
 
 const MAX_TEXT_LENGTH = 10_000;
+
+/**
+ * Hard cap on the raw request body.
+ *
+ * A 10,000-character message is ~30 KB when written in Kannada, so this sits
+ * just above that worst case while still rejecting anything meaningfully
+ * larger long before it is buffered — see `readJsonBody`.
+ */
+const MAX_BODY_BYTES = 32 * 1024;
 
 const fraudCheckSchema = z.object({
   inputType: z.enum([
@@ -37,10 +47,12 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Size-capped before buffering; see `readJsonBody`.
     let payload: unknown;
     try {
-      payload = await request.json();
-    } catch {
+      payload = await readJsonBody(request, MAX_BODY_BYTES);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'ApiError') throw error;
       throw ErrorFactories.badRequest('Request body must be valid JSON.');
     }
 

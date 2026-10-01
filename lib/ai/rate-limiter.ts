@@ -20,6 +20,30 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
+/**
+ * Hard cap on tracked keys.
+ *
+ * The map is module-scoped and long-lived, and keys are derived from a
+ * client-influenced header, so without a cap an attacker rotating the
+ * header grows the map without bound. Expired buckets are swept first so
+ * honest traffic is unaffected; only surplus keys are evicted.
+ */
+const MAX_BUCKETS = 10_000;
+
+/** Drop expired buckets, then evict oldest-first if still over the cap. */
+function sweep(now: number): void {
+  for (const [key, bucket] of buckets) {
+    if (now >= bucket.resetAt) buckets.delete(key);
+  }
+
+  // Map preserves insertion order, so the first key is the oldest bucket.
+  while (buckets.size > MAX_BUCKETS) {
+    const oldest = buckets.keys().next();
+    if (oldest.done) break;
+    buckets.delete(oldest.value);
+  }
+}
+
 /** Read the configured limit, falling back to defaults. */
 function getMax(): number {
   const raw = process.env.ASSISTANT_RATE_LIMIT_MAX;
@@ -45,6 +69,9 @@ export function isRateLimited(key: string): boolean {
   const now = Date.now();
   const max = getMax();
   const windowMs = getWindowMs();
+
+  // Reclaim memory only when the cap is reached — normal traffic skips this.
+  if (buckets.size >= MAX_BUCKETS) sweep(now);
 
   const bucket = buckets.get(key);
 

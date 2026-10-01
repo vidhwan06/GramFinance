@@ -285,16 +285,31 @@ describe('Nested engine: multiple nesting levels', () => {
 // ─── Empty groups ────────────────────────────────────────────────────────────
 
 describe('Nested engine: empty groups', () => {
-  it('Empty AND group => PASS', () => {
+  // An empty group has no rules to evaluate. Reporting `eligible` for it
+  // would mean an unconfigured rule tree passed checks that never ran, so
+  // both operators resolve to `unknown` → `potentially_eligible`.
+  it('Empty AND group => UNKNOWN (not eligible by default)', () => {
     const root = group({ id: 'root', groupOperator: 'AND', children: [] });
     const result = evaluateEligibilityTree('test', root, {});
-    expect(result.status).toBe('eligible');
+    expect(result.status).toBe('potentially_eligible');
+    expect(result.treeResult?.outcome).toBe('unknown');
   });
 
-  it('Empty OR group => FAIL', () => {
+  it('Empty OR group => UNKNOWN (not not_eligible by default)', () => {
     const root = group({ id: 'root', groupOperator: 'OR', children: [] });
     const result = evaluateEligibilityTree('test', root, {});
-    expect(result.status).toBe('not_eligible');
+    expect(result.status).toBe('potentially_eligible');
+    expect(result.treeResult?.outcome).toBe('unknown');
+  });
+
+  it('Nested empty group does not let a tree pass by default', () => {
+    const root = group({
+      id: 'root',
+      groupOperator: 'AND',
+      children: [g(group({ id: 'empty', groupOperator: 'AND', children: [] }))],
+    });
+    const result = evaluateEligibilityTree('test', root, {});
+    expect(result.status).toBe('potentially_eligible');
   });
 });
 

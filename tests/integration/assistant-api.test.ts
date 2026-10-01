@@ -273,3 +273,80 @@ describe('Assistant API', () => {
     expect(body.error.code).toBe('AI_UNAVAILABLE');
   });
 });
+
+describe('Assistant API — request body limit (MED-05)', () => {
+  const MAX_BODY_BYTES = 8 * 1024;
+
+  beforeEach(() => {
+    process.env.GEMINI_API_KEY = 'test-key';
+    mockGenerateContent.mockResolvedValue({
+      response: { text: () => 'Test response from Gemini' },
+    });
+  });
+
+  afterEach(() => {
+    delete process.env.GEMINI_API_KEY;
+    vi.clearAllMocks();
+  });
+
+  function makeRawRequest(body: string, headers: Record<string, string> = {}): Request {
+    return new Request('http://localhost/api/assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body,
+    }) as unknown as Request;
+  }
+
+  async function post(request: Request) {
+    return POST(request as unknown as Parameters<typeof POST>[0]);
+  }
+
+  it('accepts a message at the schema boundary', async () => {
+    const response = await post(
+      makeRawRequest(JSON.stringify({ message: 'a'.repeat(2000), language: 'en' }))
+    );
+    expect(response.status).toBe(200);
+    expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+  });
+
+  it('still returns 400 for a schema violation inside the size cap', async () => {
+    // 2001 characters: valid JSON under 8 KB, so Zod - not the size guard -
+    // is what rejects it.
+    const response = await post(
+      makeRawRequest(JSON.stringify({ message: 'a'.repeat(2001), language: 'en' }))
+    );
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('BAD_REQUEST');
+  });
+
+  it('rejects a body over the raw limit with 413 before any model call', async () => {
+    const response = await post(makeRawRequest('x'.repeat(MAX_BODY_BYTES + 1)));
+    expect(response.status).toBe(413);
+    const body = (await response.json()) as { success: boolean; error: { code: string } };
+    expect(body.success).toBe(false);
+    expect(body.error.code).toBe('PAYLOAD_TOO_LARGE');
+    // Rejected before the model is ever touched.
+    expect(mockGenerateContent).not.toHaveBeenCalled();
+  });
+
+  it('rejects an over-declared Content-Length with 413 without reading the body', async () => {
+    const response = await post(
+      makeRawRequest(JSON.stringify({ message: 'Hello', language: 'en' }), {
+        'content-length': String(MAX_BODY_BYTES * 10),
+      })
+    );
+    expect(response.status).toBe(413);
+    const body = (await response.json()) as { error: { code: string } };
+    expect(body.error.code).toBe('PAYLOAD_TOO_LARGE');
+    expect(mockGenerateContent).not.toHaveBeenCalled();
+  });
+
+  it('ignores a malformed Content-Length and still enforces the limit', async () => {
+    const response = await post(
+      makeRawRequest('x'.repeat(MAX_BODY_BYTES + 1), { 'content-length': 'not-a-number' })
+    );
+    expect(response.status).toBe(413);
+    expect(mockGenerateContent).not.toHaveBeenCalled();
+  });
+});

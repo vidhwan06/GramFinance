@@ -195,6 +195,22 @@ function evaluateNode(
 
   // Group node
   const group = node.group;
+
+  // An empty group has nothing to evaluate. Reducing an empty child list is
+  // NOT the same as an empty boolean conjunction: here it would mean "no rule
+  // was ever checked", and reporting `pass` for that makes an unconfigured
+  // rule tree resolve to `eligible`. An empty group is missing rule data, so
+  // it is unknown until real rules exist.
+  if (group.children.length === 0) {
+    return {
+      nodeId: group.id,
+      nodeType: 'group',
+      outcome: 'unknown',
+      groupOperator: group.groupOperator,
+      children: [],
+    };
+  }
+
   const childResults = group.children.map(child => evaluateNode(child, applicant));
   const outcomes = childResults.map(r => r.outcome);
   const outcome = reduceOutcomes(outcomes, group.groupOperator);

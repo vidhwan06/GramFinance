@@ -332,3 +332,93 @@ describe('domain constants match the database', () => {
     expect(ELIGIBILITY_DISCLAIMER_KN).toMatch(/[\u0C80-\u0CFF]/);
   });
 });
+
+// ─── Production hardening migrations (MED-07 / MED-08) ──────────────────────
+//
+// These two migrations only REMOVE privileges. Asserting that is the safety
+// property: a future edit that quietly added a policy, disabled RLS or touched
+// data fails here rather than on the live project.
+
+function assertStrengthensOnly(sql: string, label: string): void {
+  const forbidden: Array<[string, RegExp]> = [
+    ['CREATE POLICY', /CREATE\s+POLICY/i],
+    ['DROP POLICY', /DROP\s+POLICY/i],
+    ['DROP TABLE', /DROP\s+TABLE/i],
+    ['DROP FUNCTION', /DROP\s+FUNCTION/i],
+    ['TRUNCATE', /TRUNCATE\s+/i],
+    ['DELETE FROM', /DELETE\s+FROM/i],
+    ['UPDATE of any table', /\bUPDATE\s+(public\.)?\w+\s+SET\b/i],
+    ['ALTER TABLE ... DISABLE ROW LEVEL SECURITY', /DISABLE\s+ROW\s+LEVEL\s+SECURITY/i],
+  ];
+
+  for (const [what, pattern] of forbidden) {
+    expect(pattern.test(sql), `${label} must not perform a ${what}`).toBe(false);
+  }
+
+  expect(sql, `${label} must be wrapped in a transaction`).toMatch(/^\s*BEGIN\s*;/m);
+  expect(sql.trimEnd(), `${label} must commit`).toMatch(/COMMIT\s*;$/);
+}
+
+describe('migration 026 closes the is_admin() grant gap (MED-07)', () => {
+  const sql = stripSqlComments(readMigration('026_lock_down_is_admin.sql'));
+
+  it('exists', () => {
+    expect(sql.length).toBeGreaterThan(0);
+  });
+
+  it('revokes EXECUTE on is_admin() from anon', () => {
+    expect(sql).toMatch(
+      /REVOKE\s+EXECUTE\s+ON\s+FUNCTION\s+public\.is_admin\(\)\s+FROM\s+anon/i
+    );
+  });
+
+  it('keeps migration 011 stated positions intact', () => {
+    expect(sql).toMatch(
+      /REVOKE\s+ALL\s+ON\s+FUNCTION\s+public\.is_admin\(\)\s+FROM\s+PUBLIC/i
+    );
+    expect(sql).toMatch(
+      /GRANT\s+EXECUTE\s+ON\s+FUNCTION\s+public\.is_admin\(\)\s+TO\s+authenticated/i
+    );
+  });
+
+  it('preserves the function rather than dropping it', () => {
+    expect(sql).not.toMatch(/DROP\s+FUNCTION/i);
+    expect(sql).not.toMatch(/CREATE\s+OR\s+REPLACE\s+FUNCTION/i);
+  });
+
+  it('only strengthens privileges', () => {
+    assertStrengthensOnly(sql, 'migration 026');
+  });
+});
+
+describe('migration 027 closes the fraud-table grant gap (MED-08)', () => {
+  const sql = stripSqlComments(readMigration('027_revoke_fraud_table_client_access.sql'));
+
+  it('exists', () => {
+    expect(sql.length).toBeGreaterThan(0);
+  });
+
+  it('revokes SELECT on both fraud tables from anon and authenticated', () => {
+    expect(sql).toMatch(
+      /REVOKE\s+SELECT\s+ON\s+public\.fraud_checks,\s*public\.fraud_check_signals\s+FROM\s+anon,\s*authenticated/i
+    );
+  });
+
+  it('clears the remaining default-privilege grants too', () => {
+    expect(sql).toMatch(
+      /REVOKE\s+INSERT,\s*UPDATE,\s*DELETE,\s*TRUNCATE,\s*REFERENCES,\s*TRIGGER/i
+    );
+  });
+
+  it('leaves fraud_signals — the deliberately public reference table — alone', () => {
+    expect(sql).not.toMatch(/fraud_signals/);
+  });
+
+  it('adds no SELECT policy instead of making the query work', () => {
+    expect(sql).not.toMatch(/CREATE\s+POLICY/i);
+  });
+
+  it('only strengthens privileges', () => {
+    assertStrengthensOnly(sql, 'migration 027');
+  });
+});
