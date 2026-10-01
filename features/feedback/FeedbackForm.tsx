@@ -4,6 +4,7 @@ import React, { useState, FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
 import { Alert } from '@/components/ui/Alert';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
 import { cn } from '@/lib/utils/cn';
@@ -15,16 +16,22 @@ import { cn } from '@/lib/utils/cn';
  * comment. Submits to POST /api/feedback.
  *
  * ── State machine ────────────────────────────────────────────────────────────
- * idle → submitting → success | error
+ * idle → submitting → success | unauthorized | error
  *
  * The form prevents duplicate submissions by disabling all inputs and the
  * submit button while a request is in flight.
+ *
+ * ── Authentication ──────────────────────────────────────────────────────────
+ * The API requires an authenticated session. A 401 response is surfaced as
+ * a distinct, clearly-worded state rather than a generic error, so users
+ * understand they need to sign in before their feedback can be accepted.
  */
 
 type FormState =
   | { status: 'idle' }
   | { status: 'submitting' }
   | { status: 'success' }
+  | { status: 'unauthorized' }
   | { status: 'error'; message: string };
 
 export function FeedbackForm() {
@@ -36,6 +43,14 @@ export function FeedbackForm() {
   const [formState, setFormState] = useState<FormState>({ status: 'idle' });
 
   const isSubmitting = formState.status === 'submitting';
+
+  const moduleOptions = [
+    { value: 'general', label: t.feedback.moduleGeneral },
+    { value: 'loan', label: t.feedback.moduleLoan },
+    { value: 'schemes', label: t.feedback.moduleSchemes },
+    { value: 'fraud-check', label: t.feedback.moduleFraudCheck },
+    { value: 'learn', label: t.feedback.moduleLearn },
+  ];
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -59,6 +74,8 @@ export function FeedbackForm() {
           setModule('');
           setRating(null);
           setComment('');
+        } else if (res.status === 401) {
+          setFormState({ status: 'unauthorized' });
         } else {
           const message =
             body?.error?.message ?? t.common.error;
@@ -101,29 +118,15 @@ export function FeedbackForm() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Module selector */}
-          <div className="flex flex-col space-y-1.5">
-            <label
-              htmlFor="feedback-module"
-              className="text-base font-semibold text-gray-800"
-            >
-              {t.feedback.moduleLabel}
-            </label>
-            <select
-              id="feedback-module"
-              value={module}
-              onChange={(e) => setModule(e.target.value)}
-              disabled={isSubmitting}
-              required
-              className="flex w-full min-h-[48px] rounded-lg border-2 border-gray-300 bg-white px-4 py-3 text-base text-gray-900 shadow-sm focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-60"
-            >
-              <option value="">{t.feedback.modulePlaceholder}</option>
-              <option value="general">{t.feedback.moduleGeneral}</option>
-              <option value="loan">{t.feedback.moduleLoan}</option>
-              <option value="schemes">{t.feedback.moduleSchemes}</option>
-              <option value="fraud-check">{t.feedback.moduleFraudCheck}</option>
-              <option value="learn">{t.feedback.moduleLearn}</option>
-            </select>
-          </div>
+          <Select
+            id="feedback-module"
+            label={t.feedback.moduleLabel}
+            options={moduleOptions}
+            value={module}
+            onChange={(e) => setModule(e.target.value)}
+            disabled={isSubmitting}
+            required
+          />
 
           {/* Star rating */}
           <div className="flex flex-col space-y-1.5">
@@ -166,7 +169,14 @@ export function FeedbackForm() {
             placeholder={t.feedback.commentPlaceholder}
           />
 
-          {/* Error alert */}
+          {/* Unauthorized alert — distinct from generic errors */}
+          {formState.status === 'unauthorized' && (
+            <Alert variant="warning" title={t.feedback.authRequiredTitle}>
+              {t.feedback.authRequiredMessage}
+            </Alert>
+          )}
+
+          {/* Generic error alert */}
           {formState.status === 'error' && (
             <Alert variant="danger" title={t.common.error}>
               {formState.message}
@@ -188,5 +198,3 @@ export function FeedbackForm() {
     </Card>
   );
 }
-
-

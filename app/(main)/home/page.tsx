@@ -465,6 +465,7 @@ export default function HomePage() {
               <ul className="space-y-1">
                 <li><Link href="/schemes" className="text-xs text-muted-ink hover:text-seal-red transition-colors">{t.nav.schemes}</Link></li>
                 <li><Link href="/assistant" className="text-xs text-muted-ink hover:text-seal-red transition-colors">{t.nav.assistant}</Link></li>
+                <li><Link href="/feedback" className="text-xs text-muted-ink hover:text-seal-red transition-colors">{t.nav.feedback}</Link></li>
               </ul>
             </div>
             <div>

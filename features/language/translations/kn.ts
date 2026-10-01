@@ -79,6 +79,8 @@ export const kn: TranslationKeys = {
     commentHelper: 'ಏನು ಚೆನ್ನಾಗಿದೆ ಅಥವಾ ಏನು ಉತ್ತಮವಾಗಬಹುದು ಎಂದು ತಿಳಿಸಿ.',
     commentPlaceholder: 'ನಿಮ್ಮ ಅಭಿಪ್ರಾಯವನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ...',
     submitAnother: 'ಇನ್ನೊಂದು ಅಭಿಪ್ರಾಯ ಸಲ್ಲಿಸಿ',
+    authRequiredTitle: 'ಸೈನ್-ಇನ್ ಅಗತ್ಯವಿದೆ',
+    authRequiredMessage: 'ಅಭಿಪ್ರಾಯ ಸಲ್ಲಿಸಲು ನೀವು ಸೈನ್-ಇನ್ ಆಗಿರಬೇಕು. ದಯವಿಟ್ಟು ಸೈನ್-ಇನ್ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
   },
 
 

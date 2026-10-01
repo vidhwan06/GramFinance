@@ -143,6 +143,8 @@ export const en = {
     commentHelper: 'Tell us what went well or what could be better.',
     commentPlaceholder: 'Type your feedback here...',
     submitAnother: 'Submit another feedback',
+    authRequiredTitle: 'Sign-in required',
+    authRequiredMessage: 'You must be signed in to submit feedback. Please sign in and try again.',
   },
   home: {
     welcomeTitle: 'GramFinance',
