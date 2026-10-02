@@ -58,6 +58,19 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  /**
+   * Suppress `X-Powered-By: Next.js`.
+   *
+   * Verified on the wire before this was set: the header advertised the
+   * framework and its exact major version to every unauthenticated visitor,
+   * which is free reconnaissance for version-specific CVEs and contributes
+   * nothing functionally.
+   *
+   * This is the idiomatic switch. No middleware was added to strip it — doing so
+   * would cost a response-time tax on every request to remove something the
+   * framework already has a setting for.
+   */
+  poweredByHeader: false,
   async headers() {
     return [
       {

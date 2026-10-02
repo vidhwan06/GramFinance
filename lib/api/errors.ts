@@ -54,8 +54,18 @@ export const ErrorFactories = {
     new ApiError(message, 413, 'PAYLOAD_TOO_LARGE'),
   internal: (message = 'An unexpected internal error occurred') =>
     new ApiError(message, 500, 'INTERNAL_ERROR'),
+  /**
+   * 503 Service Unavailable, a registered IANA status.
+   *
+   * This factory previously used 533, which is not a real HTTP status code. It
+   * round-trips on a bare Node origin but is invalid to anything in front of it:
+   * a CDN, reverse proxy, WAF or uptime monitor may reject it, rewrite it to
+   * 500/502, or drop the response. Since the condition it reports is exactly the
+   * "the upstream is down, retry later" case that health checks and alerting
+   * key off, an unregistered code there is actively harmful.
+   */
   serviceUnavailable: (message = 'Service temporarily unavailable') =>
-    new ApiError(message, 533, 'SERVICE_UNAVAILABLE'),
+    new ApiError(message, 503, 'SERVICE_UNAVAILABLE'),
   aiUnavailable: (message = 'The AI assistant is temporarily unavailable. Please try again later.') =>
     new ApiError(message, 503, 'AI_UNAVAILABLE'),
   /**
@@ -63,9 +73,10 @@ export const ErrorFactories = {
    * anonymous sign-ins are disabled on the project, or the upstream refused.
    *
    * Deliberately separate from `serviceUnavailable` rather than reusing it, so
-   * this route does not inherit that factory's non-standard 533 status. A
-   * deployment missing GEMINI_API_KEY or anonymous sign-ins enabled is exactly
-   * the case a health check and an uptime monitor need to see as a real 503.
+   * this route carries its own `AUTH_UNAVAILABLE` code for client handling
+   * while sharing the standard 503 status. A deployment missing
+   * GEMINI_API_KEY or anonymous sign-ins enabled is exactly the case a health
+   * check and an uptime monitor need to see as a real 503.
    */
   authUnavailable: (message = 'Sign-in is temporarily unavailable. Please try again later.') =>
     new ApiError(message, 503, 'AUTH_UNAVAILABLE'),
