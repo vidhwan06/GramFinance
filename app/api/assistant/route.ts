@@ -5,7 +5,7 @@ import { ErrorFactories } from '@/lib/api/errors';
 import { readJsonBody } from '@/lib/api/read-json';
 import { getGenerativeModel } from '@/lib/ai/gemini';
 import { buildSystemPrompt } from '@/lib/ai/prompt';
-import { isRateLimited } from '@/lib/ai/rate-limiter';
+import { checkRateLimit, retryAfterSeconds, ROUTE_LIMITS } from '@/lib/api/rate-limit';
 import {
   detectDeferral,
   isInvestmentAdviceRequest,
@@ -76,31 +76,25 @@ function isGeminiUpstreamError(error: Error): boolean {
  * server-set user identity available. A client-supplied x-user-id
  * header would be spoofable, so it is intentionally NOT trusted.
  *
- * When x-forwarded-for is present it is a comma-separated chain, one
- * entry appended per proxy. Only the LAST entry is written by the
- * nearest (trusted) proxy; everything to its left arrived from the
- * client and can be prepended at will, so a leftmost pick would hand
- * every attacker a fresh bucket and defeat the limiter entirely.
- * The key is also length-capped: headers are client-controlled and a
- * bucket key is retained in memory for the whole window.
+ * It now delegates to `resolveClientIp` in lib/api/rate-limit.ts. This route's
+ * local copy used to fall back to the literal key `'anonymous'` when no
+ * forwarded-IP header was present. That is a single global bucket: ten requests
+ * from anywhere exhaust it and lock out every user for the rest of the window,
+ * which is a denial-of-service lever rather than a limit. The shared helper has
+ * no such fallback — it fails closed in production and uses a namespaced
+ * `dev:` bucket in development. The header-parsing reasoning itself is
+ * unchanged; it just lives in one place now.
  */
-function getRateLimitKey(request: NextRequest): string {
-  const fwd = request.headers.get('x-forwarded-for');
-  if (fwd) {
-    const hops = fwd.split(',');
-    const ip = hops[hops.length - 1]?.trim();
-    if (ip) return `ip:${ip.slice(0, 64)}`;
-  }
-
-  return 'anonymous';
-}
 
 export async function POST(request: NextRequest) {
   try {
     // 1. Rate limit BEFORE any expensive work
-    const rateKey = getRateLimitKey(request);
-    if (isRateLimited(rateKey)) {
-      throw ErrorFactories.rateLimited();
+    const limit = ROUTE_LIMITS.assistant;
+    if (checkRateLimit(request, limit).limited) {
+      throw ErrorFactories.rateLimited(
+        'Too many requests. Please wait a moment.',
+        retryAfterSeconds(request, limit)
+      );
     }
 
     // 2. Parse and validate. The body is size-capped before it is buffered,

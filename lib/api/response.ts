@@ -2,7 +2,16 @@ import { NextResponse } from 'next/server';
 import { ApiResponse } from '@/types/api';
 import { ApiError } from './errors';
 
-export function successResponse<T>(data: T, status = 200): NextResponse<ApiResponse<T>> {
+/**
+ * Optional headers let a route attach caching and conditional-request metadata
+ * (`Cache-Control`, `ETag`) without abandoning the shared envelope. The
+ * parameter is appended after `status` so every existing call site is unchanged.
+ */
+export function successResponse<T>(
+  data: T,
+  status = 200,
+  headers?: Record<string, string>
+): NextResponse<ApiResponse<T>> {
   return NextResponse.json(
     {
       success: true,
@@ -11,7 +20,7 @@ export function successResponse<T>(data: T, status = 200): NextResponse<ApiRespo
         timestamp: new Date().toISOString(),
       },
     },
-    { status }
+    { status, headers }
   );
 }
 
@@ -21,6 +30,10 @@ export function errorResponse(error: unknown): NextResponse<ApiResponse> {
   const code = isApiError ? error.code : 'INTERNAL_ERROR';
   const message = isApiError ? error.message : 'An unexpected error occurred';
   const details = isApiError ? error.details : undefined;
+  // Only an ApiError may contribute headers; anything else is an unexpected
+  // failure and must not be able to influence the response's cache or
+  // conditional-request behaviour.
+  const headers = isApiError ? error.headers : undefined;
 
   return NextResponse.json(
     {
@@ -34,6 +47,6 @@ export function errorResponse(error: unknown): NextResponse<ApiResponse> {
         timestamp: new Date().toISOString(),
       },
     },
-    { status: statusCode }
+    { status: statusCode, headers }
   );
 }

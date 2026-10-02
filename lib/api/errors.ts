@@ -2,13 +2,28 @@ export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
   public readonly details?: unknown;
+  /**
+   * Response headers to emit alongside this error.
+   *
+   * Used by the rate limiter to carry `Retry-After`, which has to travel on the
+   * 429 response itself rather than in the body — a client deciding how long to
+   * back off should not have to parse an error envelope to find out.
+   */
+  public readonly headers?: Record<string, string>;
 
-  constructor(message: string, statusCode = 500, code = 'INTERNAL_ERROR', details?: unknown) {
+  constructor(
+    message: string,
+    statusCode = 500,
+    code = 'INTERNAL_ERROR',
+    details?: unknown,
+    headers?: Record<string, string>
+  ) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;
+    this.headers = headers;
     Object.setPrototypeOf(this, ApiError.prototype);
   }
 }
@@ -22,8 +37,19 @@ export const ErrorFactories = {
     new ApiError(message, 403, 'FORBIDDEN'),
   notFound: (message = 'Resource Not Found') =>
     new ApiError(message, 404, 'NOT_FOUND'),
-  rateLimited: (message = 'Too Many Requests — Please wait a moment') =>
-    new ApiError(message, 429, 'RATE_LIMITED'),
+  /**
+   * `retryAfterSeconds`, when provided, becomes a `Retry-After` header on the
+   * response. Omitted entirely when absent, so the header never appears with a
+   * meaningless value.
+   */
+  rateLimited: (message = 'Too Many Requests — Please wait a moment', retryAfterSeconds?: number) =>
+    new ApiError(
+      message,
+      429,
+      'RATE_LIMITED',
+      undefined,
+      retryAfterSeconds !== undefined ? { 'Retry-After': String(retryAfterSeconds) } : undefined
+    ),
   payloadTooLarge: (message = 'Request body is too large.') =>
     new ApiError(message, 413, 'PAYLOAD_TOO_LARGE'),
   internal: (message = 'An unexpected internal error occurred') =>

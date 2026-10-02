@@ -105,6 +105,22 @@ export function isRateLimited(key: string, overrides?: RateLimitOverrides): bool
 }
 
 /**
+ * Milliseconds until the current window resets for `key`, or 0 when the key is
+ * not currently limited.
+ *
+ * Strictly non-mutating: unlike `isRateLimited` it neither creates a bucket nor
+ * increments a counter, so it is safe to call after a rejection purely to build
+ * a `Retry-After` header. Reading the same key for reporting must not itself
+ * count as traffic.
+ */
+export function getRetryDelayMs(key: string): number {
+  const now = Date.now();
+  const bucket = buckets.get(key);
+  if (!bucket || now >= bucket.resetAt) return 0;
+  return Math.max(0, bucket.resetAt - now);
+}
+
+/**
  * Clear all buckets. Exposed for tests.
  */
 export function _resetBuckets(): void {

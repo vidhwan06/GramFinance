@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
 import { readJsonBody } from '@/lib/api/read-json';
+import { checkRateLimit, retryAfterSeconds, ROUTE_LIMITS } from '@/lib/api/rate-limit';
 import {
   eligibilityRequestSchema,
   formatValidationIssues,
@@ -45,6 +46,18 @@ const MAX_BODY_BYTES = 16 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit FIRST, before the body is even read and long before any
+    // database work. This is the most expensive read path in the app: four
+    // queries and a ~30 KB response, so an unthrottled caller multiplies both.
+    // Eligibility is deliberately public, so IP is the only available key.
+    const limit = ROUTE_LIMITS.eligibility;
+    if (checkRateLimit(request, limit).limited) {
+      throw ErrorFactories.rateLimited(
+        'Too many requests. Please wait a moment.',
+        retryAfterSeconds(request, limit)
+      );
+    }
+
     // Size-capped on the bytes actually read, not on the Content-Length header.
     // readJsonBody uses the header only as a cheap early exit and enforces the
     // real limit while counting the stream, so a request with no Content-Length

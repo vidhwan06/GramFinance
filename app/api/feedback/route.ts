@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
 import { readJsonBody } from '@/lib/api/read-json';
+import { isRateLimited } from '@/lib/ai/rate-limiter';
+import { retryAfterSecondsForKey, ROUTE_LIMITS } from '@/lib/api/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import {
   feedbackInputSchema,
@@ -70,6 +72,24 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       throw ErrorFactories.unauthorized('You must be signed in to submit feedback.');
+    }
+
+    // Rate limit AFTER authentication and keyed on the authenticated user id,
+    // never on the IP. Two reasons for that order and that key:
+    //
+    //   * Placing this before `getUser()` would let an unauthenticated caller
+    //     distinguish "rate limited" from "signed in", and would return 429
+    //     where the contract says an anonymous request gets 401.
+    //   * Keying on IP would punish an entire household or a shared village
+    //     connection for one person's activity. The session UUID is the honest
+    //     unit of ownership here, and it is server-derived.
+    const limit = ROUTE_LIMITS.feedback;
+    const userKey = `feedback:user:${user.id}`;
+    if (isRateLimited(userKey, { max: limit.max, windowMs: limit.windowMs })) {
+      throw ErrorFactories.rateLimited(
+        'Too many feedback submissions. Please wait a moment.',
+        retryAfterSecondsForKey(userKey)
+      );
     }
 
     // Size-capped on the bytes actually read, not on the Content-Length header.

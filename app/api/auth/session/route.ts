@@ -23,15 +23,29 @@
  * there is no profile UI in GramFinance, so nothing else has a consumer.
  */
 
+import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
+import { checkRateLimit, retryAfterSeconds, ROUTE_LIMITS } from '@/lib/api/rate-limit';
 import { createClient } from '@/lib/supabase/server';
 import { getSupabasePublicEnv } from '@/lib/supabase/env';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Rate limited, but never authenticated: the UI calls this on every header
+    // and menu mount to decide which control to render, so requiring a session
+    // would make it unusable and a tight limit would break navigation. The
+    // budget is generous for that reason.
+    const limit = ROUTE_LIMITS.authSession;
+    if (checkRateLimit(request, limit).limited) {
+      throw ErrorFactories.rateLimited(
+        'Too many requests. Please wait a moment.',
+        retryAfterSeconds(request, limit)
+      );
+    }
+
     if (!getSupabasePublicEnv()) {
       throw ErrorFactories.authUnavailable();
     }

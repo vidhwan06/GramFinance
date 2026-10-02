@@ -11,9 +11,12 @@ vi.mock('@google/generative-ai', () => ({
   })),
 }));
 
-// Mock the rate limiter to always allow
+// Mock the rate limiter to always allow. `getRetryDelayMs` is mocked too: the
+// route now reads it to build a `Retry-After` header, and a partial module mock
+// would leave it undefined, which throws and turns an expected 429 into a 500.
 vi.mock('@/lib/ai/rate-limiter', () => ({
   isRateLimited: vi.fn().mockReturnValue(false),
+  getRetryDelayMs: vi.fn().mockReturnValue(0),
 }));
 
 import { POST } from '@/app/api/assistant/route';

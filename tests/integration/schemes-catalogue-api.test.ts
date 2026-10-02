@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NextRequest } from 'next/server';
+import { _resetBuckets } from '@/lib/ai/rate-limiter';
 
 /**
  * Live integration test for the published scheme catalogue.
@@ -56,7 +58,11 @@ interface SchemeDto {
 }
 
 describe.skipIf(skipReason !== null)('published scheme catalogue (live)', () => {
-  let GET: () => Promise<Response>;
+  // GET now takes the request: it needs `If-None-Match` for the 304 path and
+  // the request for the per-IP rate limit. Existing callers pass an empty
+  // NextRequest, which has no forwarded-IP header and therefore lands on the
+  // namespaced dev bucket (non-production).
+  let GET: (request: NextRequest) => Promise<Response>;
   let listActiveSchemes: () => Promise<SchemeDto[]>;
 
   beforeAll(async () => {
@@ -64,8 +70,19 @@ describe.skipIf(skipReason !== null)('published scheme catalogue (live)', () => 
     ({ listActiveSchemes } = await import('@/features/schemes/schemes-service'));
   });
 
+  function catalogue(headers: Record<string, string> = {}): NextRequest {
+    return new NextRequest('http://localhost:3000/api/schemes', { headers });
+  }
+
+  // These cases make many origin requests and the endpoint now rate limits at
+  // 60/60s. Buckets live in the Node process, so each test starts clean —
+  // otherwise results would depend on execution order.
+  beforeEach(() => {
+    _resetBuckets();
+  });
+
   it('serves the published catalogue over HTTP', async () => {
-    const response = await GET();
+    const response = await GET(catalogue());
     expect(response.status).toBe(200);
 
     const body = (await response.json()) as {

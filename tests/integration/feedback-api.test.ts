@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { NextRequest } from 'next/server';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { _resetBuckets } from '@/lib/ai/rate-limiter';
 
 /**
  * Live integration test for POST /api/feedback.
@@ -126,6 +127,13 @@ describe.skipIf(skipReason !== null)('POST /api/feedback (live)', () => {
     ({ POST } = await import('@/app/api/feedback/route'));
   });
 
+  // The endpoint rate limits at 5/60s per authenticated user. Buckets live in
+  // the Node process, so each test starts clean — otherwise a run would depend
+  // on execution order and a body-limit case would see 429 instead of 413.
+  beforeEach(() => {
+    _resetBuckets();
+  });
+
   async function call(body: unknown, headers?: Record<string, string>): Promise<{
     status: number;
     json: ApiBody;
@@ -235,6 +243,7 @@ describe('POST /api/feedback — request body limit (F2)', () => {
 
   beforeEach(() => {
     currentUser = AUTHED;
+    _resetBuckets();
   });
 
   /**
@@ -374,12 +383,16 @@ describe('POST /api/feedback — request body limit (F2)', () => {
  * read, so an unauthenticated caller cannot use this endpoint to probe the body
  * limit, the schema or anything else about the request.
  */
-describe('POST /api/feedback — authentication precedes body processing (F2)', () => {
+describe('POST /api/feedback - authentication precedes body processing (F2)', () => {
   const MAX_BODY_BYTES = 8 * 1024;
   let POST: (request: NextRequest) => Promise<Response>;
 
   beforeAll(async () => {
     ({ POST } = await import('@/app/api/feedback/route'));
+  });
+
+  beforeEach(() => {
+    _resetBuckets();
   });
 
   function raw(body: string, headers: Record<string, string> = {}): NextRequest {

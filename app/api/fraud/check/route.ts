@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
 import { readJsonBody } from '@/lib/api/read-json';
+import { checkRateLimit, retryAfterSeconds, ROUTE_LIMITS } from '@/lib/api/rate-limit';
 import { runFraudEngine } from '@/lib/fraud/fraud-engine';
 import { listActiveSchemes } from '@/features/schemes/schemes-service';
 
@@ -47,6 +48,18 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit FIRST, before the body is read and before the scheme lookup.
+    // The engine itself is pure and cheap, but every call still performs one
+    // database query, so an unthrottled caller multiplies origin load. The route
+    // is public, so IP is the only available key.
+    const limit = ROUTE_LIMITS.fraud;
+    if (checkRateLimit(request, limit).limited) {
+      throw ErrorFactories.rateLimited(
+        'Too many requests. Please wait a moment.',
+        retryAfterSeconds(request, limit)
+      );
+    }
+
     // Size-capped before buffering; see `readJsonBody`.
     let payload: unknown;
     try {

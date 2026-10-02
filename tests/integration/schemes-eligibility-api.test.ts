@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { NextRequest } from 'next/server';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { _resetBuckets } from '@/lib/ai/rate-limiter';
 
 /**
  * Live integration test for POST /api/schemes/eligibility.
@@ -91,6 +92,13 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
 
   beforeAll(async () => {
     ({ POST } = await import('@/app/api/schemes/eligibility/route'));
+  });
+
+  // The endpoint rate limits at 12/60s and this suite makes many origin
+  // requests per test. Buckets live in the Node process, so each test starts
+  // clean rather than depending on execution order.
+  beforeEach(() => {
+    _resetBuckets();
   });
 
   async function call(body: unknown, headers?: Record<string, string>): Promise<{
@@ -280,6 +288,10 @@ describe('POST /api/schemes/eligibility - request body limit (F2)', () => {
 
   beforeAll(async () => {
     ({ POST } = await import('@/app/api/schemes/eligibility/route'));
+  });
+
+  beforeEach(() => {
+    _resetBuckets();
   });
 
   /**
