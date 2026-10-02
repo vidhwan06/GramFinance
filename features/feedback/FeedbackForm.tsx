@@ -1,31 +1,43 @@
 'use client';
 
-import React, { useState, FormEvent } from 'react';
+import React, { useRef, useState, FormEvent } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
+import { SignInButton } from '@/features/auth/components/SignInButton';
+import { createAnonymousSession } from '@/features/auth/lib/session-client';
+import { authCopy } from '@/features/auth/presentation/copy';
 import { cn } from '@/lib/utils/cn';
 import { copy } from './presentation/copy';
 
 /**
- * Feedback form — Stitch "Feedback Improvement Console" presentation.
+ * Feedback form - Stitch "Feedback Improvement Console" presentation.
  *
- * Allows an authenticated user to submit a 1–5 rating and an optional
- * comment. Submits to POST /api/feedback.
+ * Allows a user to submit a 1-5 rating and an optional comment. Submits to
+ * POST /api/feedback.
  *
- * ── State machine (unchanged) ───────────────────────────────────────────────
- * idle → submitting → success | unauthorized | error
+ * - State machine (unchanged)
+ *   idle -> submitting -> success | unauthorized | error
  *
  * The form prevents duplicate submissions by disabling all inputs and the
  * submit button while a request is in flight.
  *
- * ── Authentication (unchanged) ──────────────────────────────────────────────
+ * - Authentication
  * A 401 is surfaced as a distinct, clearly-worded state ("Sign-in required")
- * rather than a generic error, so users understand they must sign in first.
+ * rather than a generic error, and that state now carries a working sign-in
+ * control. Previously it told the user to "please sign in" when the app gave
+ * them no way to do so.
  *
- * ── What changed vs. the old markup ─────────────────────────────────────────
+ * The form does NOT look up session state on mount. That would add a request
+ * the form has no need for and would couple its behaviour to auth state it is
+ * not responsible for. It reacts only to a real 401 from the server, so a normal
+ * submission still costs exactly one request - the existing test contract -
+ * while a rejected one recovers automatically without the user retyping
+ * anything.
+ *
+ * - What changed vs. the old markup
  * Presentation only: the Card/Select/Textarea wrappers are replaced by the
  * design's console card (uppercase label rows, step pills, char counter,
  * inset input wells, aubergine CTA). Fields, labels (`t.feedback.*`),
@@ -33,7 +45,7 @@ import { copy } from './presentation/copy';
  * `tests/ui/feedback` keeps passing unchanged.
  */
 
-/** Display cap for the comment box — mirrors COMMENT_MAX_LENGTH in validation.ts. */
+/** Display cap for the comment box - mirrors COMMENT_MAX_LENGTH in validation.ts. */
 const COMMENT_MAX_LENGTH = 1000;
 
 type FormState =
@@ -43,9 +55,17 @@ type FormState =
   | { status: 'unauthorized' }
   | { status: 'error'; message: string };
 
+/** The exact shape POST /api/feedback accepts. Unchanged by this feature. */
+interface FeedbackPayload {
+  module: string;
+  rating: number;
+  comment?: string;
+}
+
 export function FeedbackForm() {
   const { t, language } = useLanguage();
   const c = copy[language === 'kn' ? 'kn' : 'en'];
+  const auth = authCopy[language === 'kn' ? 'kn' : 'en'];
 
   const [module, setModule] = useState('');
   const [rating, setRating] = useState<number | null>(null);
@@ -53,6 +73,14 @@ export function FeedbackForm() {
   const [formState, setFormState] = useState<FormState>({ status: 'idle' });
 
   const isSubmitting = formState.status === 'submitting';
+
+  /**
+   * The payload of the submission that was rejected with a 401, so it can be
+   * replayed verbatim after sign-in. A ref rather than state: replaying must
+   * not itself trigger a render, and the value is only ever read by the retry
+   * handler.
+   */
+  const lastPayload = useRef<FeedbackPayload | null>(null);
 
   const moduleOptions = [
     { value: 'general', label: t.feedback.moduleGeneral },
@@ -62,49 +90,116 @@ export function FeedbackForm() {
     { value: 'learn', label: t.feedback.moduleLearn },
   ];
 
+  /**
+   * POSTs a payload and drives the form state machine.
+   *
+   * Returns true only on success, so the sign-in retry can tell whether the
+   * replayed submission actually landed. Kept separate from the submit handler
+   * so the identical request can be issued a second time without duplicating
+   * any of the response handling.
+   */
+  async function postFeedback(payload: FeedbackPayload): Promise<boolean> {
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const body = await response.json().catch(() => null);
+
+      if (response.ok && body?.success) {
+        setFormState({ status: 'success' });
+        setModule('');
+        setRating(null);
+        setComment('');
+        return true;
+      }
+
+      if (response.status === 401) {
+        setFormState({ status: 'unauthorized' });
+        return false;
+      }
+
+      setFormState({
+        status: 'error',
+        message: body?.error?.message ?? t.common.error,
+      });
+      return false;
+    } catch {
+      setFormState({ status: 'error', message: t.common.error });
+      return false;
+    }
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (isSubmitting) return;
 
     setFormState({ status: 'submitting' });
 
-    fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        module: module.trim(),
-        rating: rating,
-        comment: comment.trim() || undefined,
-      }),
-    })
-      .then(async (res) => {
-        const body = await res.json();
-        if (res.ok && body.success) {
-          setFormState({ status: 'success' });
-          setModule('');
-          setRating(null);
-          setComment('');
-        } else if (res.status === 401) {
-          setFormState({ status: 'unauthorized' });
-        } else {
-          const message =
-            body?.error?.message ?? t.common.error;
-          setFormState({ status: 'error', message });
-        }
-      })
-      .catch(() => {
-        setFormState({ status: 'error', message: t.common.error });
-      });
+    const payload: FeedbackPayload = {
+      module: module.trim(),
+      rating: rating as number,
+      comment: comment.trim() || undefined,
+    };
+    lastPayload.current = payload;
+
+    void postFeedback(payload);
+  }
+
+  /**
+   * Sign in, then replay the rejected submission.
+   *
+   * The user must not have to re-enter the form, so the stored payload is
+   * reused exactly as it was first sent. If sign-in fails the form falls back
+   * to the unauthorized state so the same control remains available; if the
+   * retry is rejected again it returns to idle with the entered values still
+   * in place, so nothing is ever lost.
+   */
+  async function handleSignInAndRetry() {
+    const payload = lastPayload.current;
+    if (!payload) {
+      setFormState({ status: 'idle' });
+      return;
+    }
+
+    setFormState({ status: 'submitting' });
+
+    let signedIn = false;
+    try {
+      const session = await createAnonymousSession();
+      signedIn = session.signedIn;
+    } catch {
+      signedIn = false;
+    }
+
+    if (!signedIn) {
+      setFormState({ status: 'unauthorized' });
+      return;
+    }
+
+    const sent = await postFeedback(payload);
+    if (!sent) {
+      // Either a second 401 (the cookie did not reach the server) or a server
+      // error. postFeedback has already set the appropriate state; the only
+      // case worth correcting is a second 401, where the notice should show
+      // again so the user is not left staring at a spinner.
+      setFormState((current) =>
+        current.status === 'unauthorized' ? { status: 'unauthorized' } : current
+      );
+    }
   }
 
   function resetForm() {
     setModule('');
     setRating(null);
     setComment('');
+    lastPayload.current = null;
     setFormState({ status: 'idle' });
   }
 
-  // ── Success state ──────────────────────────────────────────────────────────
+  // - Success state ------------------------------------------------------------
   if (formState.status === 'success') {
     return (
       <section
@@ -152,7 +247,7 @@ export function FeedbackForm() {
     );
   }
 
-  // ── Console form ───────────────────────────────────────────────────────────
+  // - Console form -------------------------------------------------------------
   return (
     <div className="relative rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-space-md shadow-sm sm:p-space-lg">
       <div className="mb-space-md border-b border-outline-variant/40 pb-space-md">
@@ -165,7 +260,7 @@ export function FeedbackForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-space-md">
-        {/* Category — the module selector */}
+        {/* Category - the module selector */}
         <div>
           <div className="mb-2 flex items-center justify-between gap-2">
             <span className="flex items-baseline gap-1.5">
@@ -278,14 +373,27 @@ export function FeedbackForm() {
           </div>
         </div>
 
-        {/* Unauthorized alert — distinct from generic errors */}
+        {/*
+          Unauthorized alert - distinct from generic errors.
+
+          This is where the old copy made a promise the app could not keep ("Please
+          sign in and try again") with no way to act on it. The SignInButton below
+          is the fix: it creates the lightweight session and replays this exact
+          submission, so the user never retypes what they already wrote.
+        */}
         {formState.status === 'unauthorized' && (
           <Alert
             variant="warning"
             title={t.feedback.authRequiredTitle}
             className="rounded-2xl border-l-4 border-secondary bg-surface-container-high text-on-surface"
           >
-            {t.feedback.authRequiredMessage}
+            <p className="mb-3">{t.feedback.authRequiredMessage}</p>
+            <SignInButton
+              onClick={handleSignInAndRetry}
+              label={auth.retryAfterSignIn}
+              size="sm"
+              variant="primary"
+            />
           </Alert>
         )}
 

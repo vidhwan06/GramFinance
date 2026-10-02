@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
+import { AuthControl } from '@/features/auth/components/AuthControl';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
@@ -87,6 +88,8 @@ export function Header() {
             </span>
           </Link>
           <LanguageSwitcher />
+          {/* Lightweight anonymous session: Continue when signed out, Sign out when signed in. */}
+          <AuthControl size="sm" />
         </div>
       </div>
     </header>

@@ -18,6 +18,17 @@ import {
  * so a user can only insert their own feedback. An unauthenticated request
  * is rejected with 401 before any database work is attempted.
  *
+ * The authentication check runs FIRST, ahead of parsing and schema validation.
+ * That ordering is deliberate:
+ *   * An unauthenticated caller learns only that authentication is required. It
+ *     does not receive the field list, the allowed enum values or the per-field
+ *     validation messages, which is free schema disclosure.
+ *   * No work is done for a request that cannot succeed anyway. Previously an
+ *     anonymous caller caused a body parse, a Zod pass, and two Supabase round
+ *     trips before reaching the same 401.
+ * The size guard stays ahead of both, because it bounds memory rather than
+ * describing the schema.
+ *
  * ── No service-role key ─────────────────────────────────────────────────────
  * The server client uses the anon key only. RLS is never bypassed.
  */
@@ -33,6 +44,23 @@ export async function POST(request: NextRequest) {
     const declaredLength = Number(request.headers.get('content-length') ?? '0');
     if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
       throw ErrorFactories.badRequest('Request body is too large.');
+    }
+
+    const supabase = await createClient();
+
+    // Authenticate BEFORE validating the body. getUser(), never getSession():
+    // the token is revalidated with the auth server, which is what makes the
+    // resulting user id safe to write as user_id below. The RLS policy enforces
+    // the same rule independently; this check exists to return a clean 401
+    // rather than a database error, and to keep anonymous callers away from the
+    // validation surface.
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      throw ErrorFactories.unauthorized('You must be signed in to submit feedback.');
     }
 
     let payload: unknown;
@@ -52,19 +80,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { module, rating, comment } = parsed.data;
-
-    const supabase = await createClient();
-
-    // Authenticate the request. The RLS policy will also enforce this, but
-    // checking here gives a clean 401 rather than a database error.
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      throw ErrorFactories.unauthorized('You must be signed in to submit feedback.');
-    }
 
     // Insert the feedback. user_id comes from the authenticated session,
     // never from the request body. RLS enforces that it matches auth.uid().

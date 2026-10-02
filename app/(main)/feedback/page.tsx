@@ -6,6 +6,8 @@ import { Info } from 'lucide-react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
 import { FeedbackForm } from '@/features/feedback/FeedbackForm';
 import { FeedbackSidebar } from '@/features/feedback/presentation/FeedbackSidebar';
+import { SignInNotice } from '@/features/auth/components/SignInNotice';
+import { useAuthState } from '@/features/auth/hooks/useAuthState';
 import { copy } from '@/features/feedback/presentation/copy';
 
 /**
@@ -27,6 +29,7 @@ import { copy } from '@/features/feedback/presentation/copy';
 export default function FeedbackPage() {
   const { t, language } = useLanguage();
   const c = copy[language === 'kn' ? 'kn' : 'en'];
+  const auth = useAuthState();
 
   return (
     <>
@@ -96,6 +99,20 @@ export default function FeedbackPage() {
 
             {/* RIGHT: the feedback console (same form, restyled) */}
             <div className="lg:col-span-7">
+              {/*
+                Pre-submission sign-in notice.
+
+                Shown only once the session lookup has resolved and the visitor
+                is confirmed signed out, so a signed-in user never sees a flash
+                of it while the lookup is in flight. The form stays fully usable
+                either way: `FeedbackForm` still handles a 401 and offers the
+                same action from its own unauthorized state.
+              */}
+              {auth.ready && !auth.signedIn && (
+                <div className="mb-space-md">
+                  <SignInNotice onSignedIn={auth.refresh} />
+                </div>
+              )}
               <FeedbackForm />
             </div>
           </div>

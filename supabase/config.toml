@@ -155,6 +155,15 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
+#
+# TODO(production): the real deployment origin is not known yet, so no value has
+# been guessed here. Before launch, set `site_url` and add the production origin
+# to `additional_redirect_urls` on BOTH this file and the live project
+# (Authentication -> URL Configuration).
+#
+# Neither is needed for the current anonymous sign-in flow, which involves no
+# redirect. They are recorded here because they become load-bearing the moment
+# any email-based flow is ever added.
 site_url = "http://127.0.0.1:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
@@ -174,7 +183,21 @@ refresh_token_reuse_interval = 10
 # Allow/disallow new user signups to your project.
 enable_signup = true
 # Allow/disallow anonymous sign-ins to your project.
-enable_anonymous_sign_ins = false
+#
+# GramFinance uses anonymous sign-in as its only authentication method. It is
+# the sole enabler of POST /api/auth/sign-in, which creates a real auth.users
+# row with a real UUID so the existing `feedback_insert_own` RLS policy has an
+# owner to check against. No email, password, OTP or phone is collected.
+#
+# The product stays fully usable without a session: only feedback submission is
+# gated.
+#
+# ⚠️ This file configures the LOCAL Supabase instance only (`supabase start`).
+# The same setting must also be enabled on the live project under
+# Authentication -> Providers -> Anonymous. Until it is, POST /api/auth/sign-in
+# returns 503 AUTH_UNAVAILABLE and the live auth integration test self-skips
+# with that reason.
+enable_anonymous_sign_ins = true
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.

@@ -175,7 +175,13 @@ export const en = {
     commentPlaceholder: 'Type your feedback here...',
     submitAnother: 'Submit another feedback',
     authRequiredTitle: 'Sign-in required',
-    authRequiredMessage: 'You must be signed in to submit feedback. Please sign in and try again.',
+    // Reworded from "Please sign in and try again", which told the user to
+    // perform an action the app previously gave them no way to perform. The
+    // button below this message now creates the session and replays the
+    // submission automatically, so the copy says what actually happens.
+    // The leading sentence is unchanged because the UI test asserts on it.
+    authRequiredMessage:
+      'You must be signed in to submit feedback. One tap creates a lightweight session — no email address or password needed — and your feedback below will be sent automatically.',
   },
   home: {
     welcomeTitle: 'GramFinance',

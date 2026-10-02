@@ -59,16 +59,31 @@ function getWindowMs(): number {
 }
 
 /**
+ * Explicit limits, for a caller that needs a different budget from the
+ * assistant's env-configured default.
+ *
+ * Omitting this argument preserves the original behaviour exactly: the
+ * `ASSISTANT_RATE_LIMIT_*` environment variables, falling back to the
+ * defaults. The bucket store, the expiry sweep and the `MAX_BUCKETS` cap are
+ * shared, so adding a second caller does not add a second implementation of
+ * the security-relevant part.
+ */
+export interface RateLimitOverrides {
+  max?: number;
+  windowMs?: number;
+}
+
+/**
  * Check whether a key is rate-limited.
  *
  * Returns true if the request should be blocked (limit exceeded).
  * Returns false if the request is allowed. The bucket is updated
  * as a side effect when the request is allowed.
  */
-export function isRateLimited(key: string): boolean {
+export function isRateLimited(key: string, overrides?: RateLimitOverrides): boolean {
   const now = Date.now();
-  const max = getMax();
-  const windowMs = getWindowMs();
+  const max = overrides?.max ?? getMax();
+  const windowMs = overrides?.windowMs ?? getWindowMs();
 
   // Reclaim memory only when the cap is reached — normal traffic skips this.
   if (buckets.size >= MAX_BUCKETS) sweep(now);

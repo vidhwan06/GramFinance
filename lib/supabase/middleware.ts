@@ -44,19 +44,33 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Do not swap this for getSession(): getUser() revalidates the JWT with the
-  // auth server, which is what makes it safe to read `user` from for
-  // authorization decisions.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // ── Refresh pass only — NOT an authorization decision ──────────────────────
+  // `getClaims()` validates the access token's signature locally against the
+  // cached JWKS and checks `exp`. It does not call the Supabase Auth server.
+  // `getUser()` did make a network round trip to `/auth/v1/user` on every
+  // single matched request, which is pure overhead for a pass whose only job is
+  // to keep the cookie fresh.
+  //
+  // What actually keeps the session alive: `getSession()` (called internally by
+  // `getClaims()`) refreshes when the access token is within its expiry margin,
+  // and the `SIGNED_IN` / `TOKEN_REFRESHED` auth-state handler installed by
+  // `createServerClient` routes those new tokens back through `setAll` above.
+  // Because `setAll` re-creates `supabaseResponse`, the refreshed cookies are
+  // carried onto the response that is actually returned.
+  //
+  // Authorization is still decided with `getUser()` in the individual route
+  // handlers that need it (see `app/api/feedback/route.ts`). Nothing here is
+  // ever used to allow or deny a request.
+  const { error: claimsError } = await supabase.auth.getClaims();
 
-  // No auth guard is applied here yet. When a route requires a session, the
-  // check belongs on the specific route/Server Action, and the redirect must
-  // be applied to `supabaseResponse` (not a fresh NextResponse) so refreshed
-  // cookies survive the redirect.
-
-  void user; // Reserved for the route guards described above.
+  // A rejected or absent token is not an error condition: the overwhelming
+  // majority of GramFinance traffic is anonymous, and public pages must render
+  // without a session. Supabase has already cleared any unusable cookie through
+  // `setAll` above, so the response simply carries on unsigned.
+  if (claimsError) {
+    // Intentionally silent. This fires on every anonymous request, so logging
+    // it would be pure noise, and the token itself must never be logged.
+  }
 
   return supabaseResponse;
 }

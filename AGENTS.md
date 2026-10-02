@@ -40,7 +40,28 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
   - Test coverage: 8 unit, 5 integration, 34 UI tests — all passing
 - Other API routes in `app/api/*` (schemes, lessons, feedback, AI) are stubs echoing `{ message: '... placeholder ready.' }`.
 - No page or component calls Gemini, Tesseract. Supabase client used only server-side in `/api/fraud/check` for scheme data.
-- `middleware.ts` calls `supabase.auth.getUser()` on every request but no-ops when the Supabase env vars are missing, so the app renders fine with no backend.
+- `middleware.ts` uses `supabase.auth.getClaims()` (local JWT validation, no auth-server round trip) to refresh the session cookie, and no-ops when the Supabase env vars are missing, so the app renders fine with no backend. Its matcher **excludes `/api`** — route handlers refresh on demand via their own writable cookie store.
+- Authentication is implemented; see the Authentication section below.
+
+## Authentication (F1 — anonymous sessions)
+
+GramFinance uses **Supabase anonymous sign-in** as its only authentication method. There is no email, password, OTP, phone or OAuth, and no account is ever created.
+
+**Why anonymous, and not real identity.** Every feature that works today is public and stays public: the loan calculator, fraud checker, scheme catalogue, eligibility engine, AI assistant and learning module. The *only* gated feature is submitting feedback, which needs an owner-scoped `user_id` to satisfy the `feedback_insert_own` RLS policy. Full identity would mean collecting a large amount of personal data from a largely low-literacy audience on shared devices and unreliable networks, for one low-stakes action — and it is not currently available anyway: the project allows only 2 emails/hour and has no SMS provider configured. An anonymous session yields a real `auth.users` row with a real UUID, which is exactly what RLS needs, and the UUID is stable if a real credential is ever linked later.
+
+**Hard invariants — breaking any of these is a security regression:**
+
+- **The browser must never contact Supabase directly.** Auth runs through same-origin Route Handlers (`app/api/auth/{sign-in,sign-out,session}`) using `lib/supabase/server`. There is deliberately **no browser Supabase client**: `lib/supabase/client.ts` exists but is imported by nothing and must stay that way. This is what keeps `connect-src 'self'` correct in `next.config.ts` and keeps the project URL out of the client bundle. `tests/unit/auth/auth-architecture-guards.test.ts` enforces it.
+- **Protected routes authorize with `getUser()`, never `getSession()`.** `getSession()` reads a cookie without revalidating it, so trusting it for an authorization decision would be a vulnerability.
+- **Middleware is a session refresher, NOT a global authorization guard.** It never redirects. GramFinance is public by default; per-route checks live in the route handlers.
+- **Never add a role/admin column on `public.users`.** See the Supabase section below — unchanged by this feature.
+- **`POST /api/auth/sign-in` is rate limited per client IP** via `lib/api/rate-limit.ts`, before any upstream work. There is deliberately **no shared fallback bucket** (the assistant route's `'anonymous'` fallback is the pattern being avoided): a shared key would let anyone lock the feature out for everyone. If no client IP can be determined the route **fails closed in production** and stays permissive in development, where `next dev` sets no proxy header.
+- **Sign-out ends the session only.** It must never delete `public.users` or any `feedback` row. `feedback.user_id` is `ON DELETE SET NULL` (migration 006), so a cascade would silently strip attribution from feedback the team still needs.
+- **Never expose tokens in a response body**, and never log a session, token or user identifier. `GET /api/auth/session` returns only `{ signedIn }` and, when true, `{ userId }`.
+
+**No migration was needed.** Every existing policy works unchanged against an anonymous `auth.users` UUID: `feedback_insert_own`, `feedback_select_own`, `users_select_own`, `users_update_own`, and the migration 009 `handle_new_user` trigger, which fires for anonymous signups and auto-provisions the `public.users` profile. `user_roles`, `is_admin()` and the scheme/fraud policies are untouched.
+
+**Configuration.** `supabase/config.toml` sets `enable_anonymous_sign_ins = true`, but that file only configures the **local** Supabase instance. The live project must have the same switch enabled under **Authentication → Providers → Anonymous**; until it is, `POST /api/auth/sign-in` returns `503 AUTH_UNAVAILABLE` and `tests/integration/auth-api.test.ts` self-skips with that reason (it prints a warning so a skipped run is never mistaken for a passing one).
 
 ## Supabase
 

@@ -321,7 +321,8 @@ The latest report confirms **63/63 automated tests passing** and successful buil
 * Fee handling
 * Prepayment simulation
 * Supabase database
-* Supabase authentication relationship
+* Supabase authentication relationship (schema only — the `public.users` profile is tied to `auth.users`)
+* Anonymous session sign-in (lightweight, one-tap; no email, password, OTP or phone)
 * Row Level Security
 * Database policies
 * Seed data
@@ -343,6 +344,16 @@ The latest report confirms **63/63 automated tests passing** and successful buil
 * Production hardening
 
 The recommended development order is Government Schemes → Financial Learning → Fraud/Scam Checker → AI Financial Assistant → Feedback, followed by content population and final hardening.
+
+### 🔐 Authentication
+
+Authentication is a **lightweight anonymous session**, not an account. There is no email address, password, OTP or phone number, and nothing personal is collected.
+
+The entire app is public and works without signing in — the loan calculator, fraud checker, scheme catalogue, scheme eligibility, AI assistant and learning content are all open to everyone. Only *submitting feedback* needs a session, because the feedback record must be attached to an owner that row-level security can verify.
+
+Tapping **Continue** creates a real Supabase `auth.users` entry with a real identifier, stored in an HTTP-only cookie. That is enough for the existing RLS rules to work unchanged; no database migration was needed. The browser never talks to Supabase directly — sign-in happens through this app's own same-origin endpoints, so no third-party origin had to be added to the Content-Security-Policy.
+
+**Setup requirement:** anonymous sign-ins must be enabled on the Supabase project under **Authentication → Providers → Anonymous**. Without it, feedback submission returns a "temporarily unavailable" response. `supabase/config.toml` already sets `enable_anonymous_sign_ins = true`, but that file only configures a local Supabase instance and does not affect the hosted project.
 
 ---
 

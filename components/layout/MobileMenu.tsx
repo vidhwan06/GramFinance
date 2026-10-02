@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
+import { AuthControl } from '@/features/auth/components/AuthControl';
 
 export function MobileMenu() {
   const { t } = useLanguage();
@@ -27,6 +28,10 @@ export function MobileMenu() {
       <Link href="/assistant" className="text-base font-semibold text-ink hover:text-seal-red py-1.5">
         {t.nav.assistant}
       </Link>
+      {/* Lightweight anonymous session, same control as the header. */}
+      <div className="pt-2 mt-1 border-t border-rule">
+        <AuthControl size="sm" />
+      </div>
     </div>
   );
 }
