@@ -1,13 +1,18 @@
 'use client';
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { DocumentChecklist } from './DocumentChecklist';
+import { SchemeBreadcrumbs } from './SchemeBreadcrumbs';
+import { SchemeHero } from './SchemeHero';
+import { SchemeMetaStrip } from './SchemeMetaStrip';
+import { SchemeOverviewSection } from './SchemeOverviewSection';
+import { SchemeCriteriaSection } from './SchemeCriteriaSection';
+import { SchemeEligibilityJourney } from './SchemeEligibilityJourney';
+import { SchemeTransparencyNote } from './SchemeTransparencyNote';
+import { SchemeQuestionsSection } from './SchemeQuestionsSection';
+import { SchemeClosingCta } from './SchemeClosingCta';
 import { OfficialSourceLink } from './OfficialSourceLink';
 import { EligibilityForm } from './EligibilityForm';
-import { getSchemeFieldDefinition } from '../eligibility/field-registry';
-import { targetGroupLabel } from '../eligibility/form-fields';
+import { schemeDetailText } from './scheme-detail-copy';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
 import { ELIGIBILITY_DISCLAIMER_EN, ELIGIBILITY_DISCLAIMER_KN } from '../types';
 import type { SchemeDetail } from '../schemes-service';
@@ -17,24 +22,19 @@ export interface SchemeDetailViewProps {
 }
 
 /**
- * Formats an ISO date string (YYYY-MM-DD) for human-readable display.
- * Returns the original string if parsing fails.
- */
-function formatDate(isoDate: string, language: 'en' | 'kn'): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return isoDate;
-  return new Intl.DateTimeFormat(language === 'kn' ? 'kn-IN' : 'en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(date);
-}
-
-/**
  * The scheme detail body.
  *
  * A Client Component so it can read the active language. All data was fetched
  * on the server and arrives as a plain serialisable prop.
+ *
+ * Composition follows the final Stitch scheme-detail design, section by section,
+ * while staying strictly data-driven — every fact on the page reads from the
+ * `scheme` record, so the same layout serves PM-KISAN today and any future
+ * scheme unchanged:
+ *
+ *   breadcrumb → hero → at-a-glance strip → about + self-assessment →
+ *   criteria + documents → how the check works → eligibility & verification →
+ *   official source → questions → closing invitation → check eligibility form
  *
  * The eligibility section is passed `requiredFields`, which the SERVER computed
  * from the scheme's own rules using the same service the API uses. The form has
@@ -42,185 +42,45 @@ function formatDate(isoDate: string, language: 'en' | 'kn'): string {
  */
 export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
   const { t, language } = useLanguage();
+  const c = schemeDetailText(language);
 
-  const isNationwide = scheme.states.length === 0 || scheme.states.includes('ALL');
-
-  // Group rules by their ruleGroup for human-readable display.
-  const groupedRules: Record<number, typeof scheme.rules> = {};
-  for (const rule of scheme.rules) {
-    const group = rule.ruleGroup;
-    if (!groupedRules[group]) groupedRules[group] = [];
-    groupedRules[group].push(rule);
-  }
-
-  const groupNumbers = Object.keys(groupedRules).map(Number).sort((a, b) => a - b);
-
-  const conditionDescriptions = (rules: typeof scheme.rules): string[] => {
-    // Collect all authored descriptions in the group.
-    const descriptions: string[] = [];
-    for (const rule of rules) {
-      const authored = language === 'kn' ? rule.descriptionKn : rule.descriptionEn;
-      if (authored) {
-        descriptions.push(authored);
-      } else {
-        // Fallback: use the field label.
-        const def = getSchemeFieldDefinition(rule.field);
-        descriptions.push(def ? (language === 'kn' ? def.labelKn : def.labelEn) : rule.field);
-      }
-    }
-    return descriptions;
-  };
+  const schemeName = language === 'kn' ? scheme.nameKn : scheme.nameEn;
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900">
-          {language === 'kn' ? scheme.nameKn : scheme.nameEn}
-        </h1>
-        <p className="text-sm text-gray-500">
-          {t.schemes.lastVerified}:{' '}
-          <time dateTime={scheme.lastVerified}>{formatDate(scheme.lastVerified, language)}</time>
-        </p>
-      </header>
+    <div className="w-full">
+      {/* ─────────────── BREADCRUMB + VERIFIED DATE ─────────────── */}
+      <SchemeBreadcrumbs schemeName={schemeName} lastVerified={scheme.lastVerified} />
 
-      {scheme.descriptionEn && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{language === 'kn' ? 'ಈ ಯೋಜನೆ ಬಗ್ಗೆ' : 'About this scheme'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-700 leading-relaxed">
-              {language === 'kn'
-                ? scheme.descriptionKn
-                : scheme.descriptionEn}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {/* ─────────────── HERO ─────────────── */}
+      <SchemeHero
+        scheme={scheme}
+        language={language}
+        verifiedLabel={t.schemes.lastVerified}
+        eligibilityCta={t.schemes.checkEligibility}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t.schemes.aboutEligibilityAndVerification}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                {language === 'kn' ? 'ಅರ್ಹತೆ ಅಂದಾಜು' : 'Eligibility estimate'}
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {language === 'kn'
-                  ? 'GramFinance ನಿಮ್ಮ ಉತ್ತರಗಳ ಆಧಾರದ ಮೇಲೆ ಈ ಯೋಜನೆಯ ಅರ್ಹತೆ ಷರತ್ತುಗಳನ್ನು ಪೂರೈಸುತ್ತೀರಾ ಎಂದು ಅಂದಾಜು ಮಾಡುತ್ತದೆ.'
-                  : 'GramFinance uses the information you provide to estimate whether you may meet this scheme’s eligibility conditions.'}
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                {language === 'kn' ? 'ಅಧಿಕೃತ ಪರಿಶೀಲನೆ' : 'Official verification'}
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {language === 'kn'
-                  ? 'ಅಂತಿಮ ಅರ್ಹತೆ ಸಂಬಂಧಿತ ಅಧಿಕಾರಿಗಳು ಮತ್ತು ಅನ್ವಯಿಕ ಯೋಜನೆ ಪ್ರಕ್ರಿಯೆಯ ಮೂಲಕ ಪರಿಶೀಲನೆಗೆ ಒಳಪಟ್ಟಿದೆ.'
-                  : 'Final eligibility is subject to verification by the relevant authorities and the applicable scheme process.'}
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">
-                {language === 'kn' ? 'ಆಡಳಿತ ಅಗತ್ಯಗಳು' : 'Administrative requirements'}
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {language === 'kn'
-                  ? 'ಅರ್ಜಿದಾರರು ಅನ್ವಯಿಕ KYC, ದಾಖಲೆ ಮತ್ತು ಪರಿಶೀಲನೆ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಬೇಕು.'
-                  : 'Applicants must complete the applicable KYC, documentation, and verification process.'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* ─────────────── AT-A-GLANCE STRIP ─────────────── */}
+      <SchemeMetaStrip scheme={scheme} />
 
-      {(scheme.targetGroups.length > 0 || !isNationwide) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t.schemes.forWhom}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {scheme.targetGroups.length > 0 && (
-              <ul className="flex flex-wrap gap-1.5">
-                {scheme.targetGroups.map((group) => (
-                  <li key={group}>
-                    <Badge variant="neutral">{targetGroupLabel(group, language)}</Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {!isNationwide && <p className="text-sm text-gray-600">{scheme.states.join(', ')}</p>}
-            {isNationwide && (
-              <p className="text-sm text-gray-600">{t.schemes.allStates}</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      {/* ─────────────── ABOUT + SELF-ASSESSMENT ─────────────── */}
+      <SchemeOverviewSection scheme={scheme} />
 
-      {scheme.rules.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t.schemes.conditionsTitle}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="space-y-3"
-              aria-label={t.schemes.conditionsTitle}
-              data-testid="scheme-conditions"
-            >
-              {groupNumbers.map((groupNum) => {
-                const rules = groupedRules[groupNum];
-                const groupOp = rules[0]?.groupOperator ?? 'AND';
-                const descriptions = conditionDescriptions(rules);
-                return (
-                  <div
-                    key={groupNum}
-                    className="rounded-lg border border-gray-200 bg-white p-4"
-                  >
-                    <div className="space-y-1">
-                      {descriptions.map((desc, idx) => (
-                        <p key={idx} className="text-sm text-gray-700">
-                          <span className="font-semibold">{desc}</span>
-                        </p>
-                      ))}
-                    </div>
-                    {rules.length > 1 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {groupOp === 'OR'
-                          ? (language === 'kn'
-                              ? 'ಈ ನಿಯಮಗಳಲ್ಲಿ ಕನಿಷ್ಟ ಒಂದು ಪೂರೈಯಬೇಕು.'
-                              : 'At least one of these conditions must be met.')
-                          : (language === 'kn'
-                              ? 'ಈ ನಿಯಮಗಳೆಲ್ಲವೂ ಪೂರೈಯಬೇಕು.'
-                              : 'All of these conditions must be met.')}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* ─────────────── CONDITIONS + DOCUMENTS ─────────────── */}
+      <SchemeCriteriaSection scheme={scheme} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t.schemes.documentsTitle}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DocumentChecklist
-            documents={scheme.requiredDocuments}
-            emptyLabel={t.schemes.documentsEmpty}
-          />
-        </CardContent>
-      </Card>
+      {/* ─────────────── HOW THE CHECK WORKS ─────────────── */}
+      <SchemeEligibilityJourney />
 
-      <Card>
-        <CardContent>
+      {/* ─────────────── ELIGIBILITY AND VERIFICATION ─────────────── */}
+      <SchemeTransparencyNote />
+
+      {/* ─────────────── OFFICIAL SOURCE ─────────────── */}
+      {/* OfficialSourceLink renders its own heading (exactly one on the page). */}
+      <section
+        className="max-w-[1440px] w-full mx-auto px-margin-mobile lg:px-margin pb-space-xl"
+        aria-label={t.schemes.sourceTitle}
+      >
+        <div className="bg-surface-container-lowest p-6 lg:p-8 rounded-2xl shadow-sm border border-outline-variant/40">
           <OfficialSourceLink
             source={scheme.officialSource}
             label={t.schemes.sourceTitle}
@@ -228,31 +88,56 @@ export function SchemeDetailView({ scheme }: SchemeDetailViewProps) {
             lastVerifiedLabel={t.schemes.lastVerified}
             lastVerified={scheme.lastVerified}
             language={language}
+            visitLabel={c.sourceCta}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <section id="check" className="scroll-mt-20 space-y-3">
-        <h2 className="text-xl font-bold text-gray-900">{t.schemes.checkEligibility}</h2>
+      {/* ─────────────── QUESTIONS ABOUT THE CHECK ─────────────── */}
+      <SchemeQuestionsSection />
 
-        <p className="rounded-lg border-l-4 border-gray-300 bg-gray-50 p-3 text-sm text-gray-700">
-          {language === 'kn' ? ELIGIBILITY_DISCLAIMER_KN : ELIGIBILITY_DISCLAIMER_EN}
-        </p>
+      {/* ─────────────── CLOSING INVITATION ─────────────── */}
+      <SchemeClosingCta />
 
-        <EligibilityForm
-          schemeId={scheme.id}
-          requiredFields={scheme.requiredFields}
-          language={language}
-          labels={{
-            formTitle: t.schemes.formTitle,
-            formHelp: t.schemes.formHelp,
-            checkButton: t.schemes.checkButton,
-            checking: t.schemes.checking,
-            addInformation: t.schemes.addInformation,
-            errorTitle: t.schemes.errorTitle,
-            fieldRequired: t.schemes.fieldRequired,
-          }}
-        />
+      {/* ─────────────── CHECK ELIGIBILITY ─────────────── */}
+      <section
+        id="check"
+        className="max-w-[1440px] w-full mx-auto px-margin-mobile lg:px-margin pb-space-xl scroll-mt-24"
+        aria-labelledby="scheme-check-heading"
+      >
+        <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/40 p-6 lg:p-10 space-y-4">
+          <div className="space-y-1">
+            <span className="font-label-md text-label-md text-secondary font-semibold uppercase tracking-wider">
+              {c.checkEyebrow}
+            </span>
+            <h2
+              id="scheme-check-heading"
+              className="font-headline-md text-headline-md text-on-surface font-bold"
+            >
+              {t.schemes.checkEligibility}
+            </h2>
+            <p className="font-body-md text-body-md text-on-surface-variant">{c.checkDesc}</p>
+          </div>
+
+          <p className="rounded-xl border-l-4 border-seal-red bg-surface-container-low p-3 text-body-sm text-on-surface">
+            {language === 'kn' ? ELIGIBILITY_DISCLAIMER_KN : ELIGIBILITY_DISCLAIMER_EN}
+          </p>
+
+          <EligibilityForm
+            schemeId={scheme.id}
+            requiredFields={scheme.requiredFields}
+            language={language}
+            labels={{
+              formTitle: t.schemes.formTitle,
+              formHelp: t.schemes.formHelp,
+              checkButton: t.schemes.checkButton,
+              checking: t.schemes.checking,
+              addInformation: t.schemes.addInformation,
+              errorTitle: t.schemes.errorTitle,
+              fieldRequired: t.schemes.fieldRequired,
+            }}
+          />
+        </div>
       </section>
     </div>
   );

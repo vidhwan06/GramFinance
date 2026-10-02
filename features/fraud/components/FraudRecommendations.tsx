@@ -2,24 +2,32 @@
 
 import React from 'react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
+import { copy } from '@/features/fraud/presentation/copy';
 import type { Recommendation } from '@/lib/fraud/types';
 import { translateRecommendation } from '@/features/fraud/lib/fraud-translations';
+import { Phone } from 'lucide-react';
 
 /**
  * Displays practical safety recommendations returned by the fraud checker.
+ *
+ * Stitch composition: aubergine action card — "! What you should do" header
+ * with a numbered checklist, then the cybercrime helpline note when the
+ * recommendations mention `1930`.
  *
  * Shows each recommendation as a bullet point. If the cybercrime helpline
  * (`1930`) is included in the recommendations, it is displayed clearly but
  * without making the entire result alarmist.
  *
  * The purpose is to help the user think clearly, not to fear-monger.
+ * Renders nothing at all when there are no recommendations.
  */
 export function FraudRecommendations({
   recommendations,
 }: {
   recommendations: Recommendation[];
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const c = copy[language === 'kn' ? 'kn' : 'en'];
 
   if (recommendations.length === 0) return null;
 
@@ -28,50 +36,60 @@ export function FraudRecommendations({
   );
 
   return (
-    <div>
-      <h3 className="text-lg font-bold text-gray-900 mb-3">
-        {t.fraud.recommendationsTitle}
-      </h3>
-      <ul className="space-y-2" role="list">
-        {recommendations.map((rec, idx) => (
-          <li
-            key={idx}
-            className="flex items-start gap-2 pb-2 border-b border-gray-100 last:pb-0 last:border-0"
+    <section
+      aria-labelledby="action-heading"
+      className="rounded-xl bg-primary-container shadow-md p-space-md lg:p-space-lg space-y-space-md"
+    >
+      <div className="flex items-center gap-space-sm">
+        <span
+          className="w-8 h-8 rounded-full bg-tertiary-fixed text-primary-container flex items-center justify-center font-bold shrink-0"
+          aria-hidden="true"
+        >
+          !
+        </span>
+        <div>
+          <span className="font-label-sm text-label-sm text-on-primary-container uppercase tracking-wider font-semibold block">
+            {c.recEyebrow}
+          </span>
+          <h3
+            id="action-heading"
+            className="font-title-md text-title-md text-inverse-on-surface leading-tight"
           >
+            {t.fraud.recommendationsTitle}
+          </h3>
+        </div>
+      </div>
+
+      <p className="font-label-sm text-label-sm text-on-primary-container">
+        {c.recSub}
+      </p>
+
+      <ol className="space-y-space-md" role="list">
+        {recommendations.map((rec, idx) => (
+          <li key={idx} className="flex items-start gap-space-sm">
             <span
+              className="w-6 h-6 rounded-full bg-white/10 text-tertiary-fixed flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
               aria-hidden="true"
-              className="font-medium text-ink shrink-0 mt-0.5"
             >
-              •
+              {idx + 1}
             </span>
-            <span className="flex-1 text-sm text-gray-700">
+            <p className="font-body-sm text-body-sm text-inverse-on-surface leading-relaxed flex-1">
               {translateRecommendation(rec.text, t)}
-            </span>
+            </p>
           </li>
         ))}
-      </ul>
+      </ol>
 
-      {/* Cybercrime helpline - shown clearly but not alarmist */}
+      {/* Cybercrime helpline — shown clearly but not alarmist */}
       {hasHelpline && (
-        <div className="mt-4 rounded-lg border border-rule bg-paper p-3">
-          <p className="text-sm text-gray-600 flex items-start gap-2">
-            <svg
-              className="h-4 w-4 shrink-0 mt-0.5 text-gray-500"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-            </svg>
-            <span>
-              {t.fraud.helplineNote}
-            </span>
+        <div className="pt-space-sm border-t border-white/10 flex items-start gap-2">
+          <Phone className="h-4 w-4 shrink-0 mt-0.5 text-tertiary-fixed" aria-hidden="true" />
+          <p className="font-body-sm text-body-sm text-on-primary-container leading-relaxed">
+            {t.fraud.helplineNote}
           </p>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

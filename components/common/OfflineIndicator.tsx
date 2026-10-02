@@ -27,7 +27,7 @@ export function OfflineIndicator() {
   return (
     <div
       role="status"
-      className="bg-amber-600 text-white text-sm font-semibold px-4 py-2 text-center shadow-inner"
+      className="bg-warning-600 text-white text-sm font-semibold px-4 py-2 text-center shadow-inner"
     >
       ⚠️ {t.common.offline}
     </div>

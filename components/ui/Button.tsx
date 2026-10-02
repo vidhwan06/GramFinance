@@ -2,7 +2,7 @@ import React, { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'accent';
   size?: 'sm' | 'md' | 'lg';
   isLoading?: boolean;
   loadingText?: string;
@@ -28,15 +28,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variants = {
       primary:
-        'bg-seal-red text-white hover:bg-ink focus-visible:ring-seal-red shadow-sm',
+        'bg-aubergine text-warm-ivory hover:bg-deep-plum focus-visible:ring-aubergine shadow-sm',
+      accent:
+        'bg-signature-lime text-aubergine hover:bg-signature-lime/85 focus-visible:ring-signature-lime shadow-sm border border-aubergine/20',
       secondary:
-        'bg-green-100 text-green-800 hover:bg-green-200 focus-visible:ring-green-500',
+        'bg-deep-teal/10 text-deep-teal hover:bg-deep-teal/20 focus-visible:ring-deep-teal',
       outline:
-        'border-2 border-seal-red text-seal-red hover:bg-paper focus-visible:ring-seal-red bg-transparent',
+        'border-2 border-seal-red text-seal-red hover:bg-seal-red/10 focus-visible:ring-seal-red bg-transparent',
       ghost:
-        'text-ink hover:bg-rule hover:text-ink focus-visible:ring-muted-ink bg-transparent',
+        'text-ink hover:bg-stone hover:text-ink focus-visible:ring-muted-ink bg-transparent',
       danger:
-        'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600 shadow-sm',
+        'bg-coral text-white hover:bg-coral/90 focus-visible:ring-coral shadow-sm',
     };
 
     const sizes = {

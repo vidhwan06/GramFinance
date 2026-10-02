@@ -23,7 +23,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full flex flex-col space-y-1.5">
         {label && (
-          <label htmlFor={selectId} className="text-base font-semibold text-gray-800">
+          <label htmlFor={selectId} className="text-base font-semibold text-ink">
             {label}
           </label>
         )}
@@ -31,8 +31,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={selectId}
           ref={ref}
           className={cn(
-            'flex w-full min-h-[48px] rounded-lg border-2 border-gray-300 bg-white px-4 py-3 text-base text-gray-900 shadow-sm focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-700 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:opacity-60',
-            error && 'border-red-600 focus:border-red-600 focus:ring-red-600',
+            'flex w-full min-h-[48px] rounded-lg border-2 border-rule bg-white px-4 py-3 text-base text-ink shadow-sm focus:border-seal-red focus:outline-none focus:ring-2 focus:ring-seal-red/20 disabled:cursor-not-allowed disabled:bg-stone disabled:opacity-60',
+            error && 'border-coral focus:border-coral focus:ring-coral/20',
             className
           )}
           aria-invalid={error ? 'true' : 'false'}
@@ -46,10 +46,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p id={`${selectId}-error`} className="text-sm font-medium text-red-600">{error}</p>
+          <p id={`${selectId}-error`} className="text-sm font-medium text-coral">{error}</p>
         )}
         {!error && helperText && (
-          <p id={`${selectId}-helper`} className="text-sm text-gray-600">{helperText}</p>
+          <p id={`${selectId}-helper`} className="text-sm text-muted-ink">{helperText}</p>
         )}
       </div>
     );

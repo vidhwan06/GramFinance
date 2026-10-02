@@ -1,5 +1,6 @@
 import React from 'react';
 import { SchemeCatalogue } from '@/features/schemes/components/SchemeCatalogue';
+import { SchemesPageHeader } from '@/features/schemes/components/SchemesPageHeader';
 import { ErrorState } from '@/components/common/ErrorState';
 import { listActiveSchemes } from '@/features/schemes/schemes-service';
 import { en as t } from '@/features/language/translations/en';
@@ -14,8 +15,9 @@ import { en as t } from '@/features/language/translations/en';
  * RLS policy.
  *
  * The result is handed to a Client Component as a plain serialisable prop so the
- * existing language switcher keeps working. `PageContainer` is already applied
- * by `app/(main)/layout.tsx`, so it is deliberately not repeated here.
+ * existing language switcher keeps working. The layout no longer applies a
+ * page-wide container (Stitch sections own their width), so the catalogue
+ * declares its own here.
  */
 
 export const dynamic = 'force-dynamic';
@@ -33,13 +35,8 @@ export default async function SchemesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900">
-          {t.schemes.title}
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600">{t.schemes.subtitle}</p>
-      </header>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      <SchemesPageHeader />
 
       <SchemeCatalogue schemes={schemes} />
     </div>

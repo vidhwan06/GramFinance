@@ -24,11 +24,11 @@ export function AmortizationTable({ schedule }: AmortizationTableProps) {
   const displayedRows = showAllRows ? schedule.rows : schedule.rows.slice(0, 12);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-4 shadow-sm">
+    <div className="rounded-xl border border-rule bg-white p-4 space-y-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Table className="h-5 w-5 text-green-700" />
-          <h3 className="font-bold text-gray-900 text-base">{title}</h3>
+          <Table className="h-5 w-5 text-deep-teal" />
+          <h3 className="font-bold text-ink text-base">{title}</h3>
         </div>
         <Button
           variant="outline"
@@ -42,11 +42,11 @@ export function AmortizationTable({ schedule }: AmortizationTableProps) {
       </div>
 
       {isExpanded && (
-        <div className="space-y-3 pt-2 border-t border-gray-100 animate-fade-in">
+        <div className="space-y-3 pt-2 border-t border-rule animate-fade-in">
           {/* Responsive Table Container */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
+          <div className="overflow-x-auto rounded-lg border border-rule">
             <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-slate-100 text-slate-700 font-bold border-b border-gray-200">
+              <thead className="bg-stone text-ink font-bold border-b border-rule">
                 <tr>
                   <th className="p-2.5">{language === 'kn' ? 'ತಿಂಗಳು' : 'Month'}</th>
                   <th className="p-2.5">{language === 'kn' ? 'ಆರಂಭಿಕ ಬಾಕಿ' : 'Opening Bal'}</th>
@@ -56,15 +56,15 @@ export function AmortizationTable({ schedule }: AmortizationTableProps) {
                   <th className="p-2.5">{language === 'kn' ? 'ಅಂತಿಮ ಬಾಕಿ' : 'Closing Bal'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-rule">
                 {displayedRows.map((row) => (
-                  <tr key={row.month} className="hover:bg-slate-50 transition-colors">
-                    <td className="p-2.5 font-semibold text-gray-900">#{row.month}</td>
-                    <td className="p-2.5 text-gray-700">{formatPaiseINR(row.openingBalancePaise)}</td>
-                    <td className="p-2.5 font-bold text-green-800">{formatPaiseINR(row.scheduledEmiPaise)}</td>
-                    <td className="p-2.5 text-slate-800">{formatPaiseINR(row.principalPaidPaise)}</td>
-                    <td className="p-2.5 text-amber-700">{formatPaiseINR(row.interestPaidPaise)}</td>
-                    <td className="p-2.5 text-gray-900 font-medium">{formatPaiseINR(row.closingBalancePaise)}</td>
+                  <tr key={row.month} className="hover:bg-warm-ivory transition-colors">
+                    <td className="p-2.5 font-semibold text-ink">#{row.month}</td>
+                    <td className="p-2.5 text-ink">{formatPaiseINR(row.openingBalancePaise)}</td>
+                    <td className="p-2.5 font-bold text-deep-teal">{formatPaiseINR(row.scheduledEmiPaise)}</td>
+                    <td className="p-2.5 text-ink">{formatPaiseINR(row.principalPaidPaise)}</td>
+                    <td className="p-2.5 text-warning-700">{formatPaiseINR(row.interestPaidPaise)}</td>
+                    <td className="p-2.5 text-ink font-medium">{formatPaiseINR(row.closingBalancePaise)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -77,7 +77,7 @@ export function AmortizationTable({ schedule }: AmortizationTableProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAllRows(!showAllRows)}
-                className="text-xs text-green-700"
+                className="text-xs text-deep-teal"
               >
                 {showAllRows
                   ? language === 'kn' ? 'ಮೊದಲ 12 ತಿಂಗಳುಗಳನ್ನಷ್ಟೇ ತೋರಿಸಿ' : 'Show First 12 Months Only'

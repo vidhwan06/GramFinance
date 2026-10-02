@@ -64,7 +64,7 @@ export function FraudChecker({ className }: { className?: string }) {
   }, []);
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-space-lg', className)}>
       <FraudInput
         onSubmit={handleSubmit}
         isLoading={isLoading}

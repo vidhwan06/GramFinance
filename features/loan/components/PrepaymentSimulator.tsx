@@ -93,7 +93,7 @@ export function PrepaymentSimulator({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Scenario A: Reduce EMI */}
               <div className="p-4 rounded-xl border border-indigo-200 bg-white space-y-2 shadow-sm">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <div className="flex justify-between items-center border-b border-rule pb-2">
                   <span className="font-bold text-indigo-900 text-sm">
                     {language === 'kn' ? 'ಆಯ್ಕೆ A: ಕಂತು ಕಡಿತ (Reduce EMI)' : 'Outcome A: Reduce Monthly EMI'}
                   </span>
@@ -101,40 +101,40 @@ export function PrepaymentSimulator({
                     Same Tenure
                   </span>
                 </div>
-                <div className="text-sm space-y-1 text-gray-700">
+                <div className="text-sm space-y-1 text-ink">
                   <div className="flex justify-between">
                     <span>{language === 'kn' ? 'ಹೊಸ ತಿಂಗಳ ಕಂತು:' : 'New Monthly EMI:'}</span>
-                    <strong className="text-green-700 font-bold">{formatPaiseINR(analysis.reduceEmiScenario.newMonthlyEmiPaise)}</strong>
+                    <strong className="text-deep-teal font-bold">{formatPaiseINR(analysis.reduceEmiScenario.newMonthlyEmiPaise)}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>{language === 'kn' ? 'ಉಳಿತಾಯವಾಗುವ ಒಟ್ಟು ಬಡ್ಡಿ:' : 'Interest Saved:'}</span>
-                    <strong className="text-amber-700 font-bold">{formatPaiseINR(analysis.reduceEmiScenario.interestSavingsPaise)}</strong>
+                    <strong className="text-warning-700 font-bold">{formatPaiseINR(analysis.reduceEmiScenario.interestSavingsPaise)}</strong>
                   </div>
                 </div>
               </div>
 
               {/* Scenario B: Reduce Tenure */}
               <div className="p-4 rounded-xl border border-indigo-200 bg-white space-y-2 shadow-sm">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                <div className="flex justify-between items-center border-b border-rule pb-2">
                   <span className="font-bold text-indigo-900 text-sm">
                     {language === 'kn' ? 'ಆಯ್ಕೆ B: ಅವಧಿ ಕಡಿತ (Reduce Tenure)' : 'Outcome B: Finish Loan Earlier'}
                   </span>
-                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold">
+                  <span className="text-xs bg-deep-teal/10 text-deep-teal px-2 py-0.5 rounded font-semibold">
                     Same EMI
                   </span>
                 </div>
-                <div className="text-sm space-y-1 text-gray-700">
+                <div className="text-sm space-y-1 text-ink">
                   <div className="flex justify-between">
                     <span>{language === 'kn' ? 'ಹೊಸ ಮುಕ್ತಾಯ ಅವಧಿ:' : 'New Loan Duration:'}</span>
-                    <strong className="text-gray-900 font-bold">{analysis.reduceTenureScenario.actualTenureMonths} months</strong>
+                    <strong className="text-ink font-bold">{analysis.reduceTenureScenario.actualTenureMonths} months</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>{language === 'kn' ? 'ಕಡಿತಗೊಂಡ ತಿಂಗಳುಗಳು:' : 'Months Saved:'}</span>
-                    <strong className="text-green-700 font-bold">-{analysis.reduceTenureScenario.tenureReductionMonths} months</strong>
+                    <strong className="text-deep-teal font-bold">-{analysis.reduceTenureScenario.tenureReductionMonths} months</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>{language === 'kn' ? 'ಉಳಿತಾಯವಾಗುವ ಒಟ್ಟು ಬಡ್ಡಿ:' : 'Interest Saved:'}</span>
-                    <strong className="text-amber-700 font-bold">{formatPaiseINR(analysis.reduceTenureScenario.interestSavingsPaise)}</strong>
+                    <strong className="text-warning-700 font-bold">{formatPaiseINR(analysis.reduceTenureScenario.interestSavingsPaise)}</strong>
                   </div>
                 </div>
               </div>

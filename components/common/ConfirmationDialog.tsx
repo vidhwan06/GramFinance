@@ -25,7 +25,7 @@ export function ConfirmationDialog({
 }: ConfirmationDialogProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <p className="text-base text-gray-700 mb-6">{message}</p>
+      <p className="text-base text-ink mb-6">{message}</p>
       <div className="flex items-center justify-end space-x-3">
         <Button variant="ghost" onClick={onClose}>
           {cancelLabel}

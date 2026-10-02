@@ -1,6 +1,7 @@
 export const en = {
   appName: 'GramFinance',
   appTagline: 'Understand. Verify. Decide Safely.',
+  appSubtitle: 'Public Mission',
   nav: {
     home: 'Home',
     learn: 'Learn',
@@ -9,6 +10,29 @@ export const en = {
     schemes: 'Support Schemes',
     assistant: 'AI Assistant',
     feedback: 'Feedback',
+    // Short labels for the compact desktop header (Stitch nav proportions)
+    schemesShort: 'Schemes',
+    staySafe: 'Stay Safe',
+    loans: 'Loans',
+    ask: 'Ask GramFinance',
+  },
+  footer: {
+    brandTitle: 'GramFinance Public Mission',
+    brandDesc:
+      'A public-interest financial utility that explains government support schemes, real borrowing costs and digital fraud — with no brokerage, no advertising and no affiliate commissions.',
+    ledgerBadge: 'Public Ledger Verified',
+    products: 'Products',
+    transparency: 'Transparency',
+    access: 'Language & Civic Access',
+    transparencyItems: [
+      'Information from official government sources',
+      'Zero commission policy',
+      'Calculations run in your own browser',
+      'Explainable, rule-based results',
+    ],
+    copyright:
+      '© 2026 GramFinance. Independent public-interest financial utility for Indian households.',
+    zeroTracking: 'Zero Tracking • Non-Commercial',
   },
   common: {
     loading: 'Loading...',
@@ -35,6 +59,13 @@ export const en = {
     eligibilityDeferral: 'Check Scheme Eligibility',
     fraudDeferral: 'Check a Message',
     loanDeferral: 'Open Loan Calculator',
+    suggestionsLabel: 'Try asking',
+    suggestions: [
+      'How is my monthly instalment calculated?',
+      'What does a processing fee mean?',
+      'How do I know if a message is a scam?',
+      'Which support schemes apply to farmers?',
+    ],
   },
   loan: {
     comparison: {

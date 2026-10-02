@@ -46,13 +46,13 @@ export function SchemeCard({ scheme, language, labels }: SchemeCardProps) {
       </CardHeader>
 
       <CardContent className="flex-1 space-y-3">
-        <p className="text-sm text-gray-600 leading-relaxed">
+        <p className="text-sm text-muted-ink leading-relaxed">
           {truncate(description, CARD_DESCRIPTION_LIMIT)}
         </p>
 
         {scheme.targetGroups.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-gray-500 mb-1">{labels.forWhom}</p>
+            <p className="text-xs font-semibold text-muted-ink mb-1">{labels.forWhom}</p>
             <ul className="flex flex-wrap gap-1.5">
               {scheme.targetGroups.map((group) => (
                 <li key={group}>
@@ -63,7 +63,7 @@ export function SchemeCard({ scheme, language, labels }: SchemeCardProps) {
           </div>
         )}
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-ink">
           {isNationwide ? (
             labels.allStates
           ) : (
@@ -73,22 +73,22 @@ export function SchemeCard({ scheme, language, labels }: SchemeCardProps) {
           )}
         </p>
 
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted">
           {labels.lastVerified}:{' '}
           <time dateTime={scheme.lastVerified}>{scheme.lastVerified}</time>
         </p>
       </CardContent>
 
-      <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
+      <div className="flex flex-wrap gap-2 pt-3 border-t border-rule">
         <Link
           href={`/schemes/${scheme.id}`}
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-lg border-2 border-green-700 px-4 py-2 text-base font-medium text-green-700 transition-colors hover:bg-green-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700 focus-visible:ring-offset-2"
+          className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-lg border-2 border-deep-teal px-4 py-2 text-base font-medium text-deep-teal transition-colors hover:bg-deep-teal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-seal-red focus-visible:ring-offset-2"
         >
           {labels.view}
         </Link>
         <Link
           href={`/schemes/${scheme.id}#check`}
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-lg bg-green-700 px-4 py-2 text-base font-medium text-white transition-colors hover:bg-green-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-700 focus-visible:ring-offset-2"
+          className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-lg bg-deep-teal px-4 py-2 text-base font-medium text-white transition-colors hover:bg-deep-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-seal-red focus-visible:ring-offset-2"
         >
           {labels.check}
         </Link>

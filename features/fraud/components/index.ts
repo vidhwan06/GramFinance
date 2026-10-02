@@ -7,3 +7,7 @@ export { SchemeFindings } from './SchemeFindings';
 export { FraudRecommendations } from './FraudRecommendations';
 export { EmptyResult } from './EmptyResult';
 export { FraudExplanation } from './FraudExplanation';
+export { CheckView } from './CheckView';
+export { CheckHero } from './CheckHero';
+export { CheckEducation } from './CheckEducation';
+export { CheckGuidance } from './CheckGuidance';

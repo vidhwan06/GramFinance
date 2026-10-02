@@ -3,6 +3,7 @@ import { TranslationKeys } from './en';
 export const kn: TranslationKeys = {
   appName: 'ಗ್ರಾಮ್‌ಫೈನಾನ್ಸ್ (GramFinance)',
   appTagline: 'ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ. ಪರಿಶೀಲಿಸಿ. ಸುರಕ್ಷಿತವಾಗಿ ನಿರ್ಧರಿಸಿ.',
+  appSubtitle: 'ಸಾರ್ವಜನಿಕ ಧ್ಯೇಯ',
   nav: {
     home: 'ಮುಖ್ಯ ಪುಟ',
     learn: 'ಕಲಿಯಿರಿ',
@@ -11,6 +12,29 @@ export const kn: TranslationKeys = {
     schemes: 'ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು',
     assistant: 'ಸಹಾಯಕಿ (AI)',
     feedback: 'ಅಭಿಪ್ರಾಯ',
+    // Short labels for the compact desktop header (Stitch nav proportions)
+    schemesShort: 'ಯೋಜನೆಗಳು',
+    staySafe: 'ಸುರಕ್ಷಿತವಾಗಿರಿ',
+    loans: 'ಸಾಲಗಳು',
+    ask: 'ಗ್ರಾಮ್‌ಫೈನಾನ್ಸ್‌ಗೆ ಕೇಳಿ',
+  },
+  footer: {
+    brandTitle: 'ಗ್ರಾಮ್‌ಫೈನಾನ್ಸ್ ಸಾರ್ವಜನಿಕ ಧ್ಯೇಯ',
+    brandDesc:
+      'ಸರ್ಕಾರಿ ನೆರವು ಯೋಜನೆಗಳು, ನಿಜವಾದ ಸಾಲದ ವೆಚ್ಚ ಮತ್ತು ಡಿಜಿಟಲ್ ವಂಚನೆಗಳನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಲು ಸಾರ್ವಜನಿಕ ಹಿತಾಸಕ್ತಿಯ ಹಣಕಾಸು ಸೇವೆ — ಯಾವುದೇ ಬ್ರೋಕರೇಜ್, ಜಾಹೀರಾತು ಅಥವಾ ಕಮಿಷನ್ ಇಲ್ಲ.',
+    ledgerBadge: 'ಸಾರ್ವಜನಿಕ ದಾಖಲೆ ಪರಿಶೀಲಿತ',
+    products: 'ಸೇವೆಗಳು',
+    transparency: 'ಪಾರದರ್ಶಕತೆ',
+    access: 'ಭಾಷೆ ಮತ್ತು ಸಾರ್ವಜನಿಕ ಪ್ರವೇಶ',
+    transparencyItems: [
+      'ಅಧಿಕೃತ ಸರ್ಕಾರಿ ಮೂಲಗಳಿಂದ ಮಾಹಿತಿ',
+      'ಯಾವುದೇ ಕಮಿಷನ್ ಇಲ್ಲ',
+      'ಲೆಕ್ಕಾಚಾರ ನಿಮ್ಮ ಬ್ರೌಸರ್‌ನಲ್ಲಿಯೇ',
+      'ವಿವರಿಸಬಹುದಾದ ನಿಯಮ ಆಧಾರಿತ ಫಲಿತಾಂಶ',
+    ],
+    copyright:
+      '© 2026 ಗ್ರಾಮ್‌ಫೈನಾನ್ಸ್. ಭಾರತೀಯ ಕುಟುಂಬಗಳಿಗಾಗಿ ಸ್ವತಂತ್ರ ಸಾರ್ವಜನಿಕ ಹಿತಾಸಕ್ತಿ ಹಣಕಾಸು ಸೇವೆ.',
+    zeroTracking: 'ಯಾವುದೇ ಟ್ರ್ಯಾಕಿಂಗ್ ಇಲ್ಲ • ವಾಣಿಜ್ಯೇತರ',
   },
   common: {
     loading: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...',
@@ -37,6 +61,13 @@ export const kn: TranslationKeys = {
     eligibilityDeferral: 'ಯೋಜನೆ ಅರ್ಹತೆ ಪರಿಶೀಲಿಸಿ',
     fraudDeferral: 'ಸಂದೇಶ ಪರೀಕ್ಷಿಸಿ',
     loanDeferral: 'ಸಾಲದ ಲೆಕ್ಕಾಚಾರ ತೆರೆಯಿರಿ',
+    suggestionsLabel: 'ಇದನ್ನು ಕೇಳಿ',
+    suggestions: [
+      'ನನ್ನ ತಿಂಗಳ ಕಂತು ಹೇಗೆ ಲೆಕ್ಕಹಾಕಲಾಗುತ್ತದೆ?',
+      'ಪ್ರಕ್ರಿಯಾ ಶುಲ್ಕ ಎಂದರೇನು?',
+      'ಸಂದೇಶ ವಂಚನೆಯೇ ಎಂದು ಹೇಗೆ ಗೊತ್ತುಹಾಕಬೇಕು?',
+      'ರೈತರಿಗಾಗಿ ಯಾವ ನೆರವು ಯೋಜನೆಗಳಿವೆ?',
+    ],
   },
   loan: {
     comparison: {

@@ -14,10 +14,10 @@ export function Alert({
   ...props
 }: AlertProps) {
   const variants = {
-    info: 'bg-blue-50 border-blue-500 text-blue-900',
-    success: 'bg-green-50 border-green-600 text-green-900',
-    warning: 'bg-amber-50 border-amber-500 text-amber-900',
-    danger: 'bg-red-50 border-red-600 text-red-900',
+    info: 'bg-deep-teal/10 border-deep-teal text-ink',
+    success: 'bg-deep-teal/10 border-deep-teal text-ink',
+    warning: 'bg-warning-50 border-warning-500 text-warning-700',
+    danger: 'bg-coral/10 border-coral text-ink',
   };
 
   return (

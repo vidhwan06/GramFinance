@@ -11,9 +11,9 @@ export interface LoanBreakdownProps {
 }
 
 const SEGMENT_STYLE: Record<string, { bar: string; dot: string }> = {
-  principal: { bar: 'bg-green-600', dot: 'bg-green-600' },
-  interest: { bar: 'bg-amber-500', dot: 'bg-amber-500' },
-  upfrontFees: { bar: 'bg-blue-500', dot: 'bg-blue-500' },
+  principal: { bar: 'bg-deep-teal', dot: 'bg-deep-teal' },
+  interest: { bar: 'bg-warning-500', dot: 'bg-warning-500' },
+  upfrontFees: { bar: 'bg-coral', dot: 'bg-coral' },
 };
 
 export function LoanBreakdown({ engineResult }: LoanBreakdownProps) {
@@ -33,12 +33,12 @@ export function LoanBreakdown({ engineResult }: LoanBreakdownProps) {
   if (totalPaise <= 0 || segments.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3 shadow-sm">
-      <h4 className="text-sm font-bold text-gray-800">
+    <div className="rounded-xl border border-rule bg-white p-4 space-y-3 shadow-sm">
+      <h4 className="text-sm font-bold text-ink">
         {kn ? 'ವೆಚ್ಚದ ಪ್ರಮಾಣ ವಿಭಜನೆ (Cost Ratio)' : 'Where your money goes (Cost Ratio)'}
       </h4>
 
-      <p className="text-xs text-gray-600">
+      <p className="text-xs text-muted-ink">
         {kn
           ? `ಒಟ್ಟು ${formatPaiseINR(totalPaise)} ಪಾವತಿಸುವ ಮೊತ್ತದ ವಿಭಜನೆ.`
           : `A breakdown of the ${formatPaiseINR(totalPaise)} you repay in total.`}
@@ -47,7 +47,7 @@ export function LoanBreakdown({ engineResult }: LoanBreakdownProps) {
       {/* Visual Bar. Widths come from an exact partition, so the segments always
           fill the track and always match the legend amounts below. */}
       <div
-        className="h-5 w-full bg-gray-100 rounded-full overflow-hidden flex"
+        className="h-5 w-full bg-stone rounded-full overflow-hidden flex"
         role="img"
         aria-label={
           kn
@@ -65,7 +65,7 @@ export function LoanBreakdown({ engineResult }: LoanBreakdownProps) {
       </div>
 
       {/* Legend — the text is the accessible source of truth, not the colour. */}
-      <ul className="flex flex-wrap items-center justify-between text-xs text-gray-700 gap-2 pt-1">
+      <ul className="flex flex-wrap items-center justify-between text-xs text-ink gap-2 pt-1">
         {segments.map((segment) => (
           <li key={segment.key} className="flex items-center gap-1.5">
             <span

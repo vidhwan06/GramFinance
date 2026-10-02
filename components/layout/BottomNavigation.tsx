@@ -22,8 +22,8 @@ export function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-rule bg-paper shadow-sm md:hidden" aria-label="Mobile navigation">
-      <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2 sm:max-w-xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-rule bg-warm-ivory shadow-lg min-[840px]:hidden" aria-label="Mobile navigation">
+      <div className="mx-auto flex h-16 max-w-md items-center justify-start overflow-x-auto px-2 sm:max-w-xl sm:justify-around [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -33,7 +33,7 @@ export function BottomNavigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-seal-red min-h-[48px]',
+                'flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors text-xs font-semibold shrink-0 focus:outline-none focus:ring-2 focus:ring-seal-red min-h-[48px]',
                 isActive
                   ? 'text-seal-red font-bold bg-white'
                   : 'text-muted-ink hover:text-ink hover:bg-white'

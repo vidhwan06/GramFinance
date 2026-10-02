@@ -3,12 +3,12 @@
 import React from 'react';
 import { EngineLoanResult } from '../engine/types';
 import { V2LoanInputState } from '../hooks/useLoanCalculator';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { formatPaiseINR } from '../engine/utils/money';
-import { formatPercent } from '@/lib/utils/format-currency';
+import { getCostBreakdown, CostSegment } from '../presentation/cost-breakdown';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
-import { ShieldCheck, Info } from 'lucide-react';
+import { getInterestMethodCopy, pageCopy, LoanPageCopy } from '../presentation/dictionary';
 import { PlainLanguageSummary } from '../presentation/plain-language';
+import { Repeat, Info } from 'lucide-react';
 
 export interface LoanResultProps {
   inputState: V2LoanInputState;
@@ -16,148 +16,179 @@ export interface LoanResultProps {
   bilingualSummary: PlainLanguageSummary;
 }
 
+/** Segment colours on the aubergine card. Text always repeats the value. */
+const SEGMENT_STYLE: Record<CostSegment['key'], { bar: string; dot: string; text: string }> = {
+  principal: { bar: 'bg-secondary-fixed', dot: 'bg-secondary-fixed', text: 'text-secondary-fixed' },
+  interest: { bar: 'bg-tertiary-fixed', dot: 'bg-tertiary-fixed', text: 'text-tertiary-fixed' },
+  upfrontFees: { bar: 'bg-coral', dot: 'bg-coral', text: 'text-error-container' },
+};
+
+function segmentLabel(key: CostSegment['key'], copy: LoanPageCopy): string {
+  if (key === 'principal') return copy.legendPrincipal;
+  if (key === 'interest') return copy.legendInterest;
+  return copy.legendCharges;
+}
+
+/**
+ * Rupees handed back to the lender for every ₹100 borrowed, expressed in
+ * integer paise so the figure can be formatted with `formatPaiseINR`.
+ *
+ * Example: borrowing ₹1,50,000 and repaying ₹1,77,500 → 11833 → ₹118.33.
+ */
+function costRatioPaise(result: EngineLoanResult): number {
+  if (result.basePrincipalPaise <= 0) return 0;
+  return Math.round((result.totalCashOutflowPaise * 100) / result.basePrincipalPaise);
+}
+
+function tenureYearsText(months: number): string {
+  const years = months / 12;
+  return Number.isInteger(years) ? String(years) : String(Math.round(years * 10) / 10);
+}
+
 export function LoanResult({ inputState, engineResult, bilingualSummary }: LoanResultProps) {
   const { language } = useLanguage();
   const kn = language === 'kn';
+  const c = pageCopy[kn ? 'kn' : 'en'];
 
-  const methodBadge =
-    inputState.interestMethod === 'flat-rate'
-      ? kn ? 'ಸ್ಥಿರ ದರ' : 'Flat Rate'
-      : kn ? 'ಕ್ಷೀಣಿಸುವ ಬ್ಯಾಲೆನ್ಸ್' : 'Reducing Balance';
-
-  const labels = {
-    summaryTitle: kn ? 'ಸಾಲದ ವಿವರಗಳ ಮುನ್ನೋಟ' : 'LOAN SUMMARY',
-    monthlyTitle: kn ? 'ಪ್ರತಿ ತಿಂಗಳ ಕಂತು (EMI)' : 'MONTHLY EMI',
-    totalCostTitle: kn ? 'ಒಟ್ಟು ವೆಚ್ಚದ ವಿವರ' : 'TOTAL COST BREAKDOWN',
-    principalAmount: kn ? 'ಸಾಲದ ಅಸಲು:' : 'Loan Amount:',
-    disbursed: kn ? 'ನಿಮ್ಮ ಖಾತೆಗೆ ಬರುವ ಮೊತ್ತ:' : 'Net Disbursed to Account:',
-    interestRate: kn ? 'ವಾರ್ಷಿಕ ಬಡ್ಡಿ ದರ:' : 'Annual Rate:',
-    tenure: kn ? 'ಸಾಲದ ಅವಧಿ:' : 'Tenure:',
-    months: (m: number) => (kn ? `${m} ತಿಂಗಳುಗಳು` : `${m} months`),
-    totalInterest: kn ? 'ಒಟ್ಟು ಬಡ್ಡಿ:' : 'Total Interest:',
-    totalFees: kn ? 'ಒಟ್ಟು ಶುಲ್ಕ:' : 'Total Fees:',
-    totalRepayment: kn ? 'ಅಸಲು + ಬಡ್ಡಿ:' : 'Principal + Interest:',
-    totalCashOutflow: kn ? 'ಒಟ್ಟು ಹೊರಗೆ ಹೋಗುವ ಮೊತ್ತ:' : 'Total Cash Outflow:',
-    plainLanguageTitle: kn ? 'ಸರಳ ವಿವರಣೆ' : 'Plain-Language Explanation',
-  };
+  const method = getInterestMethodCopy(inputState.interestMethod, language);
+  const { segments, totalPaise } = getCostBreakdown(engineResult);
+  const tenureMonths = engineResult.schedule.actualTenureMonths;
+  const ratioPaise = costRatioPaise(engineResult);
+  const showDisbursedRow =
+    engineResult.netDisbursedAmountPaise !== engineResult.basePrincipalPaise;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Monthly EMI Card (Prominent Highlight) */}
-      <div className="bg-gradient-to-br from-green-800 to-green-700 text-white rounded-2xl p-6 shadow-lg border-2 border-green-600">
-        <div className="flex justify-between items-start mb-2">
-          <span className="text-sm font-bold tracking-wider text-green-100 uppercase">
-            {labels.monthlyTitle}
-          </span>
-          <span className="bg-green-900/60 text-green-200 text-xs px-2.5 py-1 rounded-full border border-green-500/40">
-            {methodBadge}
+    <div className="flex flex-col gap-space-md animate-fade-in">
+      {/* ── Aubergine result card ────────────────────────────────────────── */}
+      <div className="bg-primary-container text-inverse-on-surface rounded-2xl p-6 sm:p-8 shadow-md relative overflow-hidden">
+        <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+          <h3 className="inline-flex items-center gap-2 text-label-sm tracking-widest text-on-primary-container uppercase">
+            <span className="w-2.5 h-2.5 rounded-full bg-tertiary-fixed" aria-hidden="true" />
+            {c.emiEyebrow}
+          </h3>
+          <span className="px-2 py-0.5 rounded bg-white/10 text-white text-[11px] font-semibold">
+            {method.badge}
           </span>
         </div>
-        <div className="text-4xl sm:text-5xl font-black tracking-tight my-2">
-          {formatPaiseINR(engineResult.initialMonthlyEmiPaise)}
-          <span className="text-lg font-medium text-green-200 ml-1">/ {kn ? 'ತಿಂಗಳು' : 'month'}</span>
+
+        {/* Big figure */}
+        <div className="py-2">
+          <div className="flex items-baseline gap-1 flex-wrap">
+            <span className="font-headline-xl text-headline-xl sm:text-[48px] font-bold text-signature-lime tracking-tight">
+              {formatPaiseINR(engineResult.initialMonthlyEmiPaise)}
+            </span>
+            <span className="text-on-primary-container font-title-md text-title-md">
+              / {c.emiPerMonth}
+            </span>
+          </div>
+          <p className="font-body-sm text-body-sm text-inverse-on-surface mt-1">
+            {c.emiDuration(tenureMonths, tenureYearsText(tenureMonths))}
+          </p>
         </div>
-        <p className="text-sm text-green-100 font-medium leading-relaxed mt-3 pt-3 border-t border-green-600/60">
-          {bilingualSummary.monthlyText}
-        </p>
+
+        {/* Proportion bar — exact partition of the cash outflow */}
+        {totalPaise > 0 && segments.length > 0 && (
+          <div className="mt-6 space-y-2">
+            <ul className="flex items-center justify-between gap-2 flex-wrap text-label-sm">
+              {segments.map((segment) => (
+                <li
+                  key={segment.key}
+                  className={`inline-flex items-center gap-1.5 ${SEGMENT_STYLE[segment.key].text}`}
+                >
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full ${SEGMENT_STYLE[segment.key].dot}`}
+                    aria-hidden="true"
+                  />
+                  <span>
+                    {segmentLabel(segment.key, c)} ({segment.percent}%)
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div
+              className="w-full h-3 rounded-full bg-black/40 overflow-hidden flex"
+              role="img"
+              aria-label={segments
+                .map((segment) => `${segmentLabel(segment.key, c)} ${segment.percent}%`)
+                .join(', ')}
+            >
+              {segments.map((segment) => (
+                <div
+                  key={segment.key}
+                  className={`h-full transition-all duration-300 ${SEGMENT_STYLE[segment.key].bar}`}
+                  style={{ width: `${segment.percent}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Metric ledger */}
+        <div className="mt-6 pt-6 bg-white/5 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+            <span className="text-inverse-on-surface">{c.rowLoanAmount}</span>
+            <span className="font-semibold text-white">
+              {formatPaiseINR(engineResult.basePrincipalPaise)}
+            </span>
+          </div>
+          {showDisbursedRow && (
+            <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+              <span className="text-inverse-on-surface">{c.rowNetDisbursed}</span>
+              <span className="font-semibold text-white">
+                {formatPaiseINR(engineResult.netDisbursedAmountPaise)}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+            <span className="text-inverse-on-surface">{c.rowTotalInterest}</span>
+            <span className="font-semibold text-tertiary-fixed">
+              {formatPaiseINR(engineResult.totalInterestPaise)}
+            </span>
+          </div>
+          {engineResult.totalFeesPaise > 0 && (
+            <div className="flex items-center justify-between gap-3 font-body-sm text-body-sm">
+              <span className="text-inverse-on-surface">{c.rowTotalCharges}</span>
+              <span className="font-semibold text-white">
+                {formatPaiseINR(engineResult.totalFeesPaise)}
+              </span>
+            </div>
+          )}
+          <div className="pt-3 bg-white/10 p-3 rounded-lg flex items-center justify-between gap-3 font-title-md text-title-md">
+            <span className="text-white">{c.rowTotalOutflow}</span>
+            <span className="text-white font-bold">
+              {formatPaiseINR(engineResult.totalCashOutflowPaise)}
+            </span>
+          </div>
+        </div>
+
+        {/* True cost ratio */}
+        <div className="mt-5 p-3.5 rounded-lg bg-white/10 flex items-start gap-3">
+          <Repeat className="text-tertiary-fixed text-[20px] mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+          <div className="flex flex-col">
+            <span className="font-label-md text-label-md text-white">{c.ratioTitle}</span>
+            <p className="font-body-sm text-body-sm text-inverse-on-surface leading-snug">
+              {c.ratioSentence(formatPaiseINR(ratioPaise, true), tenureMonths)}
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Breakdown Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Input Parameters Summary */}
-        <Card className="bg-slate-50 border-slate-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base text-gray-700 flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-green-700" />
-              <span>{labels.summaryTitle}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between py-1 border-b border-slate-200/60">
-              <span className="text-gray-600">{labels.principalAmount}</span>
-              <span className="font-bold text-gray-900">
-                {formatPaiseINR(engineResult.basePrincipalPaise)}
-              </span>
-            </div>
-            {engineResult.netDisbursedAmountPaise !== engineResult.basePrincipalPaise && (
-              <div className="flex justify-between py-1 border-b border-slate-200/60">
-                <span className="text-gray-600">{labels.disbursed}</span>
-                <span className="font-bold text-blue-700">
-                  {formatPaiseINR(engineResult.netDisbursedAmountPaise)}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between py-1 border-b border-slate-200/60">
-              <span className="text-gray-600">{labels.interestRate}</span>
-              <span className="font-bold text-gray-900">
-                {formatPercent(inputState.interestRate)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-gray-600">{labels.tenure}</span>
-              <span className="font-bold text-gray-900">
-                {labels.months(inputState.tenureMonths)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Cost Breakdown */}
-        <Card className="bg-slate-50 border-slate-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base text-gray-700 flex items-center gap-2">
-              <Info className="h-4 w-4 text-green-700" />
-              <span>{labels.totalCostTitle}</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between py-1 border-b border-slate-200/60">
-              <span className="text-gray-600">{labels.totalInterest}</span>
-              <span className="font-bold text-amber-700">
-                {formatPaiseINR(engineResult.totalInterestPaise)}
-              </span>
-            </div>
-            {engineResult.totalFeesPaise > 0 && (
-              <div className="flex justify-between py-1 border-b border-slate-200/60">
-                <span className="text-gray-600">{labels.totalFees}</span>
-                <span className="font-bold text-blue-700">
-                  {formatPaiseINR(engineResult.totalFeesPaise)}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between py-1 border-b border-slate-200/60">
-              <span className="text-gray-600">{labels.totalRepayment}</span>
-              <span className="font-bold text-gray-900">
-                {formatPaiseINR(engineResult.totalRepaymentPaise)}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 pt-1">
-              <span className="font-bold text-gray-900">{labels.totalCashOutflow}</span>
-              <span className="font-extrabold text-green-800 text-base">
-                {formatPaiseINR(engineResult.totalCashOutflowPaise)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Plain Language Summary Card */}
-      <Card className="bg-amber-50/70 border-amber-200">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base text-amber-900">{labels.plainLanguageTitle}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-amber-950 leading-relaxed">
+      {/* ── Plain-language explanation ───────────────────────────────────── */}
+      <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm space-y-2">
+        <div className="flex items-center gap-2 text-on-surface font-title-md text-title-md">
+          <Info className="h-5 w-5 text-secondary shrink-0" aria-hidden="true" />
+          <h4>{c.plainLanguageTitle}</h4>
+        </div>
+        <div className="space-y-1.5 text-body-sm text-on-surface-variant leading-relaxed">
           <p>• {bilingualSummary.monthlyText}</p>
           <p>• {bilingualSummary.interestText}</p>
           <p>• {bilingualSummary.totalText}</p>
-          {bilingualSummary.disbursementText && (
-            <p>• {bilingualSummary.disbursementText}</p>
-          )}
-          <p className="text-xs text-amber-800 italic pt-2 border-t border-amber-200">
-            {bilingualSummary.estimateDisclaimer}
-          </p>
-        </CardContent>
-      </Card>
+          {bilingualSummary.disbursementText && <p>• {bilingualSummary.disbursementText}</p>}
+        </div>
+        <p className="text-label-sm text-on-surface-variant pt-2 border-t border-outline-variant/60">
+          {bilingualSummary.estimateDisclaimer}
+        </p>
+      </div>
     </div>
   );
 }

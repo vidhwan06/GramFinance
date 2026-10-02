@@ -34,9 +34,9 @@ const GLYPH: Record<EligibilityStatus, string> = {
 };
 
 const TONE: Record<EligibilityStatus, string> = {
-  eligible: 'border-emerald-500 bg-emerald-50 text-emerald-900',
-  potentially_eligible: 'border-amber-500 bg-amber-50 text-amber-900',
-  not_eligible: 'border-red-500 bg-red-50 text-red-900',
+  eligible: 'border-deep-teal bg-deep-teal/10 text-deep-teal',
+  potentially_eligible: 'border-warning-500 bg-warning-50 text-warning-700',
+  not_eligible: 'border-coral bg-coral/10 text-seal-red',
 };
 
 /**

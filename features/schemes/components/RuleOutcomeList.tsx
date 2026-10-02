@@ -24,9 +24,9 @@ const GLYPH: Record<RuleEvaluation['outcome'], string> = {
 };
 
 const TONE: Record<RuleEvaluation['outcome'], string> = {
-  pass: 'border-emerald-300 bg-emerald-50 text-emerald-900',
-  fail: 'border-red-300 bg-red-50 text-red-900',
-  unknown: 'border-amber-300 bg-amber-50 text-amber-900',
+  pass: 'border-deep-teal/30 bg-deep-teal/10 text-deep-teal',
+  fail: 'border-coral/30 bg-coral/10 text-seal-red',
+  unknown: 'border-warning-500 bg-warning-50 text-warning-700',
 };
 
 function labelFor(field: string, language: 'en' | 'kn'): string {

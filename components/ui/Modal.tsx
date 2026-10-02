@@ -42,25 +42,25 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
       />
       <div
         className={cn(
-          'relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl transition-all border-2 border-gray-200',
+          'relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl transition-all border-2 border-rule',
           className
         )}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="flex items-center justify-between pb-3 border-b border-rule">
           {title && (
-            <h2 id="modal-title" className="text-xl font-bold text-gray-900">
+            <h2 id="modal-title" className="text-xl font-bold text-ink">
               {title}
             </h2>
           )}
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-700"
+            className="rounded-full p-2 text-muted-ink hover:bg-stone hover:text-ink focus:outline-none focus:ring-2 focus:ring-seal-red"
             aria-label="Close modal"
           >
             ✕
           </button>
         </div>
-        <div className="mt-4 text-base text-gray-700">{children}</div>
+        <div className="mt-4 text-base text-ink">{children}</div>
       </div>
     </div>
   );

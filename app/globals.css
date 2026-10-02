@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #F7F6F2;
-  --foreground: #182437;
+  --background: #F7F5EF;
+  --foreground: #1B1B20;
   --font-noto-sans: 'Noto Sans', system-ui, -apple-system, sans-serif;
   --font-noto-sans-kannada: 'Noto Sans Kannada', 'Noto Sans', system-ui, sans-serif;
 }
@@ -29,7 +29,7 @@ body {
 
 /* Accessible focus outlines for keyboard navigation */
 *:focus-visible {
-  outline: 2px solid #8C2E22 !important;
+  outline: 2px solid #B4472F !important;
   outline-offset: 2px !important;
 }
 

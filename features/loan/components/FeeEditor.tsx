@@ -97,20 +97,23 @@ export function FeeEditor({ fees, onAddFee, onRemoveFee, validationErrors }: Fee
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start gap-2 text-sm text-gray-700">
-        <Receipt className="h-5 w-5 text-green-700 shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="flex items-start gap-2 text-body-sm text-on-surface-variant">
+        <Receipt className="h-5 w-5 text-secondary shrink-0 mt-0.5" aria-hidden="true" />
         <p className="leading-relaxed">{labels.intro}</p>
       </div>
 
       {fees.length === 0 ? (
-        <p className="text-sm text-gray-500">{labels.noFees}</p>
+        <p className="text-body-sm text-on-surface-variant">{labels.noFees}</p>
       ) : (
         <ul className="space-y-3" aria-label={labels.listLabel}>
           {fees.map((fee, index) => {
             const info = FEE_TYPE_INFO[fee.type];
             const error = validationErrors[`fee_${index}`];
             return (
-              <li key={fee.id} className="rounded-xl border border-gray-200 bg-slate-50 p-3 space-y-3">
+              <li
+                key={fee.id}
+                className="rounded-xl border border-outline-variant bg-surface-container-low p-3 space-y-3"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Input
                     id={`fee-name-${fee.id}`}
@@ -142,7 +145,7 @@ export function FeeEditor({ fees, onAddFee, onRemoveFee, validationErrors }: Fee
                   />
                 </div>
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-xs text-gray-600 leading-snug">
+                  <p className="text-label-sm text-on-surface-variant leading-snug">
                     {kn ? info.helpKn : info.helpEn}
                   </p>
                   <Button
@@ -167,7 +170,7 @@ export function FeeEditor({ fees, onAddFee, onRemoveFee, validationErrors }: Fee
       </Button>
 
       {fees.length === 0 && (
-        <p className="text-xs text-gray-400">{labels.noFeesHint}</p>
+        <p className="text-label-sm text-on-surface-variant">{labels.noFeesHint}</p>
       )}
     </div>
   );

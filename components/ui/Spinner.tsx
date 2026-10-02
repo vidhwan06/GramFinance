@@ -16,7 +16,7 @@ export function Spinner({ className, size = 'md', ...props }: SpinnerProps) {
     <div
       role="status"
       aria-label="Loading"
-      className={cn('inline-block animate-spin rounded-full border-solid border-green-700 border-t-transparent', sizes[size], className)}
+      className={cn('inline-block animate-spin rounded-full border-solid border-deep-teal border-t-transparent', sizes[size], className)}
       {...props}
     >
       <span className="sr-only">Loading...</span>

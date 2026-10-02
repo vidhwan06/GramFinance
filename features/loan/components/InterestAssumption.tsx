@@ -25,16 +25,16 @@ export function InterestAssumption({ interestMethod }: InterestAssumptionProps) 
   const isFlatRate = interestMethod === 'flat-rate';
   const palette = isFlatRate
     ? {
-        shell: 'rounded-xl border-2 border-amber-200 bg-amber-50/80 p-4 shadow-sm',
-        iconWrap: 'p-2 rounded-lg bg-amber-100 text-amber-800 shrink-0',
-        heading: 'font-bold text-amber-950 text-base',
-        body: 'text-sm text-amber-900 leading-relaxed',
+        shell: 'rounded-xl border-2 border-warning-500/40 bg-warning-50/80 p-4 shadow-sm',
+        iconWrap: 'p-2 rounded-lg bg-warning-50 text-warning-700 shrink-0',
+        heading: 'font-bold text-ink text-base',
+        body: 'text-sm text-warning-700 leading-relaxed',
       }
     : {
-        shell: 'rounded-xl border-2 border-emerald-200 bg-emerald-50/80 p-4 shadow-sm',
-        iconWrap: 'p-2 rounded-lg bg-emerald-100 text-emerald-800 shrink-0',
-        heading: 'font-bold text-emerald-950 text-base',
-        body: 'text-sm text-emerald-900 leading-relaxed',
+        shell: 'rounded-xl border-2 border-deep-teal/30 bg-deep-teal/10/80 p-4 shadow-sm',
+        iconWrap: 'p-2 rounded-lg bg-deep-teal/10 text-deep-teal shrink-0',
+        heading: 'font-bold text-deep-teal text-base',
+        body: 'text-sm text-deep-teal leading-relaxed',
       };
 
   return (

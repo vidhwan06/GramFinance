@@ -41,7 +41,7 @@ export default function GlobalError({
         onRetry={reset}
       />
       {error.digest ? (
-        <p className="text-center text-xs text-gray-400 mt-2">
+        <p className="text-center text-xs text-muted mt-2">
           If this keeps happening, quote reference {error.digest}.
         </p>
       ) : null}

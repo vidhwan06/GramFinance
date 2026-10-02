@@ -219,8 +219,8 @@ export function EligibilityForm({ schemeId, requiredFields, language, labels }: 
       {!result && (
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{labels.formTitle}</h2>
-            <p className="text-sm text-gray-600 mt-1">{labels.formHelp}</p>
+            <h2 className="text-lg font-bold text-ink">{labels.formTitle}</h2>
+            <p className="text-sm text-muted-ink mt-1">{labels.formHelp}</p>
           </div>
 
           {serverError && (
@@ -268,7 +268,7 @@ export function EligibilityForm({ schemeId, requiredFields, language, labels }: 
       )}
 
       {result && !disclaimer && (
-        <p className="text-sm text-gray-600">{labels.formHelp}</p>
+        <p className="text-sm text-muted-ink">{labels.formHelp}</p>
       )}
 
       <p className="sr-only" aria-live="polite">
