@@ -54,8 +54,12 @@ export interface OfficialSource {
   url: string;
   host: string;
   /**
-   * True when the host uses a reserved, non-resolving TLD (`.invalid`,
-   * `.test`, `.example`, `.localhost`).
+   * True when the stored URL is an http/https URL whose host uses a real,
+   * resolvable TLD.
+   *
+   * False when the host uses a reserved, non-resolving TLD (`.invalid`,
+   * `.test`, `.example`, `.localhost`), and false when the URL could not be
+   * parsed or uses a protocol other than http/https.
    *
    * This is a general property of the stored URL, not a check for any particular
    * scheme. It exists so the UI can warn that a "source" link does not point at
@@ -75,12 +79,40 @@ export interface SchemeDetail extends SchemeListItem {
 
 const RESERVED_TLDS = ['.invalid', '.test', '.example', '.localhost'];
 
+/**
+ * The only protocols that may ever reach an anchor's href.
+ *
+ * `new URL()` is a parser, not a filter. It accepts `javascript:`, `data:`,
+ * `vbscript:` and `file:` perfectly happily -- `new URL('javascript:alert(1)')`
+ * parses with protocol `javascript:` and an EMPTY hostname, which means the
+ * reserved-TLD check below cannot see it either. A scheme record whose
+ * `official_url` carried such a value would render as a live script link.
+ *
+ * Today that is not reachable: `schemes.official_url` has no INSERT/UPDATE
+ * policy and the client roles have no UPDATE grant (verified against the live
+ * project: PATCH and DELETE both return 42501), so only the service role can
+ * write it. This is the allowlist that keeps that true if that ever changes,
+ * and it costs one comparison.
+ */
+const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
+
 export function classifyOfficialSource(url: string): OfficialSource {
   const fallback: OfficialSource = { url, host: '', isResolving: false };
   if (typeof url !== 'string' || url.length === 0) return fallback;
 
   try {
     const parsed = new URL(url);
+
+    if (!ALLOWED_PROTOCOLS.has(parsed.protocol)) {
+      // Deliberately NOT the shared `fallback`. That one keeps `url` intact so
+      // the UI can still display a mistyped-but-harmless address; keeping it
+      // here would carry `javascript:alert(1)` straight into the `href` that
+      // OfficialSourceLink renders, which is the exact thing being prevented.
+      // Dropping the url leaves nothing clickable, and `isResolving: false`
+      // still surfaces the existing "not an official government portal" warning.
+      return { url: '', host: '', isResolving: false };
+    }
+
     const host = parsed.hostname.toLowerCase();
     const isResolving = !RESERVED_TLDS.some((tld) => host.endsWith(tld));
     return { url, host, isResolving };

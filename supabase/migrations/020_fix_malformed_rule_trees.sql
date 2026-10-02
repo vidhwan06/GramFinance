@@ -1,5 +1,9 @@
 -- ============================================================================
--- Migration 018: Fix malformed rule trees for PM-KISAN, PMUY, PM Vishwakarma
+-- Migration 020: Fix malformed rule trees for PM-KISAN, PMUY, PM Vishwakarma
+--
+-- Header correction only. This file was authored as 018 and later renumbered to
+-- 020; the body has never changed and is unchanged here. See the note in
+-- supabase/migrations/README.md about the reserved 019 slot.
 -- ============================================================================
 -- The live database has malformed rule_groups/rule_nodes for PM-KISAN and PMUY
 -- (root groups empty, child groups orphaned) and for PM Vishwakarma

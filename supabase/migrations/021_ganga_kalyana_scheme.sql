@@ -1,5 +1,9 @@
 -- ============================================================================
--- Migration 019: Ganga Kalyana Scheme (Individual Irrigation Component)
+-- Migration 021: Ganga Kalyana Scheme (Individual Irrigation Component)
+--
+-- Header correction only. This file was authored as 019 and later renumbered to
+-- 021; the body has never changed and is unchanged here. See the note in
+-- supabase/migrations/README.md about the reserved 019 slot.
 -- ============================================================================
 -- Karnataka government scheme for SC small/marginal farmers.
 -- Official source: https://adcl.karnataka.gov.in/27/ganga-kalyana-scheme/en

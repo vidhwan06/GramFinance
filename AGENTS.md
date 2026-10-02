@@ -7,7 +7,7 @@ Next.js 15 (App Router), React 19, TypeScript, Tailwind, Supabase, Vitest. Bilin
 ```bash
 npm run dev                                            # http://localhost:3000
 npm run build                                          # also runs lint + typecheck
-npm test                                               # vitest run â€” 678 tests / 42 files
+npm test                                               # vitest run: unit + UI + integration suite
 npx tsc --noEmit                                       # there is NO `typecheck` script
 npx vitest run tests/unit                              # offline only, no network
 npx vitest run -t "Money Utilities"                    # single test by name
@@ -17,7 +17,7 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
 - No CI (`.github/` absent) and no pre-commit hooks â€” verification is on you.
 - `npm run lint` prints a `next lint is deprecated` warning (removed in Next 16); `npm test` prints a Vite `configLoader: 'native'` warning. Both are harmless noise, not failures.
 - `tests/integration/supabase-connection.test.ts` hits the **real** Supabase project over the network using the anon key. It skips itself when `.env.local` holds placeholders, but runs live otherwise â€” so a network outage fails the suite.
-- Copy `.env.example` â†’ `.env.local` first. Only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are read; `GEMINI_API_KEY` / `SUPABASE_SERVICE_ROLE_KEY` are declared but unused.
+- Copy `.env.example` to `.env.local` first. Read at runtime: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (`lib/supabase/env.ts`), `GEMINI_API_KEY` and `GEMINI_MODEL` (`lib/ai/gemini.ts`). `NEXT_PUBLIC_APP_URL` and `SUPABASE_SERVICE_ROLE_KEY` are listed in `.env.example` as deliberately unused, with the reason.
 - Commits on `main` use Conventional Commits (`feat:`, `chore:`).
 
 ## Implementation status â€” check before assuming a feature exists
@@ -37,8 +37,8 @@ SUPABASE_SKIP_LIVE_TESTS=1 npm test                    # skip the live-network S
   - API route `POST /api/fraud/check` in `app/api/fraud/check/route.ts`: Zod validation (strict), calls engine with active schemes, returns envelope `{success, data, meta}`
   - UI components in `features/fraud/components/`: `FraudChecker` (container), `FraudInput`, `FraudResult`, `FraudRiskSummary`, `FraudSignalList`, `SchemeFindings`, `FraudRecommendations`, `EmptyResult`
   - Full bilingual support via `features/language/translations/en.ts` and `kn.ts`
-  - Test coverage: 8 unit, 5 integration, 34 UI tests â€” all passing
-- Other API routes in `app/api/*` (schemes, lessons, feedback, AI) are stubs echoing `{ message: '... placeholder ready.' }`.
+  - Test coverage: unit, integration and UI suites all passing (no counts recorded here; run `npm test` for the current total)
+- All API routes under `app/api/*` are implemented: fraud check, schemes catalogue, schemes eligibility, feedback, assistant, and the auth trio. There is no lessons route.
 - No page or component calls Gemini, Tesseract. Supabase client used only server-side in `/api/fraud/check` for scheme data.
 - `middleware.ts` uses `supabase.auth.getClaims()` (local JWT validation, no auth-server round trip) to refresh the session cookie, and no-ops when the Supabase env vars are missing, so the app renders fine with no backend. Its matcher **excludes `/api`** â€” route handlers refresh on demand via their own writable cookie store.
 - Authentication is implemented; see the Authentication section below.
@@ -98,7 +98,10 @@ A distributed limiter (Redis or equivalent) is a deliberate future decision that
 
 ## Supabase
 
-- Schema lives in `supabase/migrations/001`â€“`011`. `001`â€“`010` are applied to the live project; **`011` is not** â€” until `supabase db push` runs it, `schemes.status` and `scheme_rules` do not exist and three integration tests fail by design.
+- Schema lives in `supabase/migrations/`: `001`-`018`, then `020`-`028`. **All of them are applied to the live project** -- `supabase migration list --linked` reports matching local and remote versions with no pending migration. Use `supabase db push --linked` to apply new ones; do not paste SQL by hand.
+- **`019` is intentionally reserved and must never be created.** `supabase db push` only checks whether a file is *missing* from the ledger, not whether it sorts before what is already applied, so a new `019_*.sql` would be applied last -- after `028` -- with no error. Next number is `029`. Read `supabase/migrations/README.md` first.
+- **Never edit the body of an applied migration.** Local files and production are reconciled by version number, not checksum, so an edit silently diverges from what is actually running. Correcting a comment is inert and allowed; every other correction belongs in a new migration.
+- What the later migrations added, for orientation: `011` scheme eligibility foundation (`scheme_rules`, `user_roles`); `012` scalar helper; `013` dedupe demo rules; `014`-`018` per-scheme fields plus nested rule groups (`rule_groups` / `rule_nodes`); `020`-`023` rule-tree repairs and scheme data; `024`-`025` fraud checker tables and RLS; `026` revoke anon EXECUTE on `is_admin()`; `027` revoke client access to the fraud tables; `028` close the remaining default-privilege gaps (TRUNCATE/REFERENCES/TRIGGER, explicit SELECT on `rule_groups`/`rule_nodes`, revoke EXECUTE on `handle_new_user()` from `anon`/`authenticated`).
 - RLS is on for every table. `lessons` / `schemes` / `fraud_patterns` / `scheme_rules` are public **active-only** reads; `quizzes` is authenticated-only; `users` / `feedback` are owner-scoped; **`user_roles` has RLS on with ZERO policies and ZERO client grants** â€” deny-all, so self-promotion has no code path at all. Do not add a policy or grant to it without reading the reasoning in migration 011.
 - **Never use the service-role key client-side.** No service-role client exists; do not add one to `client.ts`. The anon key + session cookie is what applies RLS.
 - **Never put a role/admin column on `public.users`.** Migration 008 lets a user `UPDATE` their own row, so a `role` column there would be self-promotion. `public.is_admin()` (SECURITY DEFINER, `search_path = ''`) reads `user_roles` instead.
@@ -110,7 +113,8 @@ A distributed limiter (Redis or equivalent) is a deliberate future decision that
 
 ## Schemes (Phase 4Aâ€“4C)
 
-- **The eligibility engine and its API exist; the UI does not.** There is no schemes page, form or result component yet. `app/(main)/schemes/*` are still placeholders.
+- **The eligibility engine, its API and its UI all exist.** The catalogue is `app/(main)/schemes/page.tsx`; the detail and eligibility journey is `app/(main)/schemes/[schemeId]/page.tsx`; ~30 files under `features/schemes/` hold the components (`SchemeCatalogue`, `SchemeDetailView`, `EligibilityForm`, `EligibilityResult`, `SchemeEligibilityJourney`, `OfficialSourceLink`) and the rule-mapper/engine layer. Do not rebuild any of it.
+- `classifyOfficialSource()` in `features/schemes/schemes-service.ts` is the only validation on `schemes.official_url`, and it is a **security boundary**: it permits `http:` and `https:` only, then flags reserved non-resolving TLDs (`.invalid`, `.test`, `.example`, `.localhost`) so the UI can warn. `new URL()` accepts `javascript:` and `data:` with an empty hostname, so the reserved-TLD check alone cannot catch them. A rejected protocol must keep returning an empty `url` so nothing reaches `href`. Keep the allowlist.
 - `features/schemes/eligibility/field-registry.ts` is the **closed allow-list** of fields a rule may reference. Always read applicant values through `readApplicantField()` â€” never `applicant[rule.field]`, which is a prototype-pollution primitive. The same list is a CHECK constraint on `scheme_rules.field`; a test asserts the two stay identical.
 - **Units differ by design.** The loan engine is integer **paise**. The schemes engine is **rupees**. Convert only at the integration boundary. There must be no `* 100` / `/ 100` inside the eligibility code â€” a test greps for it.
 - **Groups are AND-combined**; `groupOperator` is the operator *inside* a group. OR-combining groups lets a failed hard limit be cancelled by an unrelated passing group, which tells users they may qualify for a scheme whose ceiling they exceed. Alternatives belong in a single OR group.
@@ -136,7 +140,7 @@ A distributed limiter (Redis or equivalent) is a deliberate future decision that
 - **UI** â€” `FraudChecker` container orchestrates inputâ†’result flow. Components: `FraudInput` (validation, char counter, helpline note), `FraudResult` (risk summary, signals, scheme findings, recommendations, disclaimer), `EmptyResult` (calm "no warning signs" + disclaimer, never "safe").
 - **Accessibility** â€” ARIA roles/labels, live regions, color+glyph+text for risk, internal codes never exposed.
 - **Bilingual** â€” all copy in `features/language/translations/en.ts` and `kn.ts`; feature-local dictionaries avoided.
-- **Test coverage** â€” 8 unit (engine, rules, risk, recommendations, normalizer, scheme recognition, claim analysis), 5 integration (API), 34 UI (components, flows) â€” all passing.
+- **Test coverage** -- unit suites (engine, rules, risk, recommendations, normalizer, scheme recognition, claim analysis), integration suites against the API, and UI suites (components, flows) -- all passing. Counts are deliberately not recorded here; run `npm test` for the current total.
 - **Limitations** â€” no OCR/screenshot upload; phone/UPI/URL input types accepted but rules treat as generic text; `officialUrl` not populated in scheme recognition; no persistence/history. Rate limiting is applied at the route (20/60s per IP) - see the Rate limiting section.
 
 ## Loan engine (`features/loan/engine/`) â€” the load-bearing code
@@ -175,7 +179,7 @@ All internal amounts are **integer paise**; rupees exist only at the UI boundary
 
 ## Database
 
-- Migrations are plain numbered SQL in `supabase/migrations/` (`001_` â€¦ `006_`) plus `supabase/seed.sql`. There is no `supabase/config.toml` and no local Supabase CLI setup â€” apply them by hand.
+- Migrations are plain numbered SQL in `supabase/migrations/` (`001`-`018`, then `020`-`028`; `019` is reserved) plus `supabase/seed.sql` and `supabase/seed-demo.sql`. `supabase/config.toml` exists and configures the **local** CLI instance, including `enable_anonymous_sign_ins = true`; the project is linked, so apply migrations with `supabase db push --linked`.
 - `types/database.ts` is hand-maintained, not generated; update it in the same change as a migration. It has already drifted: `DbQuiz.lesson_id` is typed non-nullable but the column is nullable.
 
 ## Misc traps
@@ -185,3 +189,14 @@ All internal amounts are **integer paise**; rupees exist only at the UI boundary
 - `tailwind.config.ts` has a corrupt value: `warning.50: '#fffbe finished'`. Any `bg-warning-50` / `border-warning-50` emits broken CSS; use `warning.500/600/700`.
 - Windows: PowerShell `Get-Content` mangles this repo's UTF-8 (`â‚¹` and Kannada text come out as garbage). The files are correct â€” read with a UTF-8 aware tool and do not "fix" mojibake you see in the terminal.
 - Product guardrail: keep output plain-language for low-literacy users, avoid dark patterns, and keep the cybercrime helpline `1930` (`lib/utils/constants.ts`) surfaced on fraud content.
+CSP note:
+- style-src 'unsafe-inline' is currently required by inline style attributes.
+- script-src 'unsafe-inline' is intentionally retained because Next.js 15.5.26
+  prerenders most public routes and does not apply middleware-generated nonces
+  to cached prerendered HTML.
+- A nonce spike was verified on the dynamic /schemes route but failed on
+  prerendered routes, causing framework-script CSP violations and hydration
+  failure.
+- Do not remove script-src 'unsafe-inline' or force routes dynamic without
+  revisiting the F16 architecture decision.
+- Re-evaluate after a Next.js upgrade or a confirmed deployment architecture.

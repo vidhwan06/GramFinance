@@ -1,5 +1,9 @@
 -- ============================================================================
--- Migration 019: PM Vishwakarma complete rule tree
+-- Migration 022: PM Vishwakarma complete rule tree
+--
+-- Header correction only. This file was authored as 019 and later renumbered to
+-- 022; the body has never changed and is unchanged here. See the note in
+-- supabase/migrations/README.md about the reserved 019 slot.
 -- ============================================================================
 -- Creates the correct nested rule tree for PM Vishwakarma.
 -- Idempotent: safe to run on fresh DB, malformed DB, or already-correct DB.
