@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/database';
 import { getSupabasePublicEnv } from './env';
+import { withSessionCookieAttributes } from './cookie-options';
 
 /**
  * Refreshes the Supabase session cookie on every matched request.
@@ -38,7 +39,14 @@ export async function updateSession(request: NextRequest) {
         // Re-create the response so the refreshed cookies are carried onto it.
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options as Parameters<typeof supabaseResponse.cookies.set>[2])
+          // Same enforced attributes as `server.ts`. Both call sites must agree:
+          // a cookie written by middleware is the one the browser stores, so
+          // this is the site that actually determines the Set-Cookie flags.
+          supabaseResponse.cookies.set(
+            name,
+            value,
+            withSessionCookieAttributes(options)
+          )
         );
       },
     },

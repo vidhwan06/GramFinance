@@ -117,7 +117,11 @@ export async function POST(request: NextRequest) {
 
     const { message, language } = parsed.data;
 
-    // 3. Guardrails — detect deferrals deterministically
+    // 3. Guardrails - detect deferrals deterministically.
+    //    Runs on the RAW message on purpose. These are deterministic intent
+    //    checks, not data handling; redaction happens at the outbound boundary
+    //    in step 5, and running it first would only change what these patterns
+    //    see.
     const deferral: Deferral | null = detectDeferral(message);
     const isInvestment = isInvestmentAdviceRequest(message);
 
@@ -136,10 +140,23 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildSystemPrompt(language);
     const model = getGenerativeModel();
 
+    // Redact the USER's message before it leaves this process.
+    //
+    // The reply is already stripped below, but that protects nothing that
+    // matters on its own: the request text is what is transmitted to a third
+    // party, and a user pasting an Aadhaar number, OTP, UPI ID or account
+    // number into the assistant sent all of it to Google verbatim. This
+    // audience is least likely to redact for themselves.
+    //
+    // Detection in step 3 deliberately still runs on the RAW message: those
+    // patterns are deterministic intent checks, and rewriting the text first
+    // would change what they see for no benefit.
+    const outboundMessage = stripPII(message);
+
     const result = await Promise.race([
       model.generateContent({
         systemInstruction: systemPrompt,
-        contents: [{ role: 'user', parts: [{ text: message }] }],
+        contents: [{ role: 'user', parts: [{ text: outboundMessage }] }],
       }),
       new Promise<never>((_, reject) =>
         setTimeout(

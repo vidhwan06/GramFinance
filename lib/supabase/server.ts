@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '@/types/database';
 import { getMissingSupabaseEnvVars, getSupabasePublicEnv } from './env';
+import { withSessionCookieAttributes } from './cookie-options';
 
 /**
  * Server-side Supabase client for Server Components, Server Actions and
@@ -35,7 +36,9 @@ export async function createClient() {
       setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
+            // `withSessionCookieAttributes` forces httpOnly/secure/path/sameSite
+            // over whatever the SDK defaulted to, and keeps the SDK's `maxAge`.
+            cookieStore.set(name, value, withSessionCookieAttributes(options))
           );
         } catch {
           // Next.js throws when cookies are written from a Server Component,
