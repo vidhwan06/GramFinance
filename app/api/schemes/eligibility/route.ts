@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
+import { readJsonBody } from '@/lib/api/read-json';
 import {
   eligibilityRequestSchema,
   formatValidationIssues,
@@ -24,6 +25,17 @@ import { runEligibilityCheck } from '@/features/schemes/eligibility/check-eligib
  * service-role key. That means row-level security applies to this query exactly
  * as it applies to the browser: a draft, inactive or expired scheme is
  * invisible to this endpoint, so it cannot be used to discover one.
+ *
+ * This endpoint is PUBLIC: no session is required to run an eligibility check.
+ *
+ * ── Request body limit ───────────────────────────────────────────────────────
+ * Bounded by readJsonBody, which counts the bytes it actually reads rather than
+ * trusting Content-Length. See the note at the call site.
+ *
+ * BEHAVIOUR CHANGE: an oversized body now returns 413 PAYLOAD_TOO_LARGE rather
+ * than 400 BAD_REQUEST. The previous check only trusted Content-Length, so it
+ * reported the wrong status for a body that was genuinely too large while doing
+ * nothing at all for a chunked or understated one.
  */
 
 export const dynamic = 'force-dynamic';
@@ -33,17 +45,16 @@ const MAX_BODY_BYTES = 16 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
-    // Cheap rejection before parsing, so an oversized body is never materialised.
-    const declaredLength = Number(request.headers.get('content-length') ?? '0');
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
-      throw ErrorFactories.badRequest('Request body is too large.');
-    }
-
+    // Size-capped on the bytes actually read, not on the Content-Length header.
+    // readJsonBody uses the header only as a cheap early exit and enforces the
+    // real limit while counting the stream, so a request with no Content-Length
+    // (chunked transfer) or a header that understates the body is still bounded.
+    // Nothing larger than MAX_BODY_BYTES is ever assembled in memory.
     let payload: unknown;
     try {
-      payload = await request.json();
-    } catch {
-      // Deliberately vague: the parse error can echo fragments of the body.
+      payload = await readJsonBody(request, MAX_BODY_BYTES);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'ApiError') throw error;
       throw ErrorFactories.badRequest('Request body must be valid JSON.');
     }
 

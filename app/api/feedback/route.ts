@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/api/response';
 import { ErrorFactories } from '@/lib/api/errors';
+import { readJsonBody } from '@/lib/api/read-json';
 import { createClient } from '@/lib/supabase/server';
 import {
   feedbackInputSchema,
@@ -29,6 +30,16 @@ import {
  * The size guard stays ahead of both, because it bounds memory rather than
  * describing the schema.
  *
+ * ── Request body limit ───────────────────────────────────────────────────────
+ * Bounded by readJsonBody AFTER authentication, which counts the bytes it
+ * actually reads rather than trusting Content-Length. The previous check trusted
+ * the header alone, so a chunked request or one that understated its size was
+ * buffered without limit.
+ *
+ * BEHAVIOUR CHANGE: an oversized body now returns 413 PAYLOAD_TOO_LARGE rather
+ * than 400 BAD_REQUEST. The unauthenticated path is unchanged and still wins:
+ * an oversized request without a session returns 401, not 413.
+ *
  * ── No service-role key ─────────────────────────────────────────────────────
  * The server client uses the anon key only. RLS is never bypassed.
  */
@@ -40,20 +51,18 @@ const MAX_BODY_BYTES = 8 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
-    // Cheap rejection before parsing, so an oversized body is never materialised.
-    const declaredLength = Number(request.headers.get('content-length') ?? '0');
-    if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
-      throw ErrorFactories.badRequest('Request body is too large.');
-    }
-
     const supabase = await createClient();
 
-    // Authenticate BEFORE validating the body. getUser(), never getSession():
-    // the token is revalidated with the auth server, which is what makes the
-    // resulting user id safe to write as user_id below. The RLS policy enforces
-    // the same rule independently; this check exists to return a clean 401
-    // rather than a database error, and to keep anonymous callers away from the
-    // validation surface.
+    // Authenticate BEFORE reading or validating the body. getUser(), never
+    // getSession(): the token is revalidated with the auth server, which is what
+    // makes the resulting user id safe to write as user_id below. The RLS policy
+    // enforces the same rule independently; this check exists to return a clean
+    // 401 rather than a database error, and to keep anonymous callers away from
+    // both the size and the validation surface.
+    //
+    // It deliberately runs before readJsonBody: an unauthenticated oversized
+    // request is answered 401, never 413, so the endpoint cannot be used to
+    // probe the body limit without a session.
     const {
       data: { user },
       error: authError,
@@ -63,11 +72,15 @@ export async function POST(request: NextRequest) {
       throw ErrorFactories.unauthorized('You must be signed in to submit feedback.');
     }
 
+    // Size-capped on the bytes actually read, not on the Content-Length header.
+    // readJsonBody uses the header only as a cheap early exit and enforces the
+    // real limit while counting the stream, so a request with no Content-Length
+    // (chunked transfer) or a header that understates the body is still bounded.
     let payload: unknown;
     try {
-      payload = await request.json();
-    } catch {
-      // Deliberately vague: the parse error can echo fragments of the body.
+      payload = await readJsonBody(request, MAX_BODY_BYTES);
+    } catch (error) {
+      if (error instanceof Error && error.name === 'ApiError') throw error;
       throw ErrorFactories.badRequest('Request body must be valid JSON.');
     }
 

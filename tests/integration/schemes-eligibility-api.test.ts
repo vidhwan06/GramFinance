@@ -83,6 +83,7 @@ interface ApiBody {
     disclaimer: { en: string; kn: string };
   };
   error?: { code: string; message: string; details?: unknown };
+  meta?: { timestamp: string };
 }
 
 describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () => {
@@ -232,10 +233,14 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
     expect(response.status).toBe(400);
   });
 
-  it('rejects an oversized body before parsing it', async () => {
+  it('rejects an oversized body before parsing it with 413', async () => {
+    // Behaviour change from F2: an over-declared Content-Length is caught by the
+    // early-exit path and reported as 413 PAYLOAD_TOO_LARGE. It used to be
+    // 400 BAD_REQUEST, which conflated "too large" with "not valid".
     const huge = JSON.stringify({ applicant: { occupation: 'a'.repeat(64 * 1024) } });
-    const { status } = await call(huge, { 'content-length': String(huge.length) });
-    expect(status).toBe(400);
+    const { status, json } = await call(huge, { 'content-length': String(huge.length) });
+    expect(status).toBe(413);
+    expect(json.error?.code).toBe('PAYLOAD_TOO_LARGE');
   });
 
   it('does not echo submitted values back in an error', async () => {
@@ -249,6 +254,163 @@ describe.skipIf(skipReason !== null)('POST /api/schemes/eligibility (live)', () 
       (key) => /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$/.test(key)
     );
     expect(handlers).toEqual(['POST']);
+  });
+});
+
+// ============================================================================
+// F2: request body limit - enforced on the bytes actually read
+// ============================================================================
+
+/**
+ * The security issue F2 exists to close.
+ *
+ * This route used to trust the client's `Content-Length` header and then call
+ * `request.json()`. That header is client-supplied, so it could be absent
+ * (chunked transfer), non-numeric, or understated - and in every one of those
+ * cases an arbitrarily large body was buffered before any check ran. Each case
+ * below builds a REAL `Request` with a real body stream and hands it to the real
+ * route handler, so what is exercised is the actual request stream.
+ *
+ * Every oversized case is answered before any database round trip, so these
+ * assertions are deterministic and independent of the catalogue.
+ */
+describe('POST /api/schemes/eligibility - request body limit (F2)', () => {
+  const MAX_BODY_BYTES = 16 * 1024;
+  let POST: (request: NextRequest) => Promise<Response>;
+
+  beforeAll(async () => {
+    ({ POST } = await import('@/app/api/schemes/eligibility/route'));
+  });
+
+  /**
+   * `content-length` is only present when explicitly supplied, so omitting it
+   * models a chunked request.
+   */
+  function raw(body: string, headers: Record<string, string> = {}): NextRequest {
+    return new NextRequest(ENDPOINT, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...headers },
+      body,
+    });
+  }
+
+  async function send(body: string, headers: Record<string, string> = {}) {
+    const response = await POST(raw(body, headers));
+    const json = (await response.json()) as ApiBody;
+    return { status: response.status, json };
+  }
+
+  /**
+   * JSON of exactly `bytes` bytes, padded via `occupation`.
+   *
+   * NOTE: the padding exceeds the 200-character field cap, so the body is
+   * schema-INVALID. That is intentional and unavoidable: every applicant field
+   * is short by design, so a schema-valid body can never approach 16 KB. The
+   * size guard is asserted on its own decision rather than on the final status,
+   * and the "valid body still works" case is covered by the main suite above.
+   */
+  function bodyOfSize(bytes: number): string {
+    const overhead = Buffer.byteLength('{"applicant":{"occupation":""}}', 'utf8');
+    const body = JSON.stringify({ applicant: { occupation: 'x'.repeat(bytes - overhead) } });
+    expect(Buffer.byteLength(body, 'utf8')).toBe(bytes);
+    return body;
+  }
+
+  it('A. accepts a normal valid body under the limit', async () => {
+    const response = await send(JSON.stringify({ applicant: { age: 30 } }));
+    // A real verdict, not a body-level rejection.
+    expect(response.status).toBe(200);
+    expect(response.json.success).toBe(true);
+  });
+
+  it('B. rejects a body over 16 KB with 413', async () => {
+    const body = bodyOfSize(MAX_BODY_BYTES + 1);
+    const { status, json } = await send(body, {
+      'content-length': String(MAX_BODY_BYTES + 1),
+    });
+
+    expect(status).toBe(413);
+    expect(json.error?.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('D. rejects an oversized body with NO Content-Length (chunked)', async () => {
+    // The decisive case: no header exists, so only counting the actual stream
+    // can catch it. This is exactly what the old Content-Length check missed.
+    const body = bodyOfSize(MAX_BODY_BYTES + 2048);
+    const request = raw(body);
+    expect(request.headers.get('content-length')).toBeNull();
+
+    const response = await POST(request);
+    const json = (await response.json()) as ApiBody;
+
+    expect(response.status).toBe(413);
+    expect(json.error?.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('E. rejects a lying Content-Length that understates the body', async () => {
+    const body = bodyOfSize(MAX_BODY_BYTES + 2048);
+    const { status, json } = await send(body, { 'content-length': '10' });
+
+    expect(status).toBe(413);
+    expect(json.error?.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('F. rejects an over-declared Content-Length before reading the body', async () => {
+    const { status, json } = await send(JSON.stringify({ applicant: { age: 30 } }), {
+      'content-length': String(MAX_BODY_BYTES * 10),
+    });
+
+    expect(status).toBe(413);
+    expect(json.error?.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('ignores a non-numeric Content-Length and still enforces the limit', async () => {
+    const under = await send(JSON.stringify({ applicant: { age: 30 } }), {
+      'content-length': 'not-a-number',
+    });
+    expect(under.status).toBe(200);
+
+    const body = bodyOfSize(MAX_BODY_BYTES + 1);
+    const over = await send(body, { 'content-length': 'not-a-number' });
+    expect(over.status).toBe(413);
+    expect(over.json.error?.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('H. enforces the limit exactly at the boundary', async () => {
+    // At the limit the size guard must let the body through. Whether the schema
+    // then accepts it is a separate question, so the assertion is that the
+    // request is NOT rejected for size.
+    const atLimit = bodyOfSize(MAX_BODY_BYTES);
+    const ok = await send(atLimit, { 'content-length': String(MAX_BODY_BYTES) });
+    expect(ok.status).not.toBe(413);
+    expect(ok.json.error?.code).not.toBe('PAYLOAD_TOO_LARGE');
+
+    const overBy1 = bodyOfSize(MAX_BODY_BYTES + 1);
+    const rejected = await send(overBy1, { 'content-length': String(MAX_BODY_BYTES + 1) });
+    expect(rejected.status).toBe(413);
+    expect(rejected.json.error?.code).toBe('PAYLOAD_TOO_LARGE');
+  });
+
+  it('G. still returns 400 for malformed JSON within the limit', async () => {
+    const { status, json } = await send('{not json');
+
+    expect(status).toBe(400);
+    expect(json.error?.code).toBe('BAD_REQUEST');
+  });
+
+  it('preserves the response envelope on rejection', async () => {
+    const body = bodyOfSize(MAX_BODY_BYTES + 1);
+    const { json } = await send(body, { 'content-length': '10' });
+
+    expect(json.success).toBe(false);
+    expect(typeof json.meta?.timestamp).toBe('string');
+  });
+
+  it('stays public: no session is required to run a size-limited check', async () => {
+    // Eligibility is deliberately unauthenticated. The body limit must not have
+    // introduced an auth requirement.
+    const response = await send(JSON.stringify({ applicant: { age: 30 } }));
+    expect(response.status).toBe(200);
   });
 });
 
