@@ -82,6 +82,62 @@ export function FeedbackForm() {
    */
   const lastPayload = useRef<FeedbackPayload | null>(null);
 
+  /**
+   * Refs to the five rating buttons, keyed by value.
+   *
+   * Needed for arrow-key navigation: moving the selection has to move DOM focus
+   * too, and a roving tabindex has to land on the right element.
+   */
+  const ratingRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+
+  /** Applies a rating and puts keyboard focus on it. */
+  function selectRating(value: number, moveFocus = false) {
+    setRating(value);
+    if (moveFocus) ratingRefs.current[value]?.focus();
+  }
+
+  /**
+   * WAI-ARIA radiogroup keyboard contract.
+   *
+   * A `role="radiogroup"` promises arrow-key navigation and a roving tabindex.
+   * Without this the component only worked with a mouse: Tab walked through all
+   * five buttons and Arrow keys did nothing at all, so a keyboard or
+   * switch-device user had no way to change the rating after focus landed
+   * inside the group.
+   *
+   * Follows the standard pattern: arrows move and select in one step, Home/End
+   * jump to the ends, and movement wraps. Up/Down are included because these
+   * are `button` elements rather than native radios, so both axes apply.
+   */
+  function handleRatingKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const values = [1, 2, 3, 4, 5];
+    const current = rating ?? 1;
+    const index = values.indexOf(current);
+
+    let next: number | null = null;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = values[(index + 1) % values.length];
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = values[(index - 1 + values.length) % values.length];
+        break;
+      case 'Home':
+        next = values[0];
+        break;
+      case 'End':
+        next = values[values.length - 1];
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    selectRating(next, true);
+  }
+
   const moduleOptions = [
     { value: 'general', label: t.feedback.moduleGeneral },
     { value: 'loan', label: t.feedback.moduleLoan },
@@ -310,17 +366,26 @@ export function FeedbackForm() {
           <div
             role="radiogroup"
             aria-label={t.feedback.ratingLabel}
+            onKeyDown={handleRatingKeyDown}
             className="flex flex-wrap items-center gap-space-sm"
           >
             {[1, 2, 3, 4, 5].map((value) => (
               <button
                 key={value}
+                ref={(element) => {
+                  ratingRefs.current[value] = element;
+                }}
                 type="button"
                 role="radio"
                 aria-checked={rating === value}
+                // Roving tabindex: exactly one button in the group is in the tab
+                // order, so Tab enters the group once and then arrows move
+                // within it. The selected rating is that button; with nothing
+                // selected yet it is the first, so focus starts somewhere useful.
+                tabIndex={rating === null ? (value === 1 ? 0 : -1) : rating === value ? 0 : -1}
                 aria-label={`${value} ${value === 1 ? t.feedback.starSingular : t.feedback.starPlural}`}
                 disabled={isSubmitting}
-                onClick={() => setRating(value)}
+                onClick={() => selectRating(value)}
                 className={cn(
                   'flex h-14 w-14 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-lg border-2 transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
                   rating === value
