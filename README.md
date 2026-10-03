@@ -1,284 +1,234 @@
 # GramFinance
 
-### Multilingual Financial Literacy & Decision-Support Platform
+### Understand. Verify. Decide Safely.
 
-GramFinance is a web-based financial literacy and decision-support platform designed primarily for rural and semi-rural households.
+**GramFinance** is a free, non-commercial financial literacy and decision-support platform built to help Indian households understand government support schemes, borrowing costs, digital-fraud risks, and everyday financial questions.
 
-The platform aims to make financial information easier to understand and safer to use by combining **financial education, loan-cost calculation, fraud-awareness assistance, government-scheme discovery, and AI-powered financial explanations** in a simple English/Kannada experience.
+🌐 **Live:** https://gram-finance.vercel.app/
 
-> **Project Status:** Active Development
-> **Latest Status Checkpoint:** 25 September 2026
+GramFinance combines **rule-based eligibility checks, loan-cost calculations, fraud-awareness analysis, financial learning, and AI-assisted explanations** in a simple English/Kannada experience.
 
----
-
-## 🎯 Problem Statement
-
-Many users interact with banking and digital financial services without having a simple way to understand:
-
-* What a financial product actually means
-* What a loan will really cost
-* Whether a suspicious message contains common fraud indicators
-* Where to find reliable information about government financial-support programs
-* How to understand basic financial terminology
-
-GramFinance addresses this gap through an interactive platform that combines **financial learning, practical decision support, fraud-awareness guidance, government-resource discovery, and AI-assisted explanations**.
-
-The project focuses on moving beyond static financial information toward simple, situation-based assistance.
+> **Project Status: ✅ Completed & Deployed**
 
 ---
 
-## 💡 Key Features
+## 🎯 The Problem
 
-### 1. 📚 Financial Learning
+Financial information is often difficult to understand, scattered across different sources, or presented in ways that make comparison difficult.
 
-Provides structured financial-literacy content covering areas such as:
+Users may need help answering questions such as:
 
-* Banking and bank accounts
-* Savings and emergency funds
-* Loans, interest, EMI and tenure
-* Insurance
-* UPI and digital payments
-* Common digital-financial fraud patterns
+* What does this financial term actually mean?
+* How much will a loan really cost?
+* Is this message showing common signs of a scam?
+* Which government schemes might apply to my situation?
+* What documents or conditions should I check before applying?
+* How can I understand financial concepts in simple Kannada or English?
 
-Lessons are designed around simple explanations, real-life examples, visuals and quizzes.
-
-**Current status:** Database/schema foundation completed; full user-facing learning experience is in development.
+GramFinance addresses these problems through a single public-interest platform focused on **clarity, transparency, and explainable decision support**.
 
 ---
 
-### 2. 💰 Loan Understanding Tool :- V2
+## ✨ Key Features
 
-The Loan Calculator is currently the most complete functional module.
+### 🏛️ Government Support Schemes
+
+Explore government welfare and financial-support schemes using structured, readable information.
+
+The scheme system supports:
+
+* Scheme discovery
+* Search and filtering
+* Target-group information
+* Eligibility checking
+* Rule-based eligibility results
+* Required information and documents
+* Official source references
+* Last-verified information
+* English/Kannada support
+
+Eligibility results are designed to show **which conditions matched, which failed, and what information may be missing**, rather than producing an unexplained yes/no result.
+
+---
+
+### 🛡️ Digital Fraud Inspector
+
+The Fraud Inspector helps users examine suspicious SMS, WhatsApp messages, loan offers and other financial messages before taking action.
+
+It looks for common warning indicators such as:
+
+* OTP requests
+* Urgent payment demands
+* Suspicious links
+* Unofficial fees
+* Personal UPI payment requests
+* Impersonation
+* Fake government claims
+* Suspicious financial offers
+
+The system uses an **explainable rules-based detection layer** and presents the reasons behind detected warning signs.
+
+> GramFinance is designed to identify risk indicators, not to guarantee that a message is fraudulent.
+
+---
+
+### 💰 Loan Cost Calculator
+
+The loan calculator helps users understand the real cost of borrowing rather than focusing only on the advertised EMI or interest rate.
 
 It supports:
 
-* Reducing-balance interest calculation
-* Flat-rate interest calculation
+* Reducing-balance interest
+* Flat-rate interest
 * EMI calculation
 * Amortization
 * Loan comparison
-* Loan validation
-* Processing-fee handling
-* Fee editing and removal
+* Processing fees
+* Fee editing
 * Fee explanations
 * Prepayment simulation
-* Prepayment validation
 * Tenure adjustment
-* Total repayment calculation
-* Total interest calculation
-* Cash-outflow/cost breakdown
-* Clear interest-method explanations
+* Total repayment
+* Total interest
+* Cash-outflow breakdown
+* Interest-method explanations
 
-The interface also includes loading/error handling and accessibility improvements.
-
-**Status: ✅ Completed**
+Calculations are performed in the browser, allowing users to understand the numbers before making a borrowing decision.
 
 ---
 
-### 3. 🛡️ Check Before You Pay — Fraud/Scam Protection
+### 📚 Financial Learning
 
-The fraud-awareness module is designed to help users identify common warning signs in suspicious financial messages.
+GramFinance provides structured financial-literacy content covering topics including:
 
-The planned workflow is:
+* Banking and bank accounts
+* Savings
+* Emergency funds
+* Loans and interest
+* EMI and tenure
+* Insurance
+* UPI and digital payments
+* Common financial scams
 
-```text
-Message / Screenshot
-        ↓
-OCR / Text Extraction
-        ↓
-Fraud Indicator Detection
-        ↓
-Risk Indicators
-        ↓
-AI Explanation
-        ↓
-Safety Guidance
-```
-
-Potential indicators include:
-
-* Urgent language
-* Requests for OTP/PIN/password
-* Suspicious or shortened links
-* Impersonation of banks or officials
-* Fake cashback/prize offers
-* Fake loan offers
-* Guaranteed-return or investment bait
-
-The system is designed to present **risk indicators rather than claiming with certainty that a message is fraudulent**.
-
-The project architecture uses an explainable rules layer, with AI used to explain detected indicators rather than independently determining the fraud score.
-
-**Status: 🚧 In Development**
+The learning experience is designed around simple explanations and practical examples rather than financial jargon.
 
 ---
 
-### 4. 🏛️ Government Scheme Finder
+### 🤖 Ask GramFinance
 
-GramFinance includes a curated government-scheme module intended to help users discover potentially relevant financial-support programs.
+The AI assistant allows users to ask everyday financial questions in **English or Kannada**.
 
-Planned functionality includes:
+It is designed to provide simple explanations grounded in the supported financial-information framework while maintaining safety guardrails.
 
-* Scheme listing
-* Search
-* Filtering
-* State/target-group filtering
-* Scheme details
-* Broad eligibility information
-* Required documents
-* Official source links
-* Last-verified dates
-* English/Kannada support
-
-The database foundation and initial PM-KISAN seed data are already available.
-
-**Status: 🚧 In Development**
-
-> Scheme information is intended to help users discover potentially relevant programs. Users should verify eligibility and current information through the official source.
+The assistant is intended to **explain**, not make financial decisions on the user's behalf.
 
 ---
 
-### 5. 🤖 AI Financial Assistant
+### 📝 Feedback
 
-The AI assistant is planned to help users understand supported financial-literacy topics using simple language.
+Users can submit feedback about the platform and its modules.
 
-The planned system includes:
-
-* Server-side Gemini integration
-* Validated API route
-* Financial-safety system prompt
-* Guardrails
-* Rate limiting
-* Safety/refusal handling
-* Structured responses
-* Conversation UI
-* English/Kannada support
-
-The Gemini API key is designed to remain **server-side** and must never be exposed through public client-side environment variables.
-
-**Status: 🚧 In Development**
-
----
-
-### 6. 📝 Feedback
-
-Users will be able to provide feedback about the platform and its modules.
-
-Planned functionality includes:
+The feedback system includes:
 
 * Ratings
 * Comments
-* Submission workflow
-* Success/error handling
-* Navigation entry
+* Validation
+* Submission handling
+* Success/error states
 * Backend integration
-
-The database table and API placeholder already exist.
-
-**Status: 🚧 In Development**
+* Protected database access
 
 ---
 
-## 🌐 Multilingual Support
+## 🌐 Bilingual Experience
 
-GramFinance is designed around:
+GramFinance supports:
 
-* 🇬🇧 English
-* 🇮🇳 Kannada
+🇬🇧 **English**
 
-The project aims to make financial concepts accessible through simple language and, where technically feasible, voice-based interaction.
+🇮🇳 **ಕನ್ನಡ Kannada**
+
+The goal is to make financial information accessible without requiring users to understand complex financial terminology.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Architecture
 
 ```text
-                    ┌──────────────────┐
-                    │      User        │
-                    └────────┬─────────┘
-                             │
-                             ▼
-                ┌────────────────────────┐
-                │ Next.js / React Frontend│
-                └────────────┬───────────┘
-                             │
-                             ▼
-                 ┌───────────────────────┐
-                 │ Next.js API / Backend │
-                 └───────┬───────┬──────┘
-                         │       │
-              ┌──────────┘       └───────────┐
-              ▼                              ▼
-      ┌─────────────────┐            ┌──────────────┐
-      │    Supabase     │            │ Gemini API   │
-      │ Auth + Postgres │            │ Server-side  │
-      │ + Storage       │            └──────────────┘
-      └─────────────────┘
-              │
-              ▼
-      ┌─────────────────┐
-      │ Fraud Rules     │
-      │ Engine + OCR    │
-      └─────────────────┘
+                         ┌──────────────────┐
+                         │       User       │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                    ┌──────────────────────────┐
+                    │   Next.js / React App    │
+                    │   English + Kannada UI   │
+                    └────────────┬─────────────┘
+                                 │
+                                 ▼
+                    ┌──────────────────────────┐
+                    │    Next.js API Layer     │
+                    │ Validation + Security    │
+                    └───────┬──────────┬───────┘
+                            │          │
+                 ┌──────────┘          └──────────┐
+                 ▼                                ▼
+        ┌─────────────────┐              ┌────────────────┐
+        │    Supabase     │              │   Gemini API   │
+        │ PostgreSQL/RLS  │              │  Server-side   │
+        └────────┬────────┘              └────────────────┘
+                 │
+                 ▼
+        ┌─────────────────────┐
+        │ Domain Logic        │
+        │ • Eligibility       │
+        │ • Fraud Detection   │
+        │ • Loan Calculations │
+        │ • Learning          │
+        └─────────────────────┘
 ```
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer           | Technology                     |
-| --------------- | ------------------------------ |
-| Frontend        | Next.js                        |
-| UI              | React                          |
-| Language        | TypeScript                     |
-| Styling         | Tailwind CSS                   |
-| Backend         | Next.js API Routes             |
-| Database        | Supabase PostgreSQL            |
-| Authentication  | Supabase Auth                  |
-| Storage         | Supabase Storage               |
-| AI              | Gemini API                     |
-| OCR             | Tesseract.js / OCR integration |
-| Speech          | Browser Web Speech API         |
-| Testing         | Project test suite             |
-| Version Control | Git + GitHub                   |
-| Deployment      | Vercel                         |
-
-The current implementation uses **Next.js 15 App Router, React 19, TypeScript strict mode and Tailwind CSS**.
+| Layer           | Technology           |
+| --------------- | -------------------- |
+| Framework       | Next.js              |
+| Frontend        | React                |
+| Language        | TypeScript           |
+| Styling         | Tailwind CSS         |
+| Backend         | Next.js API Routes   |
+| Database        | Supabase PostgreSQL  |
+| Authentication  | Supabase Auth        |
+| Storage         | Supabase Storage     |
+| AI              | Gemini API           |
+| OCR             | OCR integration      |
+| Speech          | Web Speech API       |
+| Testing         | Automated test suite |
+| Version Control | Git + GitHub         |
+| Deployment      | Vercel               |
 
 ---
 
-## 🗄️ Database
+## 🔐 Security
 
-The current Supabase database contains six primary tables:
+Security was treated as a core part of the project rather than a final add-on.
 
-```text
-users
-lessons
-quizzes
-schemes
-fraud_patterns
-feedback
-```
+GramFinance includes:
 
-The database currently includes:
+* Supabase Row Level Security
+* Server-side API validation
+* Protected database operations
+* Server-side AI credentials
+* Input validation
+* Security-focused API handling
+* Rate limiting where applicable
+* Controlled error handling
+* Sensitive-data protection
+* Production security hardening
 
-* Row Level Security (RLS)
-* Authentication relationship
-* Foreign-key indexes
-* Signup profile trigger
-* Seed data
-* Security policies
-* Typed database models
-
-Six live tables and nine verified RLS policies are currently in place.
-
----
-
-## 🔐 Security & Privacy
-
-GramFinance follows a privacy-first approach.
-
-The system is designed **not to collect or store**:
+The application is designed not to request or store:
 
 * Bank passwords
 * UPI PINs
@@ -286,134 +236,78 @@ The system is designed **not to collect or store**:
 * Full card numbers
 * Transaction credentials
 
-For fraud-check screenshots, the project specification recommends warning users to blur/crop sensitive information and processing images without permanently storing the raw screenshot.
-
-The application also uses Supabase Row Level Security to restrict protected data.
+Users should also avoid submitting sensitive personal or financial information when checking suspicious messages.
 
 ---
 
-## 🧪 Current Verification Status
+## 🔒 Privacy Principles
 
-The current project baseline has been verified with:
+GramFinance follows a **privacy-by-design** approach.
 
-| Check                     | Status       |
-| ------------------------- | ------------ |
-| `npm run build`           | ✅ PASS       |
-| `npx tsc --noEmit`        | ✅ PASS       |
-| `npm run lint`            | ✅ PASS       |
-| `npm test`                | ✅ 63/63 PASS |
-| Supabase migrations       | ✅ PASS       |
-| Supabase RLS verification | ✅ PASS       |
-| Supabase live integration | ✅ PASS       |
+The deployed platform does not require traditional account signup or phone verification for normal use. Loan calculations run on the user's device, and the project is designed without building a commercial user profile.
 
-The latest report confirms **63/63 automated tests passing** and successful build, TypeScript and lint checks.
+The platform is explicitly positioned as:
+
+> **Free • Non-commercial • No Brokerage • No Commercial Referrals**
 
 ---
 
-## 📊 Current Project Progress
+## 🧪 Verification
 
-### ✅ Completed
+The project has gone through extensive automated testing and production-readiness checks covering:
 
-* Project foundation and architecture
-* Next.js/React/TypeScript/Tailwind setup
-* Loan Calculator V2
-* Loan calculations and validation
-* Fee handling
-* Prepayment simulation
-* Supabase database
-* Supabase authentication relationship (schema only — the `public.users` profile is tied to `auth.users`)
-* Anonymous session sign-in (lightweight, one-tap; no email, password, OTP or phone)
-* Row Level Security
-* Database policies
-* Seed data
-* Supabase/Next.js integration
-* Error/loading boundaries
-* Accessibility improvements
-* Automated testing
+* Unit tests
+* Integration tests
+* API tests
+* UI tests
+* Eligibility logic
+* Fraud detection
+* Localization
+* Database integration
+* Supabase RLS
+* Input validation
+* Security hardening
+* Production builds
+* Type checking
+* Linting
 
-### 🚧 Remaining
-
-* Government Schemes user interface
-* Financial Learning experience
-* Fraud/Scam Checker workflow
-* AI Financial Assistant
-* Feedback UI/workflow
-* Content population
-* Further integration testing
-* Security review
-* Production hardening
-
-The recommended development order is Government Schemes → Financial Learning → Fraud/Scam Checker → AI Financial Assistant → Feedback, followed by content population and final hardening.
-
-### 🔐 Authentication
-
-Authentication is a **lightweight anonymous session**, not an account. There is no email address, password, OTP or phone number, and nothing personal is collected.
-
-The entire app is public and works without signing in — the loan calculator, fraud checker, scheme catalogue, scheme eligibility, AI assistant and learning content are all open to everyone. Only *submitting feedback* needs a session, because the feedback record must be attached to an owner that row-level security can verify.
-
-Tapping **Continue** creates a real Supabase `auth.users` entry with a real identifier, stored in an HTTP-only cookie. That is enough for the existing RLS rules to work unchanged; no database migration was needed. The browser never talks to Supabase directly — sign-in happens through this app's own same-origin endpoints, so no third-party origin had to be added to the Content-Security-Policy.
-
-**Setup requirement:** anonymous sign-ins must be enabled on the Supabase project under **Authentication → Providers → Anonymous**. Without it, feedback submission returns a "temporarily unavailable" response. `supabase/config.toml` already sets `enable_anonymous_sign_ins = true`, but that file only configures a local Supabase instance and does not affect the hosted project.
+The project was developed with a strong emphasis on deterministic and explainable business logic.
 
 ---
 
-## 🗺️ Development Roadmap
+## 📊 Design Principles
 
-```text
-Phase 1
-Project Research & Requirements
-        ↓
-Phase 2
-System Design & Architecture
-        ↓
-Phase 3
-Next.js + Supabase Foundation
-        ↓
-Phase 4
-Core Modules
-        ↓
-Phase 5
-Fraud / Scam Checker
-        ↓
-Phase 6
-Government Schemes + AI Assistant
-        ↓
-Phase 7
-Feedback + Integration Testing
-        ↓
-Phase 8
-Security Review & Production Hardening
-```
+### 1. Explainable by Default
+
+GramFinance should explain **why** a result was produced.
+
+Eligibility checks expose conditions and missing information rather than relying on opaque scoring.
+
+### 2. Assistant, Not Authority
+
+GramFinance provides information and decision support. It does not replace banks, government departments, financial professionals, or official scheme authorities.
+
+### 3. Verified Sources
+
+Government scheme information is tied to official sources and verification dates wherever applicable.
+
+### 4. No Commercial Incentive
+
+GramFinance is not a lender, loan marketplace, lead generator, or lending affiliate.
+
+### 5. Privacy First
+
+The platform avoids collecting unnecessary financial credentials and does not require users to provide sensitive banking information.
 
 ---
 
-## 📌 Project Scope
-
-GramFinance is intended as a **financial-literacy and decision-support platform**, not as a replacement for:
-
-* Banks
-* Financial advisors
-* Government departments
-* Law-enforcement agencies
-
-The system does not:
-
-* Approve or reject loans
-* Provide investment advice
-* Access bank accounts
-* Initiate financial transactions
-* Guarantee that a message is fraudulent
-* Determine legal eligibility for government schemes
-
----
-
-## 🚀 Getting Started
+## 🚀 Running Locally
 
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR-GITHUB-REPOSITORY-URL>
-cd <PROJECT-FOLDER>
+git clone https://github.com/vidhwan06/GramFinance.git
+cd GramFinance
 ```
 
 ### 2. Install dependencies
@@ -424,9 +318,9 @@ npm install
 
 ### 3. Configure environment variables
 
-Create a `.env.local` file and configure the required Supabase credentials.
+Create a `.env.local` file with the required Supabase and server-side AI configuration.
 
-For AI functionality, keep the Gemini API key **server-side only**.
+Keep private credentials server-side and never expose them through public client-side environment variables.
 
 ### 4. Start the development server
 
@@ -446,19 +340,19 @@ http://localhost:3000
 npm test
 ```
 
-### 6. Run type checking
+### 6. Type-check
 
 ```bash
 npx tsc --noEmit
 ```
 
-### 7. Run linting
+### 7. Lint
 
 ```bash
 npm run lint
 ```
 
-### 8. Build for production
+### 8. Production build
 
 ```bash
 npm run build
@@ -466,39 +360,67 @@ npm run build
 
 ---
 
-## 👥 Team Development
+## 🌍 Live Deployment
 
-GramFinance is being developed collaboratively using Git and GitHub.
+GramFinance is deployed using Vercel.
 
-Before beginning a major new feature, the current stable baseline should be committed so the team has a clean rollback point.
+**Live application:**
 
-Recommended checkpoint:
+https://gram-finance.vercel.app/
 
-```bash
-git add .
-git commit -m "feat: complete loan v2 and supabase integration"
-git push origin main
-```
+The deployed application provides the complete public-facing GramFinance experience, including scheme discovery, fraud checking, loan calculations, learning, AI assistance and feedback.
 
-Development should preserve the existing **RLS configuration, database security and 63-test baseline**.
+---
+
+## 📌 What GramFinance Does Not Do
+
+GramFinance does **not**:
+
+* Approve or reject loans
+* Provide personalized investment advice
+* Access users' bank accounts
+* Initiate financial transactions
+* Request OTPs, UPI PINs or banking passwords
+* Guarantee that a message is fraudulent
+* Replace official government eligibility decisions
+* Replace professional financial advice
+
+For government schemes, users should always verify the final eligibility requirements and application process through the relevant official source.
+
+---
+
+## 👥 Development
+
+GramFinance was developed collaboratively using:
+
+* Git
+* GitHub
+* Next.js
+* TypeScript
+* Supabase
+* Vercel
+* Automated testing
+* AI-assisted development workflows
+
+The project evolved from an initial financial-literacy concept into a complete platform combining **financial education, explainable decision support, fraud awareness and government-resource discovery**.
 
 ---
 
 ## 📄 Project Documentation
 
-The project documentation covers:
+The project covers:
 
-* Problem statement
-* Product goals
-* Functional requirements
-* Non-functional requirements
+* Product requirements
 * System architecture
-* Technology stack
-* Database schema
+* Database design
+* Eligibility-engine design
 * Fraud-analysis architecture
-* Privacy and security
-* Development roadmap
-* Impact measurement
+* Security model
+* Privacy principles
+* Localization
+* Testing
+* Deployment
+* Impact goals
 
 ---
 
@@ -506,12 +428,19 @@ The project documentation covers:
 
 This project is currently developed as an academic/community project.
 
-License information can be added when the team decides on the project's final licensing model.
+License information can be added when the project's final licensing model is decided.
 
 ---
 
-## ⭐ Project Vision
+## ⭐ Vision
 
-**GramFinance aims to make financial information simpler, safer and more accessible — especially for users who may find traditional financial information difficult to understand.**
+**GramFinance aims to make financial information simpler, safer and more accessible.**
 
-The goal is not simply to provide information, but to help users **understand financial concepts, recognize risks, compare loan costs and discover reliable resources before making financial decisions.**
+The goal is not simply to give users an answer.
+
+It is to help them:
+
+**Understand → Verify → Decide Safely**
+
+Whether someone is checking a government scheme, calculating the true cost of a loan, learning a financial concept, or inspecting a suspicious message, GramFinance is designed to provide clear information, transparent reasoning and practical next steps.
+
