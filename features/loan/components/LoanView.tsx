@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 
 import { useLoanCalculator } from '../hooks/useLoanCalculator';
 import { pageCopy } from '../presentation/dictionary';
+import { LoanModeTabs, LoanToolMode } from './LoanModeTabs';
+import { ExistingLoanPanel } from '../existing-loan/components/ExistingLoanPanel';
 import { LoanForm } from './LoanForm';
 import { FeeEditor } from './FeeEditor';
 import { LoanResult } from './LoanResult';
@@ -62,8 +64,25 @@ export function LoanView() {
   const isValid = validation.isValid && engineResult !== null && bilingualSummary !== null;
   const validationErrors = validation.errors;
 
+  // Which of the two Loan Tool modes is showing. 'calculate' is the default and
+  // the original experience, so a link to /loan behaves exactly as it did before
+  // this mode existed.
+  const [mode, setMode] = useState<LoanToolMode>('calculate');
+
   return (
     <div className="w-full">
+      <LoanModeTabs mode={mode} onChange={setMode} />
+
+      {/* The Calculate-a-Loan experience, unchanged. Only wrapped so the two
+          modes are mutually exclusive; every section below is the original
+          markup, and `useLoanCalculator` above is untouched, so this mode's
+          behaviour is identical to before. */}
+      <div
+        id="loan-mode-panel-calculate"
+        role="tabpanel"
+        aria-labelledby="loan-mode-tab-calculate"
+        hidden={mode !== 'calculate'}
+      >
       {/* ─────────────── SECTION 1: CIVIC TRUST BAR ─────────────── */}
       <section className="w-full bg-surface-container-high py-2.5">
         <div className="max-w-[1440px] mx-auto px-margin-mobile lg:px-margin flex flex-wrap items-center justify-between gap-3 text-on-surface-variant font-label-sm text-label-sm">
@@ -304,6 +323,26 @@ export function LoanView() {
 
       {/* ─────────────── SECTION 9: MANDATE STRIP ─────────────── */}
       <MandateStrip />
+      </div>
+
+      {/*
+        Both panels stay MOUNTED, with the inactive one hidden via the `hidden`
+        attribute rather than unmounted. `ExistingLoanPanel` keeps its form
+        state in its own useState, so unmounting it would wipe everything the
+        user typed — the exact thing the tabs exist to avoid. `hidden` is safe
+        here because neither wrapper carries a `display-*` utility, which would
+        otherwise beat the user-agent `[hidden] { display: none }` rule.
+
+        `aria-controls` on each tab points at the matching id below.
+      */}
+      <div
+        id="loan-mode-panel-existing"
+        role="tabpanel"
+        aria-labelledby="loan-mode-tab-existing"
+        hidden={mode !== 'existing'}
+      >
+        <ExistingLoanPanel />
+      </div>
     </div>
   );
 }
