@@ -525,7 +525,23 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    /**
+     * `public.is_admin()` — migration 011.
+     *
+     * SECURITY DEFINER, STABLE, `search_path = ''`. Takes no arguments and
+     * returns whether the calling `auth.uid()` holds the `admin` role in
+     * `user_roles`. Declared here so `.rpc('is_admin')` typechecks; the
+     * signature must stay in step with the migration.
+     *
+     * EXECUTE is granted to `authenticated` only (migration 011, tightened by
+     * 026), which is why every caller must already hold a session.
+     */
+    Functions: {
+      is_admin: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
+      };
+    };
     Enums: {
       user_language: UserLanguage;
       fraud_input_type: FraudInputType;

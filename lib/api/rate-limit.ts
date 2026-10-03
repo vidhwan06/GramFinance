@@ -206,4 +206,10 @@ export const ROUTE_LIMITS = {
   eligibility: { scope: 'eligibility', max: 12, windowMs: 60_000 },
   /** Authenticated and keyed per user, not per IP. */
   feedback: { scope: 'feedback', max: 5, windowMs: 60_000 },
+  /**
+   * Admin-only read of submitted feedback. One page query plus one count per
+   * rating value, so it is materially more expensive than the other read routes.
+   * Generous enough that paging through a long history is never interrupted.
+   */
+  adminFeedback: { scope: 'admin-feedback', max: 30, windowMs: 60_000 },
 } as const satisfies Record<string, RouteRateLimit>;
