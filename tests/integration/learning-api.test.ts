@@ -2,6 +2,14 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
+import type { ApiResponse } from '@/types/api';
+import type { LessonSummary, ModuleInfo } from '@/features/learning/types';
+
+/** Shape returned by GET /api/learning/lessons: `successResponse({ lessons, modules })`. */
+type LessonsListPayload = {
+  lessons: LessonSummary[];
+  modules: ModuleInfo[];
+};
 
 vi.mock('next/headers', () => ({
   cookies: async () => ({
@@ -61,14 +69,12 @@ describe.skipIf(skipReason !== null)('Financial Learning API Routes Integration 
       const response = await lessonsGet();
       expect(response.status).toBe(200);
 
-      const json = (await response.json()) as {
-        success: boolean;
-        data: unknown[];
-        meta: { timestamp: string };
-      };
+      const json = (await response.json()) as ApiResponse<LessonsListPayload>;
 
       expect(json.success).toBe(true);
-      expect(Array.isArray(json.data)).toBe(true);
+      expect(json.data).toBeDefined();
+      expect(Array.isArray(json.data?.lessons)).toBe(true);
+      expect(Array.isArray(json.data?.modules)).toBe(true);
       expect(json.meta?.timestamp).toBeDefined();
     });
   });
