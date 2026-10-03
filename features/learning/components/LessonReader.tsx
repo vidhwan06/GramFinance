@@ -1,226 +1,129 @@
 'use client';
 
 import React from 'react';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Lightbulb, BookOpen, Sparkles, ShieldCheck, Eye, AlertTriangle, ListChecks, RotateCcw } from 'lucide-react';
+import { BookOpen, Layers } from 'lucide-react';
 import { useLanguage } from '@/features/language/hooks/useLanguage';
-import type { LessonDetail } from '../types';
+import { LessonHeader } from './LessonHeader';
+import { LessonTakeaway } from './LessonTakeaway';
+import { LessonFlow } from './LessonFlow';
+import { LessonMistakes, LessonTakeawayList } from './LessonMistakes';
+import { LessonScenarios } from './LessonScenarios';
+import { LessonSteps } from './LessonSteps';
+import { LessonRecap } from './LessonRecap';
+import { LessonProse, LessonSection, ReadMore } from './LessonSection';
+import {
+  estimateReadingMinutes,
+  heroTakeaway,
+  parseFlow,
+  parseScenarios,
+  progressiveSplit,
+  toLines,
+  toParagraphs,
+} from '../lesson-content';
+import type { ChapterNavigation, LessonDetail } from '../types';
 
 interface LessonReaderProps {
   lesson: LessonDetail;
+  navigation?: ChapterNavigation | null;
 }
 
-function isArrayField(value: string[] | string | undefined): value is string[] {
-  return Array.isArray(value);
-}
-
-export function LessonReader({ lesson }: LessonReaderProps) {
+/**
+ * Guided lesson reader: understand → why it matters → how it works → what goes
+ * wrong → apply it → remember it → prove it.
+ *
+ * ── What changed, and what did not ───────────────────────────────────────────
+ * This component used to render nine sections as nine large saturated cards in
+ * a fixed order, which produced a very long page where nothing stood out. It is
+ * now a sequence of neutral sections with a single strong element at the top.
+ *
+ * Every field of `LessonContent` is still rendered, still in the lesson's own
+ * wording, and still in the same language. `concept` and `explanation` are split
+ * into short paragraphs and the tail sits behind "Read more"; `example` is split
+ * into its scenarios; `visual` becomes a flow. No text is edited, summarised or
+ * dropped, and no field is read from anywhere but the API response — the data
+ * model, the API contract and the database are untouched.
+ *
+ * Sections that a given lesson does not have are simply skipped, which is why
+ * each block is guarded rather than rendered with a placeholder.
+ */
+export function LessonReader({ lesson, navigation }: LessonReaderProps) {
   const { language, t } = useLanguage();
   const isKn = language === 'kn';
 
-  const title = isKn ? lesson.title_kn : lesson.title_en;
   const content = isKn ? lesson.content_kn : lesson.content_en;
-  const categoryLabel = t.learning.categoryLabels[lesson.category] || lesson.category;
-  const difficultyLabel = t.learning.difficultyLabels[lesson.difficulty] || lesson.difficulty;
+
+  const concept = progressiveSplit(content.concept, 2);
+  const explanation = progressiveSplit(content.explanation, 2);
+  const whyParagraphs = toParagraphs(content.whyItMatters ?? '', 2);
+  const flow = parseFlow(content.visual);
+  const mistakes = toLines(content.commonMistakes);
+  const takeaways = toLines(content.practicalTakeaway);
+  const recap = toLines(content.quickRecap);
+  const scenarios = parseScenarios(content.example, t.learning.scenarioMarker);
+  const minutes = estimateReadingMinutes(
+    [content.concept, content.explanation, content.whyItMatters, content.visual, content.example],
+    language
+  );
 
   return (
     <div className="space-y-6">
-      {/* Lesson Header */}
-      <div className="space-y-2 border-b border-gray-200 pb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="primary">{categoryLabel}</Badge>
-          <Badge variant="neutral">{difficultyLabel}</Badge>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-          {title}
-        </h1>
-      </div>
+      <LessonHeader lesson={lesson} navigation={navigation} minutes={minutes} />
 
-      {/* 1. Core Concept */}
-      <Card className="border-l-4 border-l-green-600 bg-green-50/50">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-green-100 text-green-800 shrink-0 mt-0.5">
-            <Lightbulb className="w-5 h-5" />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-base font-bold text-green-950">
-              {t.learning.concept}
-            </h2>
-            <p className="text-gray-800 leading-relaxed font-medium">
-              {content.concept}
-            </p>
-          </div>
-        </div>
-      </Card>
+      {/* The lesson's own first takeaway, lifted to the top. The full sentence
+          still appears unchanged in the Practical Takeaway section below. */}
+      {takeaways.length > 0 && <LessonTakeaway text={heroTakeaway(takeaways[0])} />}
 
-      {/* 2. Why This Matters (new section) */}
-      {content.whyItMatters && (
-        <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-blue-100 text-blue-800 shrink-0 mt-0.5">
-              <ListChecks className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-base font-bold text-blue-950">
-                {t.learning.whyItMatters}
-              </h2>
-              <p className="text-gray-800 leading-relaxed">
-                {content.whyItMatters}
-              </p>
-            </div>
-          </div>
-        </Card>
+      {/* 1. What is this? */}
+      <LessonSection
+        id="lesson-concept"
+        eyebrow={t.learning.eyebrowUnderstand}
+        title={t.learning.concept}
+        icon={<BookOpen className="h-5 w-5 text-deep-teal" />}
+      >
+        <ReadMore lead={concept.lead} rest={concept.rest} />
+      </LessonSection>
+
+      {/* 2. Why does it matter? */}
+      {whyParagraphs.length > 0 && (
+        <LessonSection
+          id="lesson-why"
+          eyebrow={t.learning.eyebrowUnderstand}
+          title={t.learning.whyItMatters}
+        >
+          <LessonProse paragraphs={whyParagraphs} />
+        </LessonSection>
       )}
 
-      {/* 3. Detailed Explanation */}
-      <Card>
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-blue-100 text-blue-800 shrink-0 mt-0.5">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <div className="space-y-2 flex-1">
-            <h2 className="text-base font-bold text-gray-900">
-              {t.learning.explanation}
-            </h2>
-            <p className="text-gray-700 leading-relaxed text-base">
-              {content.explanation}
-            </p>
-          </div>
-        </div>
-      </Card>
+      {/* 3. How does it work? */}
+      <LessonFlow flow={flow} />
 
-      {/* 4. Step-by-Step Guide (new section) */}
-      {content.steps && content.steps.length > 0 && (
-        <Card className="border-l-4 border-l-indigo-500 bg-indigo-50/30">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-indigo-100 text-indigo-800 shrink-0 mt-0.5">
-              <ListChecks className="w-5 h-5" />
-            </div>
-            <div className="space-y-3 flex-1">
-              <h2 className="text-base font-bold text-indigo-950">
-                {t.learning.stepByStep}
-              </h2>
-              <ol className="list-decimal list-inside space-y-2">
-                {content.steps.map((step, idx) => (
-                  <li key={idx} className="text-gray-800 leading-relaxed text-sm">
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </Card>
+      {/* 4. What goes wrong? */}
+      <LessonMistakes mistakes={mistakes} />
+
+      {/* 5. How do I do it? */}
+      <LessonSteps steps={toLines(content.steps)} />
+
+      {/* 6. Apply it — the full explanation, chunked. */}
+      {explanation.lead.length > 0 && (
+        <LessonSection
+          id="lesson-detail"
+          eyebrow={t.learning.eyebrowUnderstand}
+          title={t.learning.explanation}
+          icon={<Layers className="h-5 w-5 text-aubergine" />}
+          hint={t.learning.chunkHint}
+        >
+          <ReadMore lead={explanation.lead} rest={explanation.rest} />
+        </LessonSection>
       )}
 
-      {/* 5. Real-Life Practical Example */}
-      <Card className="bg-amber-50/40 border-amber-200">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-amber-100 text-amber-900 shrink-0 mt-0.5">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div className="space-y-2 flex-1">
-            <h2 className="text-base font-bold text-amber-950">
-              {t.learning.example}
-            </h2>
-            <p className="text-gray-800 leading-relaxed text-base italic">
-              &quot;{content.example}&quot;
-            </p>
-          </div>
-        </div>
-      </Card>
+      {/* 7. Real situations */}
+      <LessonScenarios scenarios={scenarios} />
 
-      {/* 6. Visual Representation */}
-      <Card className="bg-slate-900 text-white border-slate-800 shadow-md">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-emerald-400">
-            <Eye className="w-5 h-5" />
-            <h2 className="text-sm font-bold uppercase tracking-wider">
-              {t.learning.visual}
-            </h2>
-          </div>
-          <div className="p-4 rounded-lg bg-slate-800 border border-slate-700 font-mono text-sm leading-relaxed text-slate-200">
-            {content.visual}
-          </div>
-        </div>
-      </Card>
+      {/* 8. What should I remember? */}
+      <LessonTakeawayList takeaways={takeaways} />
 
-      {/* 7. Common Mistakes */}
-      <Card className="border-l-4 border-l-red-400 bg-red-50/30">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-red-100 text-red-700 shrink-0 mt-0.5">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div className="space-y-2 flex-1">
-            <h2 className="text-base font-bold text-red-950">
-              {t.learning.commonMistakes}
-            </h2>
-            {isArrayField(content.commonMistakes) ? (
-              <ul className="list-disc list-inside space-y-1">
-                {content.commonMistakes.map((mistake, idx) => (
-                  <li key={idx} className="text-gray-800 leading-relaxed text-sm">
-                    {mistake}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-800 leading-relaxed">
-                {content.commonMistakes}
-              </p>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* 8. Practical Takeaway */}
-      <Card className="border-2 border-emerald-500 bg-emerald-50">
-        <div className="flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-emerald-200 text-emerald-900 shrink-0 mt-0.5">
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-          <div className="space-y-2 flex-1">
-            <h2 className="text-base font-bold text-emerald-950">
-              {t.learning.takeaway}
-            </h2>
-            {isArrayField(content.practicalTakeaway) ? (
-              <ul className="list-disc list-inside space-y-1">
-                {content.practicalTakeaway.map((takeaway, idx) => (
-                  <li key={idx} className="text-emerald-900 font-semibold leading-relaxed text-sm">
-                    {takeaway}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-emerald-900 font-semibold leading-relaxed">
-                {content.practicalTakeaway}
-              </p>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* 9. Quick Recap (new section) */}
-      {content.quickRecap && content.quickRecap.length > 0 && (
-        <Card className="border-2 border-purple-500 bg-purple-50/50">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-purple-100 text-purple-800 shrink-0 mt-0.5">
-              <RotateCcw className="w-5 h-5" />
-            </div>
-            <div className="space-y-2 flex-1">
-              <h2 className="text-base font-bold text-purple-950">
-                {t.learning.quickRecap}
-              </h2>
-              <ul className="list-disc list-inside space-y-1">
-                {content.quickRecap.map((recap, idx) => (
-                  <li key={idx} className="text-gray-800 leading-relaxed text-sm">
-                    {recap}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* 9. Self-check */}
+      <LessonRecap recap={recap} />
     </div>
   );
 }

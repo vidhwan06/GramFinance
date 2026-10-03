@@ -417,8 +417,8 @@ export const en = {
     },
     concept: 'Core Concept',
     explanation: 'Detailed Explanation',
-    example: 'Practical Example',
-    visual: 'Visual Illustration',
+    example: 'Real Situations',
+    visual: 'How It Works',
     takeaway: 'Practical Takeaway',
     quizTitle: 'Knowledge Check Quiz',
     quizSubtitle: 'Test your understanding to reinforce your financial safety skills.',
@@ -436,7 +436,7 @@ export const en = {
     of: 'of',
     prevChapter: 'Previous Chapter',
     nextChapter: 'Next Chapter',
-    commonMistakes: 'Common Mistakes to Avoid',
+    commonMistakes: 'Common Mistakes',
     whyItMatters: 'Why This Matters',
     stepByStep: 'Step-by-Step Guide',
     quickRecap: 'Quick Recap',
@@ -447,6 +447,46 @@ export const en = {
     lessonNotFound: 'Lesson not found',
     loadLessonError: 'Failed to load lesson',
     invalidCategory: 'Invalid module category.',
+
+    // ── Guided lesson reader ───────────────────────────────────────────────
+    // Section eyebrows. Short, uppercase in the UI, and ordered so they read as
+    // a progression: understand → see → watch out → do → remember.
+    eyebrowUnderstand: 'Understand',
+    eyebrowHowItWorks: 'See it',
+    eyebrowWatchOut: 'Watch out',
+    eyebrowDoThis: 'Do this',
+    eyebrowRemember: 'Remember',
+    eyebrowRealLife: 'Real life',
+    // Used as a verb prefix: "One thing to remember".
+    oneThingToRemember: 'One thing to remember',
+    readMore: 'Read more',
+    showLess: 'Show less',
+    // "Scenario {n}" — the number comes from the lesson's own text.
+    scenarioLabel: 'Scenario {n}',
+    // Split marker for the stored `example` field. Matched against the lesson
+    // text to separate scenarios; must match the wording used in the content.
+    scenarioMarker: 'Scenario',
+    scenarioHint: 'Read the situation, decide what you would do, then check yourself.',
+    whatWouldYouDo: 'What would you do?',
+    thinkAboutIt: 'Think about it',
+    hideExplanation: 'Hide the explanation',
+    // "Chapter {current} of {total}" progress label for the progress bar.
+    chapterProgress: 'Chapter {current} of {total}',
+    minutesToRead: '{minutes} min read',
+    keyPoints: 'Also remember',
+    flowHint: 'Follow the steps in order.',
+    chunkHint: 'Read in short parts, at your own pace.',
+    recapHint: 'Tick each one you can explain in your own words.',
+    recapProgress: '{done} of {total} ticked',
+    lessonNavigationLabel: 'Lesson navigation',
+    inThisLesson: 'In this lesson',
+    moduleComplete: 'You have reached the last chapter in this module.',
+    // Heading for the quiz as the natural end of the lesson.
+    quizConclusionTitle: 'Check your understanding',
+    quizConclusionSubtitle: 'Answer each question, then read why.',
+    correct: 'Correct',
+    incorrect: 'Not quite',
+    yourAnswer: 'Your answer',
   },
 };
 

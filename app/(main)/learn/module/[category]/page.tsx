@@ -77,7 +77,7 @@ export default function ModulePage({ params }: PageProps) {
       <div>
         <Link
           href="/learn"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded text-sm font-semibold text-muted-ink transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deep-teal focus-visible:ring-offset-2 motion-reduce:transition-none"
         >
           <ArrowLeft className="w-4 h-4" />
           {t.learning.backToLessons}
@@ -88,7 +88,7 @@ export default function ModulePage({ params }: PageProps) {
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 space-y-3">
           <Spinner size="lg" />
-          <p className="text-sm text-gray-600">{t.learning.loading}</p>
+          <p className="text-sm text-muted-ink">{t.learning.loading}</p>
         </div>
       )}
 
@@ -107,29 +107,35 @@ export default function ModulePage({ params }: PageProps) {
       {/* Chapter List */}
       {!loading && !error && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-ink">
             {t.learning.categoryLabels[category as LessonCategory] || category}
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {lessons.map((lesson, idx) => (
               <Link
                 key={lesson.id}
                 href={`/learn/lesson/${lesson.id}`}
-                className="block group"
+                className="block group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deep-teal focus-visible:ring-offset-2"
               >
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 bg-white hover:border-green-500 hover:shadow-md transition-all">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-100 text-green-800 font-bold text-sm shrink-0">
+                <div className="flex items-center gap-3 rounded-xl border border-rule bg-white p-4 transition-colors group-hover:border-deep-teal/50 group-hover:bg-surface-container-low motion-reduce:transition-none">
+                  <span
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-deep-teal/10 text-sm font-bold text-deep-teal"
+                    aria-hidden="true"
+                  >
                     {idx + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors truncate">
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-ink">
                       {isKn ? lesson.title_kn : lesson.title_en}
-                    </h3>
-                    <p className="text-sm text-gray-500 truncate">
+                    </span>
+                    <span className="block truncate text-sm text-muted-ink">
                       {isKn ? lesson.summary_kn : lesson.summary_en}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors shrink-0" />
+                    </span>
+                  </span>
+                  <ArrowRight
+                    className="h-5 w-5 shrink-0 text-muted-ink transition-colors group-hover:text-deep-teal motion-reduce:transition-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </Link>
             ))}

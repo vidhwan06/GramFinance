@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { CheckCircle2, XCircle, Award, HelpCircle, RefreshCw } from 'lucide-react';
@@ -92,20 +91,27 @@ export function QuizSection({ lesson }: QuizSectionProps) {
   const allAnswered = questions.every((q) => selectedAnswers[q.id] !== undefined);
 
   return (
-    <Card className="border-2 border-indigo-200 bg-indigo-50/20">
-      <CardHeader className="border-b border-indigo-100 pb-4">
-        <div className="flex items-center gap-2 text-indigo-700">
-          <HelpCircle className="w-6 h-6" />
-          <CardTitle className="text-xl text-indigo-950">
-            {t.learning.quizTitle}
-          </CardTitle>
+    <section
+      id="lesson-quiz"
+      aria-labelledby="lesson-quiz-heading"
+      className="scroll-mt-24 rounded-xl border border-rule bg-white p-4 shadow-sm sm:p-5"
+    >
+      <div className="mb-4 flex items-start gap-2.5">
+        <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-aubergine" aria-hidden="true" />
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-aubergine">
+            {t.learning.eyebrowRemember}
+          </p>
+          <h2 id="lesson-quiz-heading" className="text-lg font-bold leading-snug text-ink sm:text-xl">
+            {t.learning.quizConclusionTitle}
+          </h2>
+          <p className="mt-1 text-sm leading-relaxed text-muted-ink">
+            {t.learning.quizConclusionSubtitle}
+          </p>
         </div>
-        <p className="text-sm text-gray-600 mt-1">
-          {t.learning.quizSubtitle}
-        </p>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-6 pt-6">
+      <div className="space-y-5">
         {/* Auth Error Banner */}
         {authError && (
           <Alert variant="warning" title={t.learning.quizAuthRequired}>
@@ -120,33 +126,36 @@ export function QuizSection({ lesson }: QuizSectionProps) {
           </Alert>
         )}
 
-        {/* Result Summary Banner (if submitted) */}
+        {/* Result Summary (if submitted) */}
         {submissionResult && (
           <div
-            className={`p-5 rounded-xl border-2 ${
+            role="status"
+            aria-live="polite"
+            className={`rounded-lg border-l-4 p-4 ${
               submissionResult.passed
-                ? 'bg-emerald-50 border-emerald-400 text-emerald-950'
-                : 'bg-amber-50 border-amber-400 text-amber-950'
+                ? 'border-deep-teal bg-deep-teal/5'
+                : 'border-warning-600 bg-warning-50'
             }`}
           >
-            <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div
-                  className={`p-3 rounded-full ${
-                    submissionResult.passed ? 'bg-emerald-200' : 'bg-amber-200'
-                  }`}
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    submissionResult.passed ? 'bg-deep-teal' : 'bg-warning-600'
+                  } text-warm-ivory`}
+                  aria-hidden="true"
                 >
-                  <Award className="w-6 h-6" />
-                </div>
+                  <Award className="w-5 h-5" />
+                </span>
                 <div>
-                  <h3 className="text-lg font-bold">
+                  <p className="text-base font-bold text-ink">
                     {submissionResult.passed
                       ? t.learning.passedTitle
                       : t.learning.failedTitle}
-                  </h3>
-                  <p className="text-sm">
+                  </p>
+                  <p className="text-sm text-muted-ink">
                     {t.learning.scoreTitle}:{' '}
-                    <span className="font-bold">
+                    <span className="font-bold text-ink">
                       {submissionResult.score} / {submissionResult.totalQuestions}
                     </span>{' '}
                     ({submissionResult.percentage}%)
@@ -159,7 +168,7 @@ export function QuizSection({ lesson }: QuizSectionProps) {
                 onClick={handleResetQuiz}
                 className="flex items-center gap-1.5"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-4 h-4" aria-hidden="true" />
                 {t.learning.retakeQuiz}
               </Button>
             </div>
@@ -167,7 +176,7 @@ export function QuizSection({ lesson }: QuizSectionProps) {
         )}
 
         {/* Questions List */}
-        <div className="space-y-6">
+        <ol className="space-y-4">
           {questions.map((q, idx) => {
             const evaluated = submissionResult?.answers.find(
               (a) => a.questionId === q.id
@@ -175,36 +184,45 @@ export function QuizSection({ lesson }: QuizSectionProps) {
             const userSelected = selectedAnswers[q.id];
 
             return (
-              <div
+              <li
                 key={q.id}
-                className="p-4 rounded-xl border border-gray-200 bg-white space-y-3 shadow-sm"
+                className="rounded-lg border border-rule bg-surface-container-lowest p-4"
               >
-                <div className="flex items-start gap-2">
-                  <span className="font-bold text-gray-500 text-sm">
-                    {idx + 1}.
+                <div className="mb-3 flex items-start gap-2.5">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-aubergine text-sm font-bold text-warm-ivory"
+                    aria-hidden="true"
+                  >
+                    {idx + 1}
                   </span>
-                  <p className="font-semibold text-gray-900 text-base">
-                    {q.question}
-                  </p>
+                  <p className="font-semibold text-base leading-7 text-ink">{q.question}</p>
                 </div>
 
-                <div className="space-y-2 pl-5">
+                <div className="space-y-2 sm:pl-9">
                   {q.options.map((opt, optIdx) => {
                     const isSelected = userSelected === optIdx;
+                    const isAnswerKey =
+                      !!submissionResult && optIdx === evaluated?.correctAnswerIndex;
+                    const isWrongPick =
+                      !!submissionResult && isSelected && !evaluated?.isCorrect;
+
                     let optionStyle =
-                      'border-gray-200 hover:bg-gray-50 text-gray-800';
+                      'border-rule bg-white text-ink hover:bg-surface-container-low';
+                    let statusText: string | null = null;
 
                     if (submissionResult && evaluated) {
-                      if (optIdx === evaluated.correctAnswerIndex) {
-                        optionStyle =
-                          'border-emerald-500 bg-emerald-50 text-emerald-900 font-semibold';
-                      } else if (isSelected && !evaluated.isCorrect) {
-                        optionStyle =
-                          'border-red-400 bg-red-50 text-red-900 line-through';
+                      if (isAnswerKey) {
+                        optionStyle = 'border-deep-teal bg-deep-teal/10 text-ink font-semibold';
+                        statusText = t.learning.correct;
+                      } else if (isWrongPick) {
+                        optionStyle = 'border-coral bg-coral/10 text-ink font-semibold';
+                        statusText = t.learning.incorrect;
+                      } else {
+                        optionStyle = 'border-rule bg-white text-muted-ink';
                       }
                     } else if (isSelected) {
                       optionStyle =
-                        'border-indigo-600 bg-indigo-50 text-indigo-900 font-semibold ring-1 ring-indigo-600';
+                        'border-aubergine bg-aubergine/5 text-ink font-semibold ring-1 ring-aubergine';
                     }
 
                     return (
@@ -213,18 +231,23 @@ export function QuizSection({ lesson }: QuizSectionProps) {
                         type="button"
                         onClick={() => handleSelectOption(q.id, optIdx)}
                         disabled={!!submissionResult || submitting}
-                        className={`w-full text-left p-3 rounded-lg border text-sm transition-all flex items-center justify-between ${optionStyle}`}
+                        aria-pressed={isSelected}
+                        className={`flex min-h-[48px] w-full items-center justify-between gap-2 rounded-lg border p-3 text-left text-base leading-6 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deep-teal focus-visible:ring-offset-2 disabled:opacity-100 motion-reduce:transition-none ${optionStyle}`}
                       >
                         <span>{opt}</span>
-                        {submissionResult &&
-                          optIdx === evaluated?.correctAnswerIndex && (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 ml-2" />
+                        <span className="flex shrink-0 items-center gap-1.5">
+                          {statusText && (
+                            <span className="text-xs font-bold uppercase tracking-wide">
+                              {statusText}
+                            </span>
                           )}
-                        {submissionResult &&
-                          isSelected &&
-                          !evaluated?.isCorrect && (
-                            <XCircle className="w-4 h-4 text-red-500 shrink-0 ml-2" />
+                          {isAnswerKey && (
+                            <CheckCircle2 className="h-5 w-5 text-deep-teal" aria-hidden="true" />
                           )}
+                          {isWrongPick && (
+                            <XCircle className="h-5 w-5 text-coral" aria-hidden="true" />
+                          )}
+                        </span>
                       </button>
                     );
                   })}
@@ -232,21 +255,23 @@ export function QuizSection({ lesson }: QuizSectionProps) {
 
                 {/* Explanation shown after scoring */}
                 {evaluated && (
-                  <div className="mt-3 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 space-y-1">
-                    <span className="font-bold text-gray-900">
+                  <div className="mt-3 rounded-lg border-l-2 border-rule bg-surface-container-low p-3 sm:ml-9">
+                    <p className="text-sm font-bold text-ink">
                       {t.learning.explanationTitle}
-                    </span>{' '}
-                    {evaluated.explanation}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-6 text-muted-ink">
+                      {evaluated.explanation}
+                    </p>
                   </div>
                 )}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
 
         {/* Submit Action */}
         {!submissionResult && (
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end pt-1">
             <Button
               variant="primary"
               size="lg"
@@ -257,7 +282,7 @@ export function QuizSection({ lesson }: QuizSectionProps) {
             </Button>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
