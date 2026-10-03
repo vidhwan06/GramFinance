@@ -11,7 +11,21 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-/** Default model when GEMINI_MODEL is not set. */
+/**
+ * Default model when GEMINI_MODEL is not set.
+ *
+ * ── Verification status (final security audit) ──────────────────────────────
+ * An audit flagged this identifier as "unverified" and worth checking, on the
+ * grounds that an invalid default would make every assistant request fail with
+ * 503. It was checked against the live Gemini API rather than assumed, by
+ * calling `GET /v1beta/models` with this project's key: `gemini-3.5-flash` IS
+ * present in the returned model list, so the identifier is real and reachable.
+ * It was therefore deliberately NOT changed - swapping in a different, less
+ * certain name would have replaced a verified default with an unverified one.
+ *
+ * `tests/unit/ai/gemini-config.test.ts` pins both halves of this: the identifier
+ * itself, and the precedence rule below, so a future edit has to be deliberate.
+ */
 const DEFAULT_MODEL = 'gemini-3.5-flash';
 
 /** Maximum output tokens — enough for detailed financial explanations with examples. */

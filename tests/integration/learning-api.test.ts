@@ -46,12 +46,27 @@ if (url) process.env.NEXT_PUBLIC_SUPABASE_URL = url;
 if (anonKey) process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = anonKey;
 
 describe.skipIf(skipReason !== null)('Financial Learning API Routes Integration (live)', () => {
-  let lessonsGet: () => Promise<Response>;
+  /**
+   * Every handler is invoked with a real `NextRequest`, exactly as the App Router
+   * invokes it.
+   *
+   * `lessonsGet` used to be called with no argument, which was correct only while
+   * the route took no request at all. It now reads headers for its rate-limit
+   * bucket, so it needs the request the framework always supplies — calling it
+   * with `undefined` throws inside `resolveClientIp` and surfaces as a 500.
+   */
+  let lessonsGet: (req: NextRequest) => Promise<Response>;
   let lessonDetailGet: (
     req: NextRequest,
     context: { params: Promise<{ lessonId: string }> }
   ) => Promise<Response>;
   let quizSubmitPost: (req: NextRequest) => Promise<Response>;
+
+  /** A request carrying a proxy IP, so the route's bucket is IP-keyed as in production. */
+  const get = (path: string) =>
+    new NextRequest(`http://localhost:3000${path}`, {
+      headers: { 'x-forwarded-for': '198.51.100.10' },
+    });
 
   beforeAll(async () => {
     const lessonsModule = await import('@/app/api/learning/lessons/route');
@@ -66,7 +81,7 @@ describe.skipIf(skipReason !== null)('Financial Learning API Routes Integration 
 
   describe('GET /api/learning/lessons', () => {
     it('returns a successful API response envelope', async () => {
-      const response = await lessonsGet();
+      const response = await lessonsGet(get('/api/learning/lessons'));
       expect(response.status).toBe(200);
 
       const json = (await response.json()) as ApiResponse<LessonsListPayload>;
@@ -81,7 +96,7 @@ describe.skipIf(skipReason !== null)('Financial Learning API Routes Integration 
 
   describe('GET /api/learning/lessons/[lessonId]', () => {
     it('returns 400 Bad Request when lessonId is not a valid UUID', async () => {
-      const req = new NextRequest('http://localhost:3000/api/learning/lessons/invalid-uuid');
+      const req = get('/api/learning/lessons/invalid-uuid');
       const response = await lessonDetailGet(req, {
         params: Promise.resolve({ lessonId: 'not-a-uuid' }),
       });
@@ -93,7 +108,7 @@ describe.skipIf(skipReason !== null)('Financial Learning API Routes Integration 
     });
 
     it('returns 404 Not Found for a non-existent UUID', async () => {
-      const req = new NextRequest('http://localhost:3000/api/learning/lessons/00000000-0000-4000-8000-000000000000');
+      const req = get('/api/learning/lessons/00000000-0000-4000-8000-000000000000');
       const response = await lessonDetailGet(req, {
         params: Promise.resolve({ lessonId: '00000000-0000-4000-8000-000000000000' }),
       });
@@ -106,25 +121,34 @@ describe.skipIf(skipReason !== null)('Financial Learning API Routes Integration 
   });
 
   describe('POST /api/learning/quiz/submit', () => {
-    it('returns 400 Bad Request for malformed payload body', async () => {
+    it('returns 401, not a validation report, for an unauthenticated invalid body', async () => {
+      // This route now authenticates BEFORE validating. The previous order sent
+      // a fully populated Zod error report to anonymous callers, which disclosed
+      // the entire request schema. A schema-invalid body from a caller with no
+      // session must therefore be refused as unauthenticated, with no detail.
       const req = new NextRequest('http://localhost:3000/api/learning/quiz/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.10' },
         body: JSON.stringify({ incomplete: true }),
       });
 
       const response = await quizSubmitPost(req);
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(401);
 
-      const json = (await response.json()) as { success: boolean; error: { code: string } };
+      const json = (await response.json()) as {
+        success: boolean;
+        error: { code: string; details?: unknown };
+      };
       expect(json.success).toBe(false);
-      expect(json.error.code).toBe('BAD_REQUEST');
+      expect(json.error.code).toBe('UNAUTHORIZED');
+      // No schema disclosure to an anonymous caller.
+      expect(json.error.details).toBeUndefined();
     });
 
     it('returns 401 Unauthorized for unauthenticated quiz submit caller', async () => {
       const req = new NextRequest('http://localhost:3000/api/learning/quiz/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-forwarded-for': '198.51.100.10' },
         body: JSON.stringify({
           lessonId: '10000000-0000-4000-8000-000000000001',
           quizId: '20000000-0000-4000-8000-000000000001',

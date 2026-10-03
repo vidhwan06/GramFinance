@@ -39,6 +39,13 @@ function table(rows: unknown[]) {
     eq: () => builder,
     in: () => builder,
     order: () => builder,
+    // Added so the learning service's `.single()` lookups resolve. Before this,
+    // any `.single()` call threw a TypeError and the learning read routes could
+    // not be exercised here at all.
+    single: async () => ({ data: rows[0] ?? null, error: null }),
+    maybeSingle: async () => ({ data: rows[0] ?? null, error: null }),
+    limit: () => builder,
+    range: () => builder,
     insert: () => ({
       select: () => ({
         single: async () => ({
@@ -73,6 +80,41 @@ const SCHEME_ROW = {
   status: 'active',
 };
 
+const QUIZ_ROW = {
+  id: '30000000-0000-4000-8000-000000000001',
+  lesson_id: '10000000-0000-4000-8000-000000000001',
+  questions_en: [
+    {
+      id: 'q-1',
+      question: 'What is an EMI?',
+      options: ['A fixed monthly payment', 'A one-off fee'],
+      correctAnswerIndex: 0,
+      explanation: 'An EMI is the fixed monthly payment.',
+    },
+  ],
+  questions_kn: [],
+};
+
+const LESSON_ROW = {
+  id: '10000000-0000-4000-8000-000000000001',
+  category: 'banking',
+  difficulty: 'beginner',
+  status: 'active',
+  title_en: 'Bank accounts',
+  title_kn: 'ಬ್ಯಾಂಕ್ ಖಾತೆಗಳು',
+  content_en: {
+    concept: 'Accounts',
+    explanation: 'How accounts work.',
+    example: 'Savings account',
+    visual: 'Diagram',
+    commonMistakes: 'None',
+    practicalTakeaway: 'Keep records',
+  },
+  content_kn: null,
+  sort_order: 1,
+  updated_at: '2026-01-01T00:00:00.000Z',
+};
+
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: {
@@ -84,6 +126,8 @@ vi.mock('@/lib/supabase/server', () => ({
       if (tableName === 'scheme_rules') return table([]);
       if (tableName === 'rule_groups') return table([]);
       if (tableName === 'rule_nodes') return table([]);
+      if (tableName === 'lessons') return table([LESSON_ROW]);
+      if (tableName === 'quizzes') return table([QUIZ_ROW]);
       return table([]);
     },
   }),
@@ -123,6 +167,7 @@ async function getPost(path: string): Promise<(r: NextRequest) => Promise<Respon
     '/api/schemes/eligibility': () => import('@/app/api/schemes/eligibility/route'),
     '/api/feedback': () => import('@/app/api/feedback/route'),
     '/api/assistant': () => import('@/app/api/assistant/route'),
+    '/api/learning/quiz/submit': () => import('@/app/api/learning/quiz/submit/route'),
   };
   const mod = await modules[path]();
   return mod.POST as (r: NextRequest) => Promise<Response>;
@@ -133,9 +178,28 @@ async function getRoute(path: string): Promise<(r: NextRequest) => Promise<Respo
     const mod = await import('@/app/api/schemes/route');
     return mod.GET as (r: NextRequest) => Promise<Response>;
   }
+  if (path === '/api/learning/lessons') {
+    const mod = await import('@/app/api/learning/lessons/route');
+    return mod.GET as (r: NextRequest) => Promise<Response>;
+  }
   const mod = await import('@/app/api/auth/session/route');
   return mod.GET as (r: NextRequest) => Promise<Response>;
 }
+
+/**
+ * The lesson-detail route takes a second `context` argument, so it gets its own
+ * helper rather than being forced through `getRoute`'s single-argument
+ * signature. A cast would have hidden a real arity mismatch from `tsc`.
+ */
+async function getLessonDetailRoute(): Promise<LessonDetailHandler> {
+  const mod = await import('@/app/api/learning/lessons/[lessonId]/route');
+  return mod.GET as unknown as LessonDetailHandler;
+}
+
+type LessonDetailHandler = (
+  r: NextRequest,
+  c: { params: Promise<{ lessonId: string }> }
+) => Promise<Response>;
 
 beforeEach(() => {
   _resetBuckets();
@@ -573,5 +637,196 @@ describe('POST /api/feedback - 5/60s per authenticated user, after auth', () => 
     // The same user from a different IP shares the same budget.
     currentUser = { id: USER_A };
     expect((await call(IP_B)).status).toBe(429);
+  });
+});
+
+// ============================================================================
+// Learning routes (final audit: previously the only unmetered paths)
+// ============================================================================
+
+const LESSON_UUID = '10000000-0000-4000-8000-000000000001';
+const QUIZ_UUID = '30000000-0000-4000-8000-000000000001';
+
+const VALID_QUIZ_BODY = {
+  lessonId: LESSON_UUID,
+  quizId: QUIZ_UUID,
+  lang: 'en',
+  answers: [{ questionId: 'q-1', selectedIndex: 0 }],
+};
+
+describe('GET /api/learning/lessons - 60/60s per IP', () => {
+  it('allows 60, then 429 on the 61st with Retry-After', async () => {
+    const GET = await getRoute('/api/learning/lessons');
+    const call = (headers: Record<string, string>) =>
+      GET(new NextRequest('http://localhost:3000/api/learning/lessons', { headers }));
+
+    for (let i = 0; i < 60; i++) {
+      const r = await call(IP_A);
+      expect(r.status, `request ${i + 1}`).toBe(200);
+    }
+
+    const blocked = await call(IP_A);
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get('retry-after')).toBeTruthy();
+    expect(((await blocked.json()) as { error: { code: string } }).error.code).toBe(
+      'RATE_LIMITED'
+    );
+
+    // A different IP keeps its own budget.
+    expect((await call(IP_B)).status).toBe(200);
+  });
+
+  it('still serves the normal payload within the limit', async () => {
+    const GET = await getRoute('/api/learning/lessons');
+    const r = await GET(new NextRequest('http://localhost:3000/api/learning/lessons', {}));
+    const json = (await r.json()) as {
+      success: boolean;
+      data: { lessons: unknown[]; modules: unknown[] };
+    };
+    expect(json.success).toBe(true);
+    expect(Array.isArray(json.data.lessons)).toBe(true);
+    expect(Array.isArray(json.data.modules)).toBe(true);
+  });
+});
+
+describe('GET /api/learning/lessons/[lessonId] - 60/60s per IP', () => {
+  it('allows 60, then 429 on the 61st, and leaves other IPs alone', async () => {
+    const GET = await getLessonDetailRoute();
+    const call = (headers: Record<string, string>) =>
+      GET(new NextRequest('http://localhost:3000/api/learning/lessons/' + LESSON_UUID, { headers }), {
+        params: Promise.resolve({ lessonId: LESSON_UUID }),
+      });
+
+    for (let i = 0; i < 60; i++) {
+      expect((await call(IP_A)).status, `request ${i + 1}`).toBe(200);
+    }
+    const blocked = await call(IP_A);
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get('retry-after')).toBeTruthy();
+    expect((await call(IP_B)).status).toBe(200);
+  });
+
+  it('does not share a bucket with the lesson list', async () => {
+    // Separate scopes are the whole point: hammering one learning endpoint must
+    // not spend the other's allowance.
+    const list = await getRoute('/api/learning/lessons');
+    const detail = await getLessonDetailRoute();
+
+    for (let i = 0; i < 60; i++) {
+      await list(new NextRequest('http://localhost:3000/api/learning/lessons', { headers: IP_A }));
+    }
+    expect(
+      (
+        await list(new NextRequest('http://localhost:3000/api/learning/lessons', { headers: IP_A }))
+      ).status
+    ).toBe(429);
+
+    // The detail route is untouched by the list route's exhaustion.
+    const detailResponse = await detail(
+      new NextRequest('http://localhost:3000/api/learning/lessons/' + LESSON_UUID, {
+        headers: IP_A,
+      }),
+      { params: Promise.resolve({ lessonId: LESSON_UUID }) }
+    );
+    expect(detailResponse.status).toBe(200);
+  });
+
+  it('rate limits before the UUID check, so it cannot be used as a free 404 oracle', async () => {
+    const GET = await getLessonDetailRoute();
+    // Invalid ids would otherwise be unmetered 400s for ever.
+    for (let i = 0; i < 60; i++) {
+      const r = await GET(
+        new NextRequest('http://localhost:3000/api/learning/lessons/not-a-uuid', {
+          headers: IP_A,
+        }),
+        { params: Promise.resolve({ lessonId: 'not-a-uuid' }) }
+      );
+      expect(r.status, `request ${i + 1}`).toBe(400);
+    }
+    const blocked = await GET(
+      new NextRequest('http://localhost:3000/api/learning/lessons/not-a-uuid', { headers: IP_A }),
+      { params: Promise.resolve({ lessonId: 'not-a-uuid' }) }
+    );
+    expect(blocked.status).toBe(429);
+  });
+});
+
+describe('POST /api/learning/quiz/submit - 20/60s per IP', () => {
+  const call = (headers: Record<string, string>, body: unknown = VALID_QUIZ_BODY) =>
+    getPost('/api/learning/quiz/submit').then((POST) =>
+      POST(
+        new NextRequest('http://localhost:3000/api/learning/quiz/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', ...headers },
+          body: JSON.stringify(body),
+        })
+      )
+    );
+
+  it('allows 20, then 429 on the 21st with Retry-After', async () => {
+    currentUser = { id: 'aaaaaaaa-1111-4111-8111-111111111111' };
+    const POST = await getPost('/api/learning/quiz/submit');
+    const one = () =>
+      POST(
+        new NextRequest('http://localhost:3000/api/learning/quiz/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', ...IP_A },
+          body: JSON.stringify(VALID_QUIZ_BODY),
+        })
+      );
+
+    for (let i = 0; i < 20; i++) {
+      expect((await one()).status, `request ${i + 1}`).toBe(200);
+    }
+    const blocked = await one();
+    expect(blocked.status).toBe(429);
+    expect(blocked.headers.get('retry-after')).toBeTruthy();
+    expect(((await blocked.json()) as { error: { code: string } }).error.code).toBe(
+      'RATE_LIMITED'
+    );
+
+    expect((await call(IP_B)).status).toBe(200);
+  });
+
+  it('rate limits before authentication, so anonymous traffic is also bounded', async () => {
+    currentUser = null;
+    const POST = await getPost('/api/learning/quiz/submit');
+    const one = () =>
+      POST(
+        new NextRequest('http://localhost:3000/api/learning/quiz/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', ...IP_A },
+          body: JSON.stringify(VALID_QUIZ_BODY),
+        })
+      );
+
+    // Each of these is a 401 on its own merits; what matters is that they are
+    // metered, so a caller cannot spin `getUser()` against the auth server
+    // without bound.
+    for (let i = 0; i < 20; i++) {
+      expect((await one()).status, `request ${i + 1}`).toBe(401);
+    }
+    expect((await one()).status).toBe(429);
+  });
+
+  it('does not share a bucket with either learning read route', async () => {
+    currentUser = { id: 'aaaaaaaa-1111-4111-8111-111111111111' };
+    const POST = await getPost('/api/learning/quiz/submit');
+    const GET = await getRoute('/api/learning/lessons');
+
+    for (let i = 0; i < 20; i++) {
+      await POST(
+        new NextRequest('http://localhost:3000/api/learning/quiz/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', ...IP_A },
+          body: JSON.stringify(VALID_QUIZ_BODY),
+        })
+      );
+    }
+    // Draining the submit budget must leave the public lesson list readable.
+    expect(
+      (await GET(new NextRequest('http://localhost:3000/api/learning/lessons', { headers: IP_A })))
+        .status
+    ).toBe(200);
   });
 });

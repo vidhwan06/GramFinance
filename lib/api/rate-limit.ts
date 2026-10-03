@@ -86,6 +86,22 @@ export function resolveClientIp(request: NextRequest): string | null {
  *   eligibility   12/min  4 queries and a 30 KB response: the most expensive
  *   sign-in        5/min  creates a real auth.users row (F1)
  *   feedback       5/min  authenticated, per user; prevents row spam
+ *   learning-*    60/min  unauthenticated reference reads; see the audit note
+ *   quiz submit   20/min  authenticated write; see the audit note
+ *
+ * ── The learning budgets (final audit) ──────────────────────────────────────
+ * The three `/api/learning/*` routes were the last ones with no budget at all,
+ * which made them the only unbounded origin-cost path in the app. Both reads are
+ * public reference data served to every page load, so they get the same generous
+ * 60/min as `/api/schemes` and `/api/auth/session` — a learner paging through
+ * chapters must never be throttled. Quiz submission is a write, so it is
+ * tighter at 20/min.
+ *
+ * The two reads get SEPARATE scopes rather than sharing one. They are different
+ * resources, and the whole point of namespacing is that a script hammering one
+ * cannot spend the other's allowance. Sharing a single 60/min bucket would let a
+ * chapter-detail loop exhaust the lesson-list budget and break the catalogue
+ * page for that IP.
  */
 export interface RouteRateLimit {
   scope: string;
@@ -212,4 +228,20 @@ export const ROUTE_LIMITS = {
    * Generous enough that paging through a long history is never interrupted.
    */
   adminFeedback: { scope: 'admin-feedback', max: 30, windowMs: 60_000 },
+  /**
+   * Public lesson list. Read-only reference data, loaded on every /learn mount,
+   * so the ceiling is generous and exists only to bound an unattended loop.
+   */
+  learningLessons: { scope: 'learning-lessons', max: 60, windowMs: 60_000 },
+  /**
+   * A single lesson's content. Its own scope, deliberately NOT shared with
+   * `learningLessons`, so one endpoint's traffic cannot drain the other's.
+   */
+  learningLesson: { scope: 'learning-lesson', max: 60, windowMs: 60_000 },
+  /**
+   * Quiz submission. Authenticated, and a write, so tighter than the reads.
+   * IP-keyed like every other limit here: the route runs before authentication,
+   * so there is no server-derived identity to key on yet.
+   */
+  learningQuizSubmit: { scope: 'learning-quiz-submit', max: 20, windowMs: 60_000 },
 } as const satisfies Record<string, RouteRateLimit>;

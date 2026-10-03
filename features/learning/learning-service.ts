@@ -195,7 +195,18 @@ export async function loadActiveLessons(
     .order('sort_order', { ascending: true, nullsFirst: false });
 
   if (error) {
-    throw ErrorFactories.internal(`Failed to load lessons: ${error.message}`);
+    // The PostgREST message can name the table, the column and the constraint
+    // ("column lessons.sort_order does not exist", a relation name, a schema
+    // hint). Embedding it in the ApiError message shipped all of that to every
+    // caller, because `errorResponse` returns `ApiError.message` verbatim and
+    // this route is PUBLIC. That was the only place in the codebase that did so.
+    //
+    // The machine-readable code IS retained, server-side, which is what makes the
+    // failure diagnosable without exposing anything: PostgREST and Postgres both
+    // give distinct codes (42P01 undefined_table, 42703 undefined_column, 42501
+    // insufficient_privilege) that identify the fault precisely.
+    console.error('[learning] failed to load lessons', { code: error.code });
+    throw ErrorFactories.internal('Could not load lessons. Please try again later.');
   }
 
   if (!data) {

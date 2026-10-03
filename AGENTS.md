@@ -76,6 +76,10 @@ Every IP-scoped API route calls `checkRateLimit` from `lib/api/rate-limit.ts`, u
 | `POST /api/schemes/eligibility` | 12 / 60s | IP |
 | `POST /api/auth/sign-in` | 5 / 60s | IP |
 | `POST /api/feedback` | 5 / 60s | **authenticated user id**, never IP |
+| `GET /api/learning/lessons` | 60 / 60s | IP (public reference read) |
+| `GET /api/learning/lessons/[lessonId]` | 60 / 60s | IP (own scope, **not** shared with the list) |
+| `POST /api/learning/quiz/submit` | 20 / 60s | IP, applied **before** auth |
+| `GET /api/admin/feedback` | 30 / 60s | IP, applied **after** auth |
 | `POST /api/auth/sign-out` | none | destroys nothing and is idempotent |
 
 **Hard invariants:**
