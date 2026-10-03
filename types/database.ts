@@ -31,6 +31,9 @@
 /** Mirrors the `users_language_check` CHECK constraint from migration 001. */
 export type UserLanguage = 'en' | 'kn';
 
+/** Mirrors the `lessons_status_check` CHECK constraint from migration 023. */
+export type LessonStatus = 'draft' | 'active' | 'archived';
+
 /** Mirrors the `schemes_status_check` CHECK constraint from migration 011. */
 export type SchemeStatus = 'draft' | 'active' | 'inactive' | 'expired';
 
@@ -85,6 +88,10 @@ export type DbLesson = {
   content_kn: Record<string, unknown>;
   /** Unconstrained `VARCHAR(20)`. Same caveat as `category`. */
   difficulty: string;
+  /** Lifecycle state added in migration 023 ('draft' | 'active' | 'archived'). */
+  status: LessonStatus;
+  /** Chapter order within a module (1-5). Added in migration 024. */
+  sort_order: number | null;
   updated_at: string;
 };
 
@@ -262,6 +269,10 @@ export type DbLessonInsert = {
   id?: string;
   /** Has DEFAULT 'beginner'. */
   difficulty?: string;
+  /** Has DEFAULT 'draft'. Omit to keep a lesson unpublished. */
+  status?: LessonStatus;
+  /** Chapter order within a module (1-5). Added in migration 024. */
+  sort_order?: number | null;
   /** Has a DEFAULT. */
   updated_at?: string;
 };
