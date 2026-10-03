@@ -16,7 +16,8 @@ import type { NextConfig } from "next";
  *   * style-src — React SSR emits inline `style=""` attributes (Progress,
  *     LoanBreakdown), which CSP otherwise strips, visibly breaking those bars.
  *
- * `unsafe-eval` is NOT permitted: nothing in the app needs it.
+ * `unsafe-eval` is NOT permitted in production: nothing in the app needs it.
+ * It IS permitted in development only — see `buildContentSecurityPolicy`.
  * `frame-ancestors` supersedes X-Frame-Options for modern clients; the legacy
  * header is kept for older browsers.
  *
@@ -24,20 +25,41 @@ import type { NextConfig } from "next";
  * http://localhost during development. Enable it alongside HSTS when the
  * deployment host is confirmed HTTPS-only.
  */
-const CONTENT_SECURITY_POLICY = [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
-  "manifest-src 'self'",
-  "worker-src 'self'",
-].join('; ');
+export function buildContentSecurityPolicy(options: { allowEval?: boolean } = {}): string {
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    options.allowEval
+      // Development only. `next dev` evaluates strings as JavaScript in
+      // @next/react-refresh-utils and in the RSC/HMR dev runtime, so without
+      // this the browser throws
+      // `EvalError: Evaluating a string as JavaScript ... 'unsafe-eval' is not
+      // an allowed source of script`, which kills hydration and leaves pages
+      // stuck on their loading state. This branch is unreachable in a
+      // production build — `next build`/`next start` set NODE_ENV=production,
+      // so the shipped header is byte-identical to the pre-existing one.
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "manifest-src 'self'",
+    "worker-src 'self'",
+  ].join('; ');
+}
+
+/**
+ * Only `next dev` sets `NODE_ENV=development`. Anything else — production,
+ * test, unset — takes the strict branch, so a misconfigured or unset
+ * environment can never widen the shipped policy.
+ */
+const CONTENT_SECURITY_POLICY = buildContentSecurityPolicy({
+  allowEval: process.env.NODE_ENV === 'development',
+});
 
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: CONTENT_SECURITY_POLICY },

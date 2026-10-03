@@ -199,4 +199,13 @@ CSP note:
   failure.
 - Do not remove script-src 'unsafe-inline' or force routes dynamic without
   revisiting the F16 architecture decision.
+- script-src 'unsafe-eval' is added **only** when `NODE_ENV=development`, via
+  `buildContentSecurityPolicy({ allowEval })` in `next.config.ts`. `next dev`
+  evaluates strings in `@next/react-refresh-utils` / the RSC-HMR runtime, so
+  without it hydration dies and pages hang on their loading state (this is how
+  `/learn` was found stuck on "Loading lessons..." while its API returned 200).
+  The production header stays byte-identical: `next build`/`next start` set
+  `NODE_ENV=production`, and any other or unset value takes the strict branch,
+  so the policy fails closed. Both branches are pinned by
+  `tests/unit/config/http-security-config.test.ts`.
 - Re-evaluate after a Next.js upgrade or a confirmed deployment architecture.

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import nextConfig from '@/next.config';
+import nextConfig, { buildContentSecurityPolicy } from '@/next.config';
 import { ErrorFactories, ApiError } from '@/lib/api/errors';
 
 /**
@@ -124,6 +124,82 @@ describe('response header hardening (F5)', () => {
     // every response to remove something Next.js already has a setting for.
     const middleware = readFileSync(resolve(process.cwd(), 'middleware.ts'), 'utf8');
     expect(middleware).not.toMatch(/x-powered-by/i);
+  });
+});
+
+/**
+ * `'unsafe-eval'` is a development-only concession.
+ *
+ * `next dev` evaluates strings as JavaScript in `@next/react-refresh-utils` and
+ * the RSC/HMR runtime. Under the production CSP the browser throws
+ * `EvalError: ... 'unsafe-eval' is not an allowed source of script`, hydration
+ * never completes, and pages hang on their loading state — this is exactly how
+ * `/learn` was found stuck on "Loading lessons...". The API was healthy the
+ * whole time; only the client-side runtime was dead.
+ *
+ * The fix widens `script-src` ONLY when `NODE_ENV=development`. Production is
+ * left byte-identical to the previous policy, so these tests pin both branches:
+ * relaxing one without the other would undo either the fix or the hardening.
+ */
+describe('CSP is environment-aware on script-src', () => {
+  const production = buildContentSecurityPolicy();
+  const productionFromFlag = buildContentSecurityPolicy({ allowEval: false });
+  const development = buildContentSecurityPolicy({ allowEval: true });
+
+  it('allows unsafe-eval in development so the Next.js dev runtime works', () => {
+    expect(development).toContain("script-src 'self' 'unsafe-inline' 'unsafe-eval'");
+  });
+
+  it('never allows unsafe-eval in production', () => {
+    expect(production).not.toContain('unsafe-eval');
+    expect(productionFromFlag).not.toContain('unsafe-eval');
+    expect(production).toContain("script-src 'self' 'unsafe-inline'");
+  });
+
+  it('defaults to the strict policy when the mode is not stated explicitly', () => {
+    // A missing/unknown environment must fail closed, never open.
+    expect(production).toBe(productionFromFlag);
+  });
+
+  it('widens script-src and nothing else', () => {
+    // The dev policy is the production policy with exactly one token added.
+    expect(development.replace("script-src 'self' 'unsafe-inline' 'unsafe-eval'", "script-src 'self' 'unsafe-inline'")).toBe(
+      production
+    );
+  });
+
+  it('leaves connect-src self-only in both environments', () => {
+    for (const [name, csp] of [
+      ['production', production],
+      ['development', development],
+    ] as const) {
+      const connectSrc = csp.match(/connect-src '([^']*)'/);
+      expect(connectSrc, name).not.toBeNull();
+      expect(connectSrc![1].split(/\s+/), name).toEqual(['self']);
+      expect(csp, name).not.toMatch(/https?:\/\//);
+    }
+  });
+
+  it('leaves style-src unsafe-inline in both environments', () => {
+    // React SSR emits inline style="" attributes; without this the progress
+    // and loan-breakdown bars lose their widths.
+    expect(production).toContain("style-src 'self' 'unsafe-inline'");
+    expect(development).toContain("style-src 'self' 'unsafe-inline'");
+  });
+
+  it('keeps every other directive identical in both environments', () => {
+    const names = (csp: string) =>
+      csp.split(';').map((d) => d.trim().split(/\s+/)[0]);
+    expect(names(development)).toEqual(names(production));
+  });
+
+  it('sends the strict policy outside `next dev`', async () => {
+    // This suite runs under NODE_ENV=test, so the header actually emitted is
+    // the production one — the dev branch is proven above, not relied on here.
+    const headers = await resolvedHeaders();
+    const csp = headers.find((h) => h.key === 'Content-Security-Policy')!.value;
+    expect(csp).not.toContain('unsafe-eval');
+    expect(csp).toBe(production);
   });
 });
 
